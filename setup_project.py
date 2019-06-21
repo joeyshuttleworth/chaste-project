@@ -1,3 +1,4 @@
+#!/usr/bin/python
 """Copyright (c) 2005-2017, University of Oxford.
 All rights reserved.
 
