@@ -1,3 +1,2 @@
-TestHello.hpp
 TestGroundTruthSimulation.hpp
 TestUnsteadyNorms.hpp

@@ -7,7 +7,7 @@
 #include "Shannon2004Cvode.hpp"
 #include "TenTusscher2006EpiCvode.hpp"
 #include "FakePetscSetup.hpp"
-
+#include <fstream>
 class TestGroundTruthSimulation : public CxxTest::TestSuite
 {
 public:
@@ -17,25 +17,59 @@ public:
         boost::shared_ptr<RegularStimulus> p_stimulus;
         boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
         boost::shared_ptr<AbstractCvodeCell> p_model(new CellTenTusscher2006EpiFromCellMLCvode(p_solver, p_stimulus));
-
-        boost::shared_ptr<RegularStimulus> p_regular_stim = p_model->UseCellMLDefaultStimulus();
+	boost::shared_ptr<RegularStimulus> p_regular_stim = p_model->UseCellMLDefaultStimulus();
 	
+	int period = 1000;
         p_regular_stim->SetPeriod(1000.0);
      	p_model->SetTolerances(1e-9,1e-9);
 
-	double max_timestep = 1;
+	double max_timestep = p_regular_stim->GetDuration()/2;
 
-	std::cout << "Stimulus duration is: " << p_regular_stim->GetDuration() << "\n";
         p_model->SetMaxTimestep(max_timestep);
-
+	unsigned int voltage_index = p_model->GetSystemInformation()->GetStateVariableIndex("membrane__V");
+	
         double sampling_timestep = max_timestep;
-        double start_time = 0.0;
-        double end_time = 10000000.0;
-	p_model->ForceUseOfNumericalJacobian();
-        OdeSolution solution = p_model->Compute(start_time, end_time, sampling_timestep);
-
-        solution.WriteToFile("TestCvodeCells","TenTusscher2006EpiGroundTruth", "ms");
-
+	int steps = 1000;
+	OdeSolution *last_solution=NULL, *current_solution = NULL;
+	std::ofstream apd_file;
+	std::ofstream variables_file;
+	std::string username = std::string(getenv("USER"));
+		
+	apd_file.open("/tmp/"+username+"/apd90plot.ssv");
+	variables_file.open("/tmp/"+username+"/state_variables.ssv");
+	/*Set cout to be as precise as possible */
+	std::cout.precision(17); 
+	
+	for(int i=0; i < steps; i++){
+	  double start_time = i*period;
+	  double end_time   = start_time + period;
+	  double apd;
+	  std::vector<double> state_variables;
+		
+	  if(last_solution)
+	    delete(last_solution);
+	  last_solution = current_solution;
+	  /*Set the initial values to be the termial values of the last solution*/
+	  if(current_solution){
+	    state_variables = current_solution->rGetSolutions()[current_solution->GetNumberOfTimeSteps()-1];
+	    std::vector<double> voltages = current_solution->GetVariableAtIndex(voltage_index);
+	    CellProperties cell_props(voltages, current_solution->rGetTimes());
+	    
+	    apd = cell_props.GetLastActionPotentialDuration(90);
+	    p_model->SetStateVariables(state_variables);
+	  }
+	  current_solution = new OdeSolution;
+	  *current_solution = p_model->Compute(start_time, end_time, sampling_timestep);
+	  apd_file <<apd << " ";
+	  for(unsigned int j=0; j < state_variables.size(); j++){
+	    variables_file << state_variables[j] << " ";
+	  }
+	  variables_file << "\n";
+	}
+	variables_file.close();
+	apd_file << "\n";
+	apd_file.close();
+	//        solution.WriteToFile("TestCvodeCells","TenTusscher2006EpiGroundTruth", "ms");
 #else
         std::cout << "Cvode is not enabled.\n";
 #endif

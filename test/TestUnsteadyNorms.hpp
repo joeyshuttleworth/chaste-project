@@ -47,7 +47,7 @@ public:
 
         double sampling_timestep = max_timestep;
         double start_time = 0.0;
-        double end_time = 1000000.0;
+        double end_time   = 8000.0;
 	p_model->ForceUseOfNumericalJacobian();
         OdeSolution solution = p_model->Compute(start_time, end_time, sampling_timestep);
 
