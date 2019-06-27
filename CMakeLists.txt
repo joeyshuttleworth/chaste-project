@@ -52,3 +52,7 @@ find_package(Chaste COMPONENTS crypt heart)
 # Change the project name in the line below to match the folder this file is in,
 # i.e. the name of your project.
 chaste_do_project(chaste-project)
+
+# Here we add extra arguments to force PyCML to use this extra argument (make Get and Set methods for
+# all metadata annotated variables). 
+set(Chaste_PYCML_EXTRA_ARGS "--expose-annotated-variables")
