@@ -19,9 +19,9 @@ public:
         boost::shared_ptr<AbstractCvodeCell> p_model(new CellTenTusscher2006EpiFromCellMLCvode(p_solver, p_stimulus));
 	boost::shared_ptr<RegularStimulus> p_regular_stim = p_model->UseCellMLDefaultStimulus();
 	
-	int period = 1000;
-        p_regular_stim->SetPeriod(1000.0);
-     	p_model->SetTolerances(1e-9,1e-9);
+	const double period = 1000;
+        p_regular_stim->SetPeriod(period);
+     	p_model->SetTolerances(1e-7,1e-7);
 
 	double max_timestep = p_regular_stim->GetDuration()/2;
 
@@ -29,26 +29,29 @@ public:
 	unsigned int voltage_index = p_model->GetSystemInformation()->GetStateVariableIndex("membrane__V");
 	
         double sampling_timestep = max_timestep;
-	int steps = 1000;
-	OdeSolution *last_solution=NULL, *current_solution = NULL;
+	int steps = 10000;
+	OdeSolution *current_solution = NULL;
 	std::ofstream apd_file;
 	std::ofstream variables_file;
 	std::string username = std::string(getenv("USER"));
+	const std::vector<std::string> state_variable_names = p_model->rGetStateVariableNames(); 
 		
 	apd_file.open("/tmp/"+username+"/apd90plot.ssv");
 	variables_file.open("/tmp/"+username+"/state_variables.ssv");
 	/*Set cout to be as precise as possible */
-	std::cout.precision(17); 
-	
+        apd_file.precision(17);
+	variables_file.precision(17);
+	/*Print variable names on the first line*/
+	for(unsigned int i = 0; i < state_variable_names.size(); i++){
+	  variables_file << state_variable_names[i] << " ";
+	}
+	variables_file << "\n";
 	for(int i=0; i < steps; i++){
 	  double start_time = i*period;
 	  double end_time   = start_time + period;
 	  double apd;
 	  std::vector<double> state_variables;
 		
-	  if(last_solution)
-	    delete(last_solution);
-	  last_solution = current_solution;
 	  /*Set the initial values to be the termial values of the last solution*/
 	  if(current_solution){
 	    state_variables = current_solution->rGetSolutions()[current_solution->GetNumberOfTimeSteps()-1];
@@ -60,7 +63,7 @@ public:
 	  }
 	  current_solution = new OdeSolution;
 	  *current_solution = p_model->Compute(start_time, end_time, sampling_timestep);
-	  apd_file <<apd << " ";
+	  apd_file << apd << " ";
 	  for(unsigned int j=0; j < state_variables.size(); j++){
 	    variables_file << state_variables[j] << " ";
 	  }

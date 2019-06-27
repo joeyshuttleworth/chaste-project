@@ -37,51 +37,61 @@ public:
         boost::shared_ptr<AbstractCvodeCell> p_model(new CellTenTusscher2006EpiFromCellMLCvode(p_solver, p_stimulus));
 
         boost::shared_ptr<RegularStimulus> p_regular_stim = p_model->UseCellMLDefaultStimulus();
-	
-        p_regular_stim->SetPeriod(500.0);
+	const double period = 500.0;
+        p_regular_stim->SetPeriod(period);
      	p_model->SetTolerances(1e-9,1e-9);
 
-	double max_timestep = 1;
+	double max_timestep = p_regular_stim->GetDuration()/2;
 
         p_model->SetMaxTimestep(max_timestep);
 
-        double sampling_timestep = max_timestep;
-        double start_time = 0.0;
-        double end_time   = 8000.0;
+        double steps = 1000;
+	
 	p_model->ForceUseOfNumericalJacobian();
-        OdeSolution solution = p_model->Compute(start_time, end_time, sampling_timestep);
 
-        solution.WriteToFile("TestCvodeCells", "TenTusscher2004Epi2Hz", "ms");
-
-	int number_of_timesteps = solution.GetNumberOfTimeSteps();
-	int pace = 1, sum = 0;
 	std::vector<double> change_between_paces;
-	const std::vector<double> times = solution.rGetTimes();
 	const std::vector<std::vector<double>> values = solution.rGetSolutions();
         TS_ASSERT_EQUALS(values.size()==0, false);
-	int number_of_variables = values[0].size();
+	unsigned int number_of_variables = values[0].size();
 	std::vector<double> changes;
+	OdeSolution *current_solution, *last_solution;
+	std::ofstream changes_file;
+	std::string username = std::string(getenv("USER"));
 	
-	for(int i = 0; i <= number_of_timesteps; i++){
-	  if(times[i] > pace * 500 || i == number_of_timesteps){
-	    /*We are now in the next pace. If this is not the first pace, 
-	      calculate the "change" between this pace and the previous one.  */
-	    if(pace > 1){
-	      changes.push_back(sqrt(sum));
-	      std::cout << sqrt(sum) << " ";
-	    }
-	    /*Update variables for the next pace*/
-	    sum = 0;
-	    pace++;
+	changes_file.open("/tmp/"+username+"/changes.ssv");
+	
+	for(int i=0; i < steps; i++){
+	  double start_time = i*period;
+	  double end_time   = start_time + period;
+
+	  std::vector<std::vector<double>> *current_state_variables;
+	  std::vector<std::vector<double>> *last_state_variables;
+	  
+	  if(last_solution)
+	    delete(last_solution);
+	  last_solution = current_solution;
+	  /*Set the initial values to be the termial values of the last solution*/
+	  if(current_solution){
+	    last_state_variables = current_state_variables;
+	    p_model->SetStateVariables(current_state_variables);
+	    current_solution  = new OdeSolution;
+	    *current_solution = p_model->Compute(start_time, end_time, max_timestep); 
+	    *current_state_variables = current_solution->rGetSolutions();
 	  }
-	  if(pace > 1){
-	    for(int j = 0; j < number_of_variables; j++)
-	      sum = sum + pow(values[i][j] - ValueAtTime(times, values, times[i] - 500, j), 2);
+	  if(i > 1){
+	    /*Calculate the "change" between the state variables over the last two beats using the Euclidean norm*/
+	    double sum = 0;
+	    std::vector<double> last_times = last_solution->rGetTimes();
+	    std::vector<double> current_times = current_solution->rGetTimes();
+	    for(unsigned int j = 0; j < number_of_variables; j++){
+	      for(unsigned int k = 0; k < current_state_variables->size(); k++){
+		sum = sum + pow(current_state_variables[k][j] - ValueAtTime(times, last_state_variables, current_times[k], j), 2);
+	      }
+	    }
 	  }
 	}
-	std::cout <<"\n";
 #else
         std::cout << "Cvode is not enabled.\n";
 #endif
-    }
+	}
 };
