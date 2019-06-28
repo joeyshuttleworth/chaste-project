@@ -5,7 +5,7 @@
 #include "RegularStimulus.hpp"
 #include "EulerIvpOdeSolver.hpp"
 #include "Shannon2004Cvode.hpp"
-#include "TenTusscher2006EpiCvode.hpp"
+#include "TenTusscher2004EpiCvode.hpp"
 #include "FakePetscSetup.hpp"
 #include <fstream>
 class TestGroundTruthSimulation : public CxxTest::TestSuite
@@ -16,7 +16,7 @@ public:
 #ifdef CHASTE_CVODE
         boost::shared_ptr<RegularStimulus> p_stimulus;
         boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
-        boost::shared_ptr<AbstractCvodeCell> p_model(new CellTenTusscher2006EpiFromCellMLCvode(p_solver, p_stimulus));
+        boost::shared_ptr<AbstractCvodeCell> p_model(new CellTenTusscher2004EpiFromCellMLCvode(p_solver, p_stimulus));
 	boost::shared_ptr<RegularStimulus> p_regular_stim = p_model->UseCellMLDefaultStimulus();
 	
 	const double period = 1000;
@@ -26,7 +26,6 @@ public:
 	double max_timestep = p_regular_stim->GetDuration()/2;
 
         p_model->SetMaxTimestep(max_timestep);
-	p_model->ForceUseOfNumericalJacobian();
 	//unsigned int voltage_index = p_model->GetSystemInformation()->GetStateVariableIndex("membrane__V");
 	
         double sampling_timestep = max_timestep;

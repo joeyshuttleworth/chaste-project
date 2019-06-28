@@ -5,7 +5,7 @@
 #include "RegularStimulus.hpp"
 #include "EulerIvpOdeSolver.hpp"
 #include "Shannon2004Cvode.hpp"
-#include "TenTusscher2006EpiCvode.hpp"
+#include "TenTusscher2004EpiCvode.hpp"
 #include "FakePetscSetup.hpp"
 #include <fstream>
 class TestGroundTruthSimulation : public CxxTest::TestSuite
@@ -16,7 +16,7 @@ public:
 #ifdef CHASTE_CVODE
         boost::shared_ptr<RegularStimulus> p_stimulus;
         boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
-        boost::shared_ptr<AbstractCvodeCell> p_model(new CellTenTusscher2006EpiFromCellMLCvode(p_solver, p_stimulus));
+        boost::shared_ptr<AbstractCvodeCell> p_model(new CellTenTusscher2004EpiFromCellMLCvode(p_solver, p_stimulus));
 	boost::shared_ptr<RegularStimulus> p_regular_stim = p_model->UseCellMLDefaultStimulus();
 	
 	const double period = 1000;
@@ -38,14 +38,15 @@ public:
 	  if(start_time>0){
 	    time_1 = i*period;
 	    time_2 = i*period + start_time;
-	    p_model->SetStateVariables(p_model->Compute(time_1, time_2, samplig_timestep)->rGetSolutions().back());
+	    p_model->Compute(time_1, time_2, sampling_timestep);
 	  }
 	  time_1 = i*period + start_time;
 	  time_2 = i*period + start_time + duration;
-	  p_model->SetStateVaraibles(p_model->Compute(time_1, time_2, sampling_timestep)->rGetSolutions().back());
+	  p_model->Compute(time_1, time_2, sampling_timestep);
 	  time_1 = i*period + start_time + duration;
 	  time_2 = (i + 1) * period;
-	  p_model->SetStateVaraibles(p_model->Compute(time_1, time_2, sampling_timestep)->rGetSolutions().back());
+	  current_solution = p_model->Compute(time_1, time_2, sampling_timestep);
+	  std::cout << current_solution->rGetSolution()[0][0] << "\n";
 	}
 #else
         std::cout << "Cvode is not enabled.\n";
