@@ -1,2 +1,4 @@
 TestGroundTruthSimulation.hpp
 TestUnsteadyNorms.hpp
+TestTolerances.hpp
+TestTwoParts.hpp

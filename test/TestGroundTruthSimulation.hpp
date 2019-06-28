@@ -11,7 +11,7 @@
 class TestGroundTruthSimulation : public CxxTest::TestSuite
 {
 public:
-    void TestShannonSimulation()
+    void TestTusscherSimulation()
     {
 #ifdef CHASTE_CVODE
         boost::shared_ptr<RegularStimulus> p_stimulus;
@@ -21,7 +21,7 @@ public:
 	
 	const double period = 1000;
         p_regular_stim->SetPeriod(period);
-     	p_model->SetTolerances(1e-7,1e-7);
+     	p_model->SetTolerances(1e-8,1e-8);
 
 	double max_timestep = p_regular_stim->GetDuration()/2;
 
@@ -29,7 +29,7 @@ public:
 	unsigned int voltage_index = p_model->GetSystemInformation()->GetStateVariableIndex("membrane__V");
 	
         double sampling_timestep = max_timestep;
-	int steps = 10000;
+	int steps = 100;
 	OdeSolution *current_solution = NULL;
 	std::ofstream apd_file;
 	std::ofstream variables_file;
@@ -38,7 +38,7 @@ public:
 		
 	apd_file.open("/tmp/"+username+"/apd90plot.ssv");
 	variables_file.open("/tmp/"+username+"/state_variables.ssv");
-	/*Set cout to be as precise as possible */
+	/*Set the output to be as precise as possible */
         apd_file.precision(17);
 	variables_file.precision(17);
 	/*Print variable names on the first line*/
@@ -52,7 +52,7 @@ public:
 	  double apd;
 	  std::vector<double> state_variables;
 		
-	  /*Set the initial values to be the termial values of the last solution*/
+	  /*Set the initial values to be the terminal values of the last solution*/
 	  if(current_solution){
 	    state_variables = current_solution->rGetSolutions()[current_solution->GetNumberOfTimeSteps()-1];
 	    std::vector<double> voltages = current_solution->GetVariableAtIndex(voltage_index);
@@ -65,7 +65,7 @@ public:
 	  *current_solution = p_model->Compute(start_time, end_time, sampling_timestep);
 	  apd_file << apd << " ";
 	  for(unsigned int j=0; j < state_variables.size(); j++){
-	    variables_file << state_variables[j] << " ";
+	     variables_file << state_variables[j] << " ";
 	  }
 	  variables_file << "\n";
 	}

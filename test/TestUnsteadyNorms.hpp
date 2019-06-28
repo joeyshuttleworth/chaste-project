@@ -9,25 +9,6 @@
 #include "FakePetscSetup.hpp"
 #include <fstream>
 
-/*Uses linear interpolation to find the value at a certain time */
-double ValueAtTime(std::vector<double> times,
-		   std::vector<std::vector<double>> values,
-		   double time,
-		   int    variable_index){
-  unsigned int i;
-  for(i = 0; i < values.size() - 1; i++){
-    if(times[i] > time)
-      break;
-  }
-  if(i == 0){
-    return values[0][variable_index];
-  }
-  else{
-    /*Interpolate between i - 1 and i */
-    return values[i-1][variable_index] + (time - times[i]) * (values[i][variable_index] - values[i-1][variable_index])/ (times[i] - times[i-1]);
-  }
-}
-
 class TestUndsteadyNorms : public CxxTest::TestSuite
 {
 public:
@@ -79,7 +60,7 @@ public:
 	    std::vector<double> current_times = current_solution->rGetTimes();
 	    for(unsigned int j = 0; j < number_of_variables; j++){
 	      for(unsigned int k = 0; k < current_solution->GetNumberOfTimeSteps(); k++){
-		sum_2 = sum_2 + pow(current_solution->rGetSolutions()[k][j] - ValueAtTime(last_times, last_solution->rGetSolutions(), current_times[k], j), 2);
+		sum_2 = sum_2 + pow(current_solution->rGetSolutions()[k][j] - last_solution->rGetSolutions()[k][j]);
 	      }
 	    }
 	    changes_file << sqrt(sum_2) << " " << sqrt(sum_mrms / number_of_variables) << "\n";
