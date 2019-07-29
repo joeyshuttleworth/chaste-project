@@ -5,9 +5,11 @@
 #include "RegularStimulus.hpp"
 #include "EulerIvpOdeSolver.hpp"
 #include "Shannon2004Cvode.hpp"
-#include "TenTusscher2004EpiCvode.hpp"
 #include "FakePetscSetup.hpp"
 #include <fstream>
+/*This file is generated from the cellml files provided at github.com/chaste/cellml*/
+#include "ten_tusscher_model_2004_epiCvode.hpp"
+
 class TestGroundTruthSimulation : public CxxTest::TestSuite
 {
 public:
@@ -16,20 +18,21 @@ public:
 #ifdef CHASTE_CVODE
         boost::shared_ptr<RegularStimulus> p_stimulus;
         boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
-        boost::shared_ptr<AbstractCvodeCell> p_model(new CellTenTusscher2004EpiFromCellMLCvode(p_solver, p_stimulus));
+        boost::shared_ptr<AbstractCvodeCell> p_model(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus));
 	boost::shared_ptr<RegularStimulus> p_regular_stim = p_model->UseCellMLDefaultStimulus();
 	
 	const double period = 1000;
         p_regular_stim->SetPeriod(period);
-     	p_model->SetTolerances(1e-8,1e-8);
-
+     	p_model->SetTolerances(1e-9,1e-9);
+	std::cout << "hello!\n";
+	
 	double max_timestep = p_regular_stim->GetDuration()/2;
 
         p_model->SetMaxTimestep(max_timestep);
-	unsigned int voltage_index = p_model->GetSystemInformation()->GetStateVariableIndex("membrane__V");
+	unsigned int voltage_index = p_model->GetSystemInformation()->GetStateVariableIndex("membrane_voltage");
 	
         double sampling_timestep = max_timestep;
-	int steps = 100;
+	int steps = 1000;
 	OdeSolution *current_solution = NULL;
 	std::ofstream apd_file;
 	std::ofstream variables_file;
@@ -51,10 +54,15 @@ public:
 	  double end_time   = start_time + period;
 	  double apd;
 	  std::vector<double> state_variables;
-		
 	  /*Set the initial values to be the terminal values of the last solution*/
 	  if(current_solution){
 	    state_variables = current_solution->rGetSolutions()[current_solution->GetNumberOfTimeSteps()-1];
+
+	    /*Does solve p_model->compute update the state variables? No. */
+	    for(unsigned int i = 0; i < state_variables.size(); i++){
+	      std::cout << state_variables[i] << "  vs  " << p_model->GetStateVariable(i) << "\n";
+	    }
+	    
 	    std::vector<double> voltages = current_solution->GetVariableAtIndex(voltage_index);
 	    CellProperties cell_props(voltages, current_solution->rGetTimes());
 	    
@@ -65,14 +73,13 @@ public:
 	  *current_solution = p_model->Compute(start_time, end_time, sampling_timestep);
 	  apd_file << apd << " ";
 	  for(unsigned int j=0; j < state_variables.size(); j++){
-	     variables_file << state_variables[j] << " ";
+	    variables_file << state_variables[j] << " ";
 	  }
 	  variables_file << "\n";
 	}
 	variables_file.close();
 	apd_file << "\n";
 	apd_file.close();
-	//        solution.WriteToFile("TestCvodeCells","TenTusscher2006EpiGroundTruth", "ms");
 #else
         std::cout << "Cvode is not enabled.\n";
 #endif

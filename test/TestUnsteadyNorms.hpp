@@ -9,6 +9,8 @@
 #include "FakePetscSetup.hpp"
 #include <fstream>
 
+/*Make sure the sampling timestep divides the stimulus duration*/
+
 class TestUndsteadyNorms : public CxxTest::TestSuite
 {
 public:

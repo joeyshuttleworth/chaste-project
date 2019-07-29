@@ -32,20 +32,16 @@ public:
 	OdeSolution current_solution;
 	
 	for(int i=0; i < steps; i++){
-	  double time_1 = i*period;
-	  double time_2   = start_time + period;
 	  double start_time = p_regular_stim->GetStartTime();
 	  if(start_time>0){
-	    time_1 = i*period;
-	    time_2 = i*period + start_time;
-	    p_model->Compute(time_1, time_2, sampling_timestep);
+	    p_model->Compute(0, start_time, sampling_timestep);
 	  }
 	  time_1 = i*period + start_time;
 	  time_2 = i*period + start_time + duration;
-	  p_model->Compute(time_1, time_2, sampling_timestep);
+	  p_model->Compute(start_time, start_time + duration, sampling_timestep);
 	  time_1 = i*period + start_time + duration;
 	  time_2 = (i + 1) * period;
-	  current_solution = p_model->Compute(time_1, time_2, sampling_timestep);
+	  current_solution = p_model->Compute(start_time + duration, period, sampling_timestep);
 	  std::cout << current_solution->rGetSolution()[0][0] << "\n";
 	}
 #else
