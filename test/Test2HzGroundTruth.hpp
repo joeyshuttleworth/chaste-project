@@ -21,11 +21,11 @@ public:
         boost::shared_ptr<AbstractCvodeCell> p_model(new Cellbeeler_reuter_model_1977FromCellMLCvode(p_solver, p_stimulus));
 	boost::shared_ptr<RegularStimulus> p_regular_stim = p_model->UseCellMLDefaultStimulus();
 	
-	const double period = 1000;
+	const double period = 500;
         p_regular_stim->SetPeriod(period);
-     	p_model->SetTolerances(1e-11,1e-11);
+     	p_model->SetTolerances(1e-10,1e-10);
 	
-	double max_timestep = p_regular_stim->GetDuration()/2;
+	double max_timestep = p_regular_stim->GetDuration();
 
         p_model->SetMaxTimestep(max_timestep);
 	unsigned int voltage_index = p_model->GetSystemInformation()->GetStateVariableIndex("membrane_voltage");
