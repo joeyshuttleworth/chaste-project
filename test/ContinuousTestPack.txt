@@ -5,3 +5,4 @@ TestOnePart.hpp
 TestTwoParts.hpp
 Test2HzGroundTruth.hpp
 TestSamplingRates.hpp
+TestErrorMeasures.hpp

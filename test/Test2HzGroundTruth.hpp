@@ -7,8 +7,13 @@
 #include "Shannon2004Cvode.hpp"
 #include "FakePetscSetup.hpp"
 #include <fstream>
+
 /* This file is generated from the cellml files provided at github.com/chaste/cellml */
+
 #include "beeler_reuter_model_1977Cvode.hpp"
+#include "ten_tusscher_model_2004_epiCvode.hpp"
+#include "ohara_rudy_2011_endoCvode.hpp"
+#include "shannon_wang_puglisi_weber_bers_2004Cvode.hpp"
 
 class TestGroundTruthSimulation : public CxxTest::TestSuite
 {
@@ -18,7 +23,7 @@ public:
 #ifdef CHASTE_CVODE
         boost::shared_ptr<RegularStimulus> p_stimulus;
         boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
-        boost::shared_ptr<AbstractCvodeCell> p_model(new Cellbeeler_reuter_model_1977FromCellMLCvode(p_solver, p_stimulus));
+        boost::shared_ptr<AbstractCvodeCell> p_model(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus));
 	boost::shared_ptr<RegularStimulus> p_regular_stim = p_model->UseCellMLDefaultStimulus();
 	
 	const double period = 500;
