@@ -10,9 +10,11 @@
 #include <sstream>
 #include <iostream>
 
+const std::vector<std::string> model_names = {"beeler_reuter_model_1997", "ten_tusscher_model_2004_epi", "ohara_rudy_2011_endo", "shannon_wang_puglisi_weber_bers_2004"};
+
 void RunSimulation(boost::shared_ptr<AbstractCvodeCell>, unsigned int paces, double tolerances);
 
-void LoadStatesFromFile(boost::shared_ptr<AbstractCvodeCell>, std::string file_path);
+int LoadStatesFromFile(boost::shared_ptr<AbstractCvodeCell>, std::string file_path);
 
 void OutputVariablesToFile(boost::shared_ptr<AbstractCvodeCell>, std::string file_path);
 

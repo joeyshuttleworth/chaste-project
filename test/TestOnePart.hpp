@@ -23,24 +23,35 @@ public:
         boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
         boost::shared_ptr<AbstractCvodeCell> p_model(new Cellohara_rudy_2011_endoFromCellMLCvode(p_solver, p_stimulus));
 	boost::shared_ptr<RegularStimulus> p_regular_stim = p_model->UseCellMLDefaultStimulus();
-	
-	const double period = 1000;
-        p_regular_stim->SetPeriod(period);
-     	p_model->SetTolerances(1e-10,1e-10);
+	std::ofstream output_file;
 
+	output_file.open("/tmp/joey/OnePart.dat");
+	const double period = 500;
+        p_regular_stim->SetPeriod(period);
+	p_regular_stim->SetStartTime(0);
+	p_model->SetTolerances(1e-12,1e-12);
+	
 	double max_timestep = p_regular_stim->GetDuration();
+	double sampling_timestep = 0.5;
 	
         p_model->SetMaxTimestep(max_timestep);
 	p_model->SetMaxSteps(1e5);
 	
 	int paces = 1000;
-	OdeSolution current_solution;
-	
-	for(int i=0; i < paces - 1; i++){
-	  p_model->SolveAndUpdateState(0, period);
+	OdeSolution solution;
+   
+	for(int i=0; i < paces; i++){
+	  solution = p_model->Compute(0, period, sampling_timestep);
+	  std::vector<double> states = solution.rGetSolutions().back();
+	  for(unsigned int j = 0; j < states.size(); j++){
+	    output_file << states[j] << " ";
+	  }
+	  output_file << "\n";
 	}
-	OdeSolution solution = p_model->Compute(0, period, 1);
-	//	solution.WriteToFile("1PartVs2Part", "1Part.dat", "ms");
+
+	solution.WriteToFile("ohara_rudy", "OnePartTrace", "ms");
+	output_file.close();
+       
 #else
         std::cout << "Cvode is not enabled.\n";
 #endif

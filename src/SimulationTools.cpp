@@ -19,10 +19,13 @@ void RunSimulation(boost::shared_ptr<AbstractCvodeCell> p_model, unsigned int pa
   return;
 }
 
-void LoadStatesFromFile(boost::shared_ptr<AbstractCvodeCell> p_model, std::string file_path){
+int LoadStatesFromFile(boost::shared_ptr<AbstractCvodeCell> p_model, std::string file_path){
   std::ifstream file_in;
   file_in.open(file_path);
-  std::cout << "Couldn't open file!";
+  if(!file_in.is_open()){
+    std::cout << "Couldn't open file! " + file_path + " \n";
+    return -1;
+  }
   std::string line;
   std::vector<std::string> state_variables_str;
   std::vector<double> state_variables;
@@ -32,7 +35,7 @@ void LoadStatesFromFile(boost::shared_ptr<AbstractCvodeCell> p_model, std::strin
     state_variables.push_back(std::stod(state_variables_str[i]));
   }
   p_model->SetStateVariables(state_variables);
-  return;
+  return 0;
 }
 
 std::vector<double> GetNthVariable(std::vector<std::vector<double>> *states, unsigned int index){
@@ -69,7 +72,7 @@ double TwoNormTrace(std::vector<std::vector<double>> A, std::vector<std::vector<
   double norm = 0;
   for(unsigned int i = 0; i < A.size(); i++){
     for(unsigned int j = 0; j < A[0].size(); j++){
-      norm = pow(A[i][j] - B[i][j], 2);
+      norm += pow(A[i][j] - B[i][j], 2);
     }
   }
   return sqrt(norm);  
@@ -86,3 +89,4 @@ double mrmsTrace(std::vector<std::vector<double>> A, std::vector<std::vector<dou
   }
   return sqrt(norm/(A.size() * A[0].size()));  
 }
+
