@@ -47,7 +47,7 @@ public:
       p_regular_stim->SetStartTime(0);
     
       double sampling_timestep = 0.01;
-      unsigned int paces  = 100;
+      unsigned int paces  = 10000;
       OdeSolution current_solution;
       std::ofstream errors_file;
       std::vector<std::vector<double>> state_variables;

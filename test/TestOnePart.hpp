@@ -26,10 +26,10 @@ public:
 	std::ofstream output_file;
 
 	output_file.open("/tmp/joey/OnePart.dat");
-	const double period = 500;
+	const double period = 1000;
         p_regular_stim->SetPeriod(period);
 	p_regular_stim->SetStartTime(0);
-	p_model->SetTolerances(1e-12,1e-12);
+	p_model->SetTolerances(1e-5,1e-5);
 	
 	double max_timestep = p_regular_stim->GetDuration();
 	double sampling_timestep = 0.5;

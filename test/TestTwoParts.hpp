@@ -37,7 +37,7 @@ public:
 	
 	p_regular_stim->SetPeriod(period);
 	p_regular_stim->SetStartTime(0);
-     	p_model->SetTolerances(1e-12,1e-12);
+     	p_model->SetTolerances(1e-5,1e-5);
 	p_model->SetMaxSteps(1e5);
 	
 	p_regular_stim->SetStartTime(0);
