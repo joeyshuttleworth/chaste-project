@@ -22,7 +22,6 @@ public:
 #ifdef CHASTE_CVODE
         boost::shared_ptr<RegularStimulus> p_stimulus;
         boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
-	boost::shared_ptr<AbstractCvodeCell> p_model(new Cellohara_rudy_2011_endoFromCellMLCvode(p_solver, p_stimulus));
 	boost::shared_ptr<RegularStimulus> p_regular_stim = p_model->UseCellMLDefaultStimulus();
 	
 	int paces = 1000;
@@ -37,7 +36,7 @@ public:
 	
 	p_regular_stim->SetPeriod(period);
 	p_regular_stim->SetStartTime(0);
-     	p_model->SetTolerances(1e-5,1e-5);
+     	p_model->SetTolerances(1e-12,1e-12);
 	p_model->SetMaxSteps(1e5);
 	
 	p_regular_stim->SetStartTime(0);
@@ -57,7 +56,7 @@ public:
 	std::vector<std::vector<double>> states = solution.rGetSolutions();
 	std::vector<double> times = solution.rGetTimes();
 	  
-	for(unsigned int i = 0; i < states.size(); i++){
+	for(unsigned int i = 0; i < states.size() - 1; i++){
 	  trace_file << times[i] << " ";
 	  for(unsigned int j = 0; j < states.size(); j++){
 	    trace_file << states[i][j] << " ";

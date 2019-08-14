@@ -18,7 +18,7 @@ int LoadStatesFromFile(boost::shared_ptr<AbstractCvodeCell>, std::string file_pa
 
 void OutputVariablesToFile(boost::shared_ptr<AbstractCvodeCell>, std::string file_path);
 
-std::vector<double> GetNthVariable(std::vector<std::vector<double>>*, unsigned int);
+std::vector<double> GetNthVariable(std::vector<std::vector<double>>, unsigned int);
 
 double mrms(std::vector<double>, std::vector<double>);
 

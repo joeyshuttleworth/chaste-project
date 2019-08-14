@@ -29,7 +29,7 @@ public:
 	const double period = 1000;
         p_regular_stim->SetPeriod(period);
 	p_regular_stim->SetStartTime(0);
-	p_model->SetTolerances(1e-5,1e-5);
+	p_model->SetTolerances(1e-12,1e-12);
 	
 	double max_timestep = p_regular_stim->GetDuration();
 	double sampling_timestep = 0.5;

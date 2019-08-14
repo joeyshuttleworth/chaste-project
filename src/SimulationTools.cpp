@@ -38,11 +38,11 @@ int LoadStatesFromFile(boost::shared_ptr<AbstractCvodeCell> p_model, std::string
   return 0;
 }
 
-std::vector<double> GetNthVariable(std::vector<std::vector<double>> *states, unsigned int index){
+std::vector<double> GetNthVariable(std::vector<std::vector<double>> states, unsigned int index){
   std::vector<double> vec;
-  vec.reserve(states->size());
-  for(unsigned int i = 0; i < states->size(); i++){
-    vec.push_back((*states)[i][index]);
+  vec.reserve(states.size());
+  for(unsigned int i = 0; i < states.size(); i++){
+    vec.push_back(states[i][index]);
   }
   return vec;
 }
