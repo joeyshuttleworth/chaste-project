@@ -36,8 +36,8 @@ public:
     std::string username = std::string(getenv("USER"));
     boost::filesystem::create_directory("/tmp/"+username);
 
-    double sampling_timestep = 0.01;
-    unsigned int paces  = 10000;
+    const double sampling_timestep = 0.01;
+    const unsigned int paces  = 10000;
     OdeSolution current_solution;
     std::ofstream errors_file;
     
@@ -78,8 +78,9 @@ public:
 	errors_file_path = "/tmp/"+username+"/"+model_name+"/2Hz1Hzerrors.dat";
       }
       errors_file.open(errors_file_path);
-
       TS_ASSERT_EQUALS(errors_file.is_open(), true);
+
+      errors_file.precision(18);
       
       errors_file << "2-Norm MRMS 2-Norm-Trace MRMS-Trace ";
 
@@ -109,10 +110,9 @@ public:
 	  errors_file << mrms(current_state_variables.back(),  previous_state_variables.back()) << " ";
 	  errors_file << TwoNormTrace(current_state_variables, previous_state_variables) << " ";
 	  errors_file << mrmsTrace(current_state_variables, previous_state_variables) << " ";
-	}
-	
-	for(unsigned int k = 0; k < current_state_variables.back().size(); k++){
-	  errors_file << current_state_variables.back()[k] << " ";
+	  for(unsigned int k = 0; k < current_state_variables.back().size(); k++){
+	    errors_file << current_state_variables.back()[k] << " ";
+	  }
 	}
 	
 	const std::vector<double> voltages = GetNthVariable(current_state_variables, voltage_index);

@@ -27,7 +27,7 @@ public:
     boost::shared_ptr<AbstractIvpOdeSolver> p_solver;    
     boost::shared_ptr<AbstractCvodeCell> p_model(new Cellohara_rudy_2011_endoFromCellMLCvode(p_solver, p_stimulus));
     boost::shared_ptr<RegularStimulus> p_regular_stim = p_model->UseCellMLDefaultStimulus();
-    const double period = 1000;
+    const double period = 500;
    
     const double duration   = p_regular_stim->GetDuration();
     const std::string model_name = p_model->GetSystemInformation()->GetSystemName();
@@ -47,9 +47,19 @@ public:
       
     std::vector<boost::shared_ptr<AbstractCvodeCell>> models;
 
-     boost::filesystem::create_directory("/tmp/"+username);
+    boost::filesystem::create_directory("/tmp/"+username);
     boost::filesystem::create_directory("/tmp/"+username+"/"+model_name);
-      
+    output_file.open("/tmp/"+username+"/"+model_name+"/apdplot.dat");
+
+    TS_ASSERT_EQUALS(LoadStatesFromFile(p_model, "/home/joey/code/chaste-project-data/"+model_name+"/GroundTruth1Hz/final_state_variables.dat"), 0);
+
+    std::vector<double> initial_conditions = MakeStdVec(p_model->rGetStateVariables());
+    
+    /*Set the output to be as precise as possible */
+    output_file.precision(18);
+    
+    TS_ASSERT_EQUALS(output_file.is_open(), true);
+    
     const std::vector<std::string> state_variable_names = p_model->rGetStateVariableNames();
    
     unsigned int voltage_index = p_model->GetSystemInformation()->GetStateVariableIndex("membrane_voltage");
@@ -58,10 +68,11 @@ public:
     
     for(unsigned int i = 0; i < sampling_timesteps.size(); i++){
       for(unsigned int j = 0; j < paces; j++){
-	current_solution = p_model->Compute(0, duration);
+	p_model->SetStateVariables(initial_conditions);
+	current_solution = p_model->Compute(0, duration, sampling_timesteps[i]);
 	state_variables = current_solution.rGetSolutions();
 	times = current_solution.rGetTimes();
-	current_solution = p_model->Compute(duration, period);
+	current_solution = p_model->Compute(duration, period, sampling_timesteps[i]);
 	std::vector<std::vector<double>> current_state_variables = current_solution.rGetSolutions();
 	std::vector<double> current_times = current_solution.rGetTimes();
 	state_variables.insert(state_variables.end(), current_state_variables.begin(), current_state_variables.end());
