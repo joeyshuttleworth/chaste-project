@@ -84,8 +84,8 @@ public:
     /*Run the simulation*/
     for(unsigned int i = 0; i < paces - 1; i++){
       /*Set the initial values to be the terminal values of the last solution*/
-      p_model->SolveAndUpdateState(0, duration);
-      p_model->SolveAndUpdateState(duration, period);
+      p_model->Compute(0, duration, sampling_timestep);
+      p_model->Compute(duration, period, sampling_timestep);
     }
     
     std::vector<std::vector<double>> final_trace;

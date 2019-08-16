@@ -98,7 +98,7 @@ public:
       std::vector<std::vector<double>> current_state_variables, previous_state_variables;
       for(unsigned int i = 0; i < paces; i++){
 	previous_state_variables = current_state_variables;
-	current_solution = p_model->Compute(0, duration, 1000);
+	current_solution = p_model->Compute(0, duration, sampling_timestep);
 	times = current_solution.rGetTimes();
 	current_state_variables = current_solution.rGetSolutions();
 	current_solution = p_model->Compute(duration, period, sampling_timestep);
@@ -106,6 +106,7 @@ public:
 	current_state_variables.insert(current_state_variables.end(), ++state_variables.begin(), state_variables.end()); 
 	times.insert(times.end(), ++current_solution.rGetTimes().begin(), current_solution.rGetTimes().end());
 	if(i>0){
+	  errors_file << CalculateAPD(p_model, p_stimulus, 90) << " ";
 	  errors_file << TwoNorm(current_state_variables.back(), previous_state_variables.back()) << " ";
 	  errors_file << mrms(current_state_variables.back(),  previous_state_variables.back()) << " ";
 	  errors_file << TwoNormTrace(current_state_variables, previous_state_variables) << " ";
@@ -114,11 +115,7 @@ public:
 	    errors_file << current_state_variables.back()[k] << " ";
 	  }
 	}
-	
-	const std::vector<double> voltages = GetNthVariable(current_state_variables, voltage_index);
-	CellProperties cell_props = CellProperties(voltages, times); 
-	current_apd90 = cell_props.GetLastActionPotentialDuration(90);
-	errors_file << current_apd90 << "\n";
+      
       }
       errors_file.close();
     }

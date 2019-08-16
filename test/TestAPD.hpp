@@ -25,7 +25,7 @@ public:
 #ifdef CHASTE_CVODE
     boost::shared_ptr<RegularStimulus> p_stimulus;
     boost::shared_ptr<AbstractIvpOdeSolver> p_solver;    
-    boost::shared_ptr<AbstractCvodeCell> p_model(new Cellohara_rudy_2011_endoFromCellMLCvode(p_solver, p_stimulus));
+    boost::shared_ptr<AbstractCvodeCell> p_model(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus));
     boost::shared_ptr<RegularStimulus> p_regular_stim = p_model->UseCellMLDefaultStimulus();
     const double period = 500;
    
@@ -67,8 +67,8 @@ public:
     std::vector<double> sampling_timesteps = {1, 0.1, 0.01, 0.001};
     
     for(unsigned int i = 0; i < sampling_timesteps.size(); i++){
+      p_model->SetStateVariables(initial_conditions);
       for(unsigned int j = 0; j < paces; j++){
-	p_model->SetStateVariables(initial_conditions);
 	current_solution = p_model->Compute(0, duration, sampling_timesteps[i]);
 	state_variables = current_solution.rGetSolutions();
 	times = current_solution.rGetTimes();

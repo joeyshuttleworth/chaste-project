@@ -6,124 +6,117 @@
 #include "EulerIvpOdeSolver.hpp"
 #include "Shannon2004Cvode.hpp"
 #include "FakePetscSetup.hpp"
+#include "SimulationTools.hpp"
+#include <boost/filesystem.hpp>
 #include <fstream>
 
+/* These header files are generated from the cellml files provided at github.com/chaste/cellml */
+
 #include "beeler_reuter_model_1977Cvode.hpp"
-
-
-double twoNorm(std::vector<double> *A, std::vector<double> *B){
-  double norm = 0;
-  for(unsigned int i=0; i < A->size(); i++){
-    double a = (*A)[i];
-    double b = (*B)[i];
-    norm += pow(a - b, 2);
-  }
-  return sqrt(norm);
-}
-
-double mrms(std::vector<double> *A, std::vector<double> *B){
-  double norm = 0;
-  
-  for(unsigned int i=0; i < A->size(); i++){
-    double a = (*A)[i];
-    double b = (*B)[i];
-    norm += pow((a - b)/(1 + abs(a)), 2);   
-  }
-  return sqrt(norm/A->size());
-}
-
-double twoNormTrace(OdeSolution *A, OdeSolution *B){
-  double norm = 0;
-  for(unsigned int i = 0; i < A->GetNumberOfTimeSteps(); i++){
-    for(unsigned int j = 0; j < B->rGetSolutions()[0].size(); j++){
-      norm = pow(A->rGetSolutions()[i][j] - B->rGetSolutions()[i][j],2);
-    }
-  }
-  return sqrt(norm);  
-}
-
-double mrmsTrace(OdeSolution *A, OdeSolution *B){
-  double norm = 0;
-  for(unsigned int i = 0; i < A->GetNumberOfTimeSteps(); i++){
-    for(unsigned int j = 0; j < A->rGetSolutions()[0].size(); j++){
-      double a = A->rGetSolutions()[i][j];
-      double b = B->rGetSolutions()[i][j];
-      norm += pow((a - b)/(1+abs(a)), 2);
-    }
-  }
-  return sqrt(norm/(A->GetNumberOfTimeSteps() * A->rGetSolutions().size()));  
-}
+#include "ten_tusscher_model_2004_epiCvode.hpp"
+#include "ohara_rudy_2011_endoCvode.hpp"
+#include "shannon_wang_puglisi_weber_bers_2004Cvode.hpp"
 
 class TestGroundTruthSimulation : public CxxTest::TestSuite
 {
 public:
-    void TestTusscherSimulation()
-    {
+  void TestTolerances()
+  {
 #ifdef CHASTE_CVODE
-        boost::shared_ptr<RegularStimulus> p_stimulus;
-        boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
-        boost::shared_ptr<AbstractCvodeCell> p_model(new Cellbeeler_reuter_model_1977FromCellMLCvode(p_solver, p_stimulus));
-	boost::shared_ptr<RegularStimulus> p_regular_stim = p_model->UseCellMLDefaultStimulus();
-	std::vector<std::vector<double>> solutions;
-	std::vector<OdeSolution> finalTraces;
-	const double period = 1000;
-	const std::vector<double> tolerances = {1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8, 1e-9, 1e-10, 1e-11, 1e-12};
-        p_regular_stim->SetPeriod(period);
+    boost::shared_ptr<RegularStimulus> p_stimulus;
+    boost::shared_ptr<AbstractIvpOdeSolver> p_solver;    
+    std::vector<boost::shared_ptr<AbstractCvodeCell>> models;
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_2011_endoFromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellbeeler_reuter_model_1977FromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_2011_endoFromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellbeeler_reuter_model_1977FromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
+    std::string username = std::string(getenv("USER"));
+    boost::filesystem::create_directory("/tmp/"+username);
+    std::vector<double> sampling_timesteps = {1e-12, 1e-10, 1e-8, 1e-6, 1e-4};
 
-	double max_timestep = p_regular_stim->GetDuration();
-
-        p_model->SetMaxTimestep(max_timestep);
-	p_model->SetMaxSteps(1e5);
-	unsigned int voltage_index = p_model->GetSystemInformation()->GetStateVariableIndex("membrane_voltage");
-	
-        double sampling_timestep = max_timestep;
-	int steps = 10000;
-	OdeSolution current_solution;
-	std::ofstream tolerances_file;
-	std::ofstream norms_file;
-	std::string username = std::string(getenv("USER"));
-	const std::vector<std::string> state_variable_names = p_model->rGetStateVariableNames(); 
-	norms_file.open("/tmp/"+username+"/norms.dat");
-	tolerances_file.open("/tmp/"+username+"/tolerances.dat");
-	/*Set cout to be as precise as possible */
-	tolerances_file.precision(17);
-	/*Print variable names on the first line*/
-	tolerances_file << "APD90 ";
-	for(unsigned int i = 0; i < state_variable_names.size(); i++){
-	  tolerances_file << state_variable_names[i] << " ";
-	}
-	tolerances_file << "\n";
-
-	std::vector<double> state_variables;
- 	for(unsigned int k = 0; k < tolerances.size(); k++){
-	  std::cout << "Testing with tolerance " << tolerances[k] << "\n";
-	  p_model->SetTolerances(tolerances[k], tolerances[k]); 
-	  for(int i=0; i < steps; i++){
-	    current_solution = p_model->Compute(0, period, sampling_timestep);
-	    state_variables = current_solution.rGetSolutions()[current_solution.GetNumberOfTimeSteps()-1];
-	    p_model->SetStateVariables(state_variables);
-	  }
-	  
-	  current_solution.WriteToFile("Trace" + std::to_string(k), "1e-" + std::to_string(k+3) + "-tolerance", "ms");
-	  finalTraces.push_back(current_solution);
-	  solutions.push_back(state_variables);
-	  std::vector<double> voltages = current_solution.GetVariableAtIndex(voltage_index);
-	  CellProperties cell_props(voltages, current_solution.rGetTimes());
-	  double apd = cell_props.GetLastActionPotentialDuration(90);
-	  tolerances_file << tolerances[k] <<apd  << " ";
-	  for(unsigned int j=0; j < state_variables.size(); j++){
-	    tolerances_file << state_variables[j] << " ";
-	  }
-	  tolerances_file << "\n";
-	}
-	std::cout << "Tolerance \t 2Norm  \t MRMS \t 2Norm over final trace\n";
-	for(unsigned int i=0; i < solutions.size()-1; i++){
-	  norms_file << tolerances[i] << "\t" << twoNorm(&solutions[i], &(solutions[solutions.size()-1])) << "\t" << mrms(&solutions.back(), &solutions[i]) << "\t" << twoNormTrace(&finalTraces[i], &finalTraces.back()) << "\t" << mrmsTrace(&finalTraces[i], &finalTraces.back()) << "\n";
-	}
-	tolerances_file.close();
-	norms_file.close();
-#else
-	std::cout << "Cvode is not enabled.\n";
-#endif
+    for(unsigned int i = 0; i < sampling_timesteps.size(); i++){
+      for(unsigned int j = 0; j < models.size(); j++)
+	if(i<4)
+	  PrintErrors(models[i], 0.01, 1000);
+	else
+	  PrintErrors(models[i], 0.01, 500);
     }
+  }
+  
+  void PrintErrors(boost::shared_ptr<AbstractCvodeCell> p_model, double sampling_timestep, const double period){
+
+    boost::shared_ptr<RegularStimulus> p_regular_stim  = p_model->UseCellMLDefaultStimulus();
+    p_regular_stim->SetPeriod(period);
+    p_model->SetTolerances(1e-12, 1e-12);
+    p_model->SetMaxSteps(1e5);
+    p_model->SetMaxTimestep(1000);
+    p_regular_stim->SetStartTime(0);
+     
+    const std::vector<std::string> state_variable_names = p_model->rGetStateVariableNames();
+    const std::string model_name = p_model->GetSystemInformation()->GetSystemName();
+    std::string file_path;
+	
+      if(i<4){
+	TS_ASSERT_EQUALS(LoadStatesFromFile(p_model, "/home/joey/code/chaste-project-data/"+model_name+"/GroundTruth1Hz/final_state_variables.dat"), 0);
+	boost::filesystem::create_directory("/tmp/"+username+"/"+model_name);      
+	file_path = "/tmp/"+username+"/"+model_name+"/1Hz2Hzerrors.dat";
+      }
+      else{
+	TS_ASSERT_EQUALS(LoadStatesFromFile(p_model, "/home/joey/code/chaste-project-data/"+model_name+"/GroundTruth2Hz/final_state_variables.dat"), 0);
+	boost::filesystem::create_directory("/tmp/"+username+"/"+model_name);      
+	file_path = "/tmp/"+username+"/"+model_name+"/2Hz1Hzerrors.dat";
+      }
+      errors_file.open(file_path);
+      TS_ASSERT_EQUALS(errors_file.is_open(), true);
+
+      errors_file.precision(18);
+      
+      errors_file << "2-Norm MRMS 2-Norm-Trace MRMS-Trace ";
+
+      std::vector<std::string> names = p_model->GetSystemInformation()->rGetStateVariableNames();
+
+      for(unsigned int i = 0; i < names.size(); i++){
+	errors_file << names[i] << " ";
+      }
+      errors_file << "\n";
+      
+      double current_apd90=0;
+      unsigned int voltage_index = p_model->GetSystemInformation()->GetStateVariableIndex("membrane_voltage");
+      std::vector<double> times;
+      std::ifstream apd_file;
+      std::vector<std::vector<double>> current_state_variables, previous_state_variables;
+      for(unsigned int i = 0; i < paces; i++){
+	previous_state_variables = current_state_variables;
+	current_solution = p_model->Compute(0, duration, sampling_timestep);
+	times = current_solution.rGetTimes();
+	current_state_variables = current_solution.rGetSolutions();
+	current_solution = p_model->Compute(duration, period, sampling_timestep);
+	state_variables = current_solution.rGetSolutions();
+	current_state_variables.insert(current_state_variables.end(), ++state_variables.begin(), state_variables.end()); 
+	times.insert(times.end(), ++current_solution.rGetTimes().begin(), current_solution.rGetTimes().end());
+	if(i>0){
+	  errors_file << TwoNorm(current_state_variables.back(), previous_state_variables.back()) << " ";
+	  errors_file << mrms(current_state_variables.back(),  previous_state_variables.back()) << " ";
+	  errors_file << TwoNormTrace(current_state_variables, previous_state_variables) << " ";
+	  errors_file << mrmsTrace(current_state_variables, previous_state_variables) << " ";
+	  for(unsigned int k = 0; k < current_state_variables.back().size(); k++){
+	    errors_file << current_state_variables.back()[k] << " ";
+	  }
+	}
+	
+	const std::vector<double> voltages = GetNthVariable(current_state_variables, voltage_index);
+	CellProperties cell_props = CellProperties(voltages, times); 
+	current_apd90 = cell_props.GetLastActionPotentialDuration(90);
+	errors_file << current_apd90 << "\n";
+      }
+      errors_file.close();
+  }
+#else
+      std::cout << "Cvode is not enabled.\n";
+#endif
 };
+
