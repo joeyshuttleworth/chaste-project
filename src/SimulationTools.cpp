@@ -90,29 +90,28 @@ double mrmsTrace(std::vector<std::vector<double>> A, std::vector<std::vector<dou
   return sqrt(norm/(A.size() * A[0].size()));  
 }
 
-double CalculateAPD(boost::shared_ptr<AbstractCvodeCell> p_model, boost::shared_ptr<RegularStimulus> p_stimulus, double  percentage){ 
+double CalculateAPD(boost::shared_ptr<AbstractCvodeCell> p_model, double period, double duration, double  percentage){ 
   double apd;
-  boost::shared_ptr<AbstractCvodeCell> p_apd_model;
-  *p_apd_model = *p_model;
-  const double period = p_stimulus->GetPeriod();
-  const double duration = p_stimulus->GetDuration();
-  const double sampling_timestep = 0.01;
 
-  p_apd_model->SetMaxSteps(1e5);
-  p_apd_model->SetTolerances(1e-12, 1e-12);
-  p_stimulus->SetStartTime(0);
+  double sampling_timestep = 0.01;
+  const std::vector<double> initial_conditions = p_model->GetStdVecStateVariables();
+  const double rel_tol = p_model->GetRelativeTolerance();
+  const double abs_tol = p_model->GetAbsoluteTolerance();  
   
-  OdeSolution solution = p_apd_model->Compute(0, duration, sampling_timestep);
+  p_model->SetMaxSteps(1e5);
+  p_model->SetTolerances(1e-12, 1e-12);
+ 
+  OdeSolution solution = p_model->Compute(0, period, sampling_timestep);
   std::vector<std::vector<double>> state_variables = solution.rGetSolutions();
   std::vector<double> times = solution.rGetTimes();
-  p_apd_model->Compute(duration, period, sampling_timestep);
-  state_variables.insert(state_variables.end(), solution.rGetSolutions().begin()+1, solution.rGetSolutions().end());
-  times.insert(times.end(), solution.rGetTimes().begin()+1, solution.rGetTimes().end());
-
   int voltage_index = p_model->GetSystemInformation()->GetStateVariableIndex("membrane_voltage");
+
   const std::vector<double> voltages = GetNthVariable(state_variables, voltage_index);
-  CellProperties cell_props = CellProperties(voltages, times); 
-  apd = cell_props.GetLastActionPotentialDuration(percentage);
+  CellProperties cell_props = CellProperties(voltages, times);
   
+  apd = cell_props.GetLastActionPotentialDuration(percentage);
+
+  p_model->SetTolerances(rel_tol, abs_tol);
+  p_model->SetStateVariables(initial_conditions);
   return apd;
 }

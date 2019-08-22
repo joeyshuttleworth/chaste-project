@@ -20,6 +20,7 @@
 
 class TestGroundTruthSimulation : public CxxTest::TestSuite
 {
+  const double thresholds[4] = {0.01, 0.01, 0.01, 0.01}; 
 public:
   void TestTusscherSimulation()
   {
@@ -29,20 +30,21 @@ public:
 
     std::vector<boost::shared_ptr<AbstractCvodeCell>> models;
     
-    // models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_2011_endoFromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_2011_endoFromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Celldecker_2009FromCellMLCvode(p_solver, p_stimulus)));
-    // models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
-    // models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
-    // models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_2011_endoFromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_2011_endoFromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Celldecker_2009FromCellMLCvode(p_solver, p_stimulus)));
-    // models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
-    // models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
+
     std::string username = std::string(getenv("USER"));
     boost::filesystem::create_directory("/tmp/"+username);
     
-    for(unsigned int i = 0; i < 2; i++){
+    for(unsigned int i = 0; i < models.size(); i++){
       double period = 1000;
-      if(i<1)
+      if(i<4)
 	period = 500;
 
       boost::shared_ptr<AbstractCvodeCell> p_model = models[i];
@@ -62,31 +64,47 @@ public:
       double sampling_timestep = 0.01;
       const unsigned int paces  = 10000;
       OdeSolution current_solution;
-      std::ofstream apd_file;
-      std::ofstream variables_file;
+      std::ofstream output_file;
       const std::vector<std::string> state_variable_names = p_model->rGetStateVariableNames();
-
+      std::vector<bool> threshold_met = {false, false, false, false};
+      
       std::cout << "Testing " << model_name << " with period " << period << "\n";
       p_model->SetMaxTimestep(1000);
       if(period==500){
-	apd_file.open("/tmp/"+username+"/"+model_name+"/GroundTruth2Hz/apd90.dat");
-	variables_file.open("/tmp/"+username+"/"+model_name+"/GroundTruth2Hz/final_state_variables.dat");
+	output_file.open("/tmp/"+username+"/"+model_name+"/1Hz2HzBenchmark.dat");
       }
       else{
-	apd_file.open("/tmp/"+username+"/"+model_name+"/GroundTruth1Hz/apd90.dat");
-	variables_file.open("/tmp/"+username+"/"+model_name+"/GroundTruth1Hz/final_state_variables.dat");
+	output_file.open("/tmp/"+username+"/"+model_name+"/2Hz1HzBenchmark.dat");
       }
-      TS_ASSERT_EQUALS(apd_file.is_open(), true);
-      TS_ASSERT_EQUALS(variables_file.is_open(), true);
-    /*Set the output to be as precise as possible */
-    apd_file.precision(18);
-    variables_file.precision(18);
+      TS_ASSERT_EQUALS(output_file.is_open(), true);
 
+      /*Set the output to be as precise as possible */
+    output_file.precision(18);
+
+    p_model->SetMinimalReset(true);
     /*Run the simulation*/
+    std::vector<std::vector<double>> current_states, previous_states;
     for(unsigned int i = 0; i < paces - 1; i++){
-      /*Set the initial values to be the terminal values of the last solution*/
-      p_model->SolveAndUpdateState(0, duration);
-      p_model->SolveAndUpdateState(duration, period);
+      OdeSolution solution = p_model->Compute(0, duration, sampling_timestep);
+      if(i>0)
+	previous_states = current_states;
+      current_states = solution.rGetSolutions();
+      solution = p_model->Compute(duration, period, sampling_timestep);
+      current_states.insert(current_states.end(), solution.rGetSolutions().begin(), solution.rGetSolutions().end());
+      if(i>0){
+	if(!threshold_met[0] && TwoNorm(current_states.back(), previous_states.back()) < thresholds[0]){
+	  output_file << model_name << "with period " << period << "took " << i << " for the two norm to less than " << thresholds[0]; 
+	}
+	if(!threshold_met[1] && mrms(current_states.back(), previous_states.back()) < thresholds[1]){
+	  output_file << model_name << "with period " << period << "took " << i << " for the mrms to less than " << thresholds[1]; 
+	}
+	if(!threshold_met[2] && TwoNormTrace(current_states, previous_states) < thresholds[2]){
+	  output_file << model_name << "with period " << period << "took " << i << " for the pace two norm to less than " << thresholds[2]; 
+	}
+	if(!threshold_met[3] && mrmsTrace(current_states, previous_states) < thresholds[3]){
+	  output_file << model_name << "with period " << period << "took " << i << " for the pace mrms to be less than " << thresholds[3]; 
+	}
+      }
     }
     
     std::vector<std::vector<double>> final_trace;
@@ -100,24 +118,6 @@ public:
     times.insert(times.end(), ++current_solution.rGetTimes().begin(), current_solution.rGetTimes().end());
     final_trace.insert(final_trace.end(), ++current_solution.rGetSolutions().begin(), current_solution.rGetSolutions().end());
 	
-    unsigned int voltage_index = p_model->GetSystemInformation()->GetStateVariableIndex("membrane_voltage");
-
-    std::vector<double> voltages = GetNthVariable(final_trace, voltage_index);
-
-    /*Output terminal state variables to file*/
-    for(unsigned int i = 0; i < final_trace[0].size(); i++){
-      variables_file << final_trace.back()[i] << " ";
-    }
-    variables_file << "\n";
-	
-    /*Calculate and output APD90 to file*/
-    CellProperties cell_props = CellProperties(voltages, times); 
-    double apd = cell_props.GetLastActionPotentialDuration(90);
-    variables_file.close();
-    apd_file << apd << " ";
-    std::cout << model_name << " " << apd << " " << period << "\n";
-    apd_file << "\n";
-    apd_file.close();	
     }
 #else
     std::cout << "Cvode is not enabled.\n";

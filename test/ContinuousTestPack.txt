@@ -7,3 +7,5 @@ Test2HzGroundTruth.hpp
 TestSamplingRates.hpp
 TestErrorMeasures.hpp
 TestAPD.hpp
+TestBenchmark.hpp
+TestPMCC.hpp

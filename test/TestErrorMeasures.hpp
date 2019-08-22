@@ -13,9 +13,11 @@
 /* These header files are generated from the cellml files provided at github.com/chaste/cellml */
 
 #include "beeler_reuter_model_1977Cvode.hpp"
+#include "luo_rudy_1994Cvode.hpp"
 #include "ten_tusscher_model_2004_epiCvode.hpp"
 #include "ohara_rudy_2011_endoCvode.hpp"
 #include "shannon_wang_puglisi_weber_bers_2004Cvode.hpp"
+#include "decker_2009Cvode.hpp"
 
 class TestGroundTruthSimulation : public CxxTest::TestSuite
 {
@@ -28,10 +30,10 @@ public:
     
     std::vector<boost::shared_ptr<AbstractCvodeCell>> models;
 
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_2011_endoFromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellbeeler_reuter_model_1977FromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
+    //models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_2011_endoFromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Celldecker_2009FromCellMLCvode(p_solver, p_stimulus)));
+    //models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
+    //models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
 
     std::string username = std::string(getenv("USER"));
     boost::filesystem::create_directory("/tmp/"+username);
@@ -41,15 +43,15 @@ public:
     OdeSolution current_solution;
     std::ofstream errors_file;
     
-    for(unsigned int i=0; i < 8; i++){
-      boost::shared_ptr<AbstractCvodeCell> p_model = models[i%4];
+    for(unsigned int i=0; i < 2; i++){
+      boost::shared_ptr<AbstractCvodeCell> p_model = models[0];
       boost::shared_ptr<RegularStimulus> p_regular_stim = p_model->UseCellMLDefaultStimulus();
       const double duration   = p_regular_stim->GetDuration();
       const std::string model_name = p_model->GetSystemInformation()->GetSystemName();
       std::cout << "Testing model: " + model_name + "\n";
 
       double period = 1000;
-      if(i<4)
+      if(i < 1)
 	period = 500;
       
       p_regular_stim->SetPeriod(period);
@@ -67,7 +69,7 @@ public:
 
       std::string errors_file_path;
 	
-      if(i<4){
+      if(period == 500){
 	TS_ASSERT_EQUALS(LoadStatesFromFile(p_model, "/home/joey/code/chaste-project-data/"+model_name+"/GroundTruth1Hz/final_state_variables.dat"), 0);
 	boost::filesystem::create_directory("/tmp/"+username+"/"+model_name);      
 	errors_file_path = "/tmp/"+username+"/"+model_name+"/1Hz2Hzerrors.dat";
@@ -82,7 +84,7 @@ public:
 
       errors_file.precision(18);
       
-      errors_file << "2-Norm MRMS 2-Norm-Trace MRMS-Trace ";
+      errors_file << "APD 2-Norm MRMS 2-Norm-Trace MRMS-Trace ";
 
       std::vector<std::string> names = p_model->GetSystemInformation()->rGetStateVariableNames();
 
@@ -91,7 +93,6 @@ public:
       }
       errors_file << "\n";
       
-      double current_apd90=0;
       unsigned int voltage_index = p_model->GetSystemInformation()->GetStateVariableIndex("membrane_voltage");
       std::vector<double> times;
       std::ifstream apd_file;
@@ -106,16 +107,19 @@ public:
 	current_state_variables.insert(current_state_variables.end(), ++state_variables.begin(), state_variables.end()); 
 	times.insert(times.end(), ++current_solution.rGetTimes().begin(), current_solution.rGetTimes().end());
 	if(i>0){
-	  errors_file << CalculateAPD(p_model, p_stimulus, 90) << " ";
+	  std::vector<double> voltages = GetNthVariable(current_state_variables, voltage_index);
+	  CellProperties cell_props = CellProperties(voltages, times);
+	  double apd = cell_props.GetLastActionPotentialDuration(90);
+	  errors_file << apd << " ";
 	  errors_file << TwoNorm(current_state_variables.back(), previous_state_variables.back()) << " ";
 	  errors_file << mrms(current_state_variables.back(),  previous_state_variables.back()) << " ";
 	  errors_file << TwoNormTrace(current_state_variables, previous_state_variables) << " ";
 	  errors_file << mrmsTrace(current_state_variables, previous_state_variables) << " ";
-	  for(unsigned int k = 0; k < current_state_variables.back().size(); k++){
+	  /* for(unsigned int k = 0; k < current_state_variables.back().size(); k++){
 	    errors_file << current_state_variables.back()[k] << " ";
-	  }
+	    }*/
 	}
-      
+	errors_file << "\n";
       }
       errors_file.close();
     }

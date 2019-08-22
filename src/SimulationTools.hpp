@@ -28,4 +28,4 @@ double mrmsTrace(std::vector<std::vector<double>>, std::vector<std::vector<doubl
 
 double TwoNormTrace(std::vector<std::vector<double>>, std::vector<std::vector<double>>);
 
-double CalculateAPD(boost::shared_ptr<AbstractCvodeCell>, boost::shared_ptr<RegularStimulus>, double);
+double CalculateAPD(boost::shared_ptr<AbstractCvodeCell>, double, double, double);
