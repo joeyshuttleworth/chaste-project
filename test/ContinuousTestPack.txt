@@ -9,3 +9,4 @@ TestErrorMeasures.hpp
 TestAPD.hpp
 TestBenchmark.hpp
 TestPMCC.hpp
+TestStates.hpp

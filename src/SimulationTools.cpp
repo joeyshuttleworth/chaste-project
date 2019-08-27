@@ -41,8 +41,17 @@ int LoadStatesFromFile(boost::shared_ptr<AbstractCvodeCell> p_model, std::string
 std::vector<double> GetNthVariable(std::vector<std::vector<double>> states, unsigned int index){
   std::vector<double> vec;
   vec.reserve(states.size());
-  for(unsigned int i = 0; i < states.size(); i++){
-    vec.push_back(states[i][index]);
+  for(auto i = states.begin(); i!=states.end(); i++){
+    vec.push_back((*i)[index]);
+  }
+  return vec;
+}
+
+std::vector<double> cGetNthVariable(boost::circular_buffer<std::vector<double>> states, unsigned int index){
+  std::vector<double> vec;
+  vec.reserve(states.size());
+  for(auto i = states.begin(); i != states.end(); i++){
+    vec.push_back((*i)[index]);
   }
   return vec;
 }
@@ -93,7 +102,7 @@ double mrmsTrace(std::vector<std::vector<double>> A, std::vector<std::vector<dou
 double CalculateAPD(boost::shared_ptr<AbstractCvodeCell> p_model, double period, double duration, double  percentage){ 
   double apd;
 
-  double sampling_timestep = 0.01;
+  double sampling_timestep = 0.1;
   const std::vector<double> initial_conditions = p_model->GetStdVecStateVariables();
   const double rel_tol = p_model->GetRelativeTolerance();
   const double abs_tol = p_model->GetAbsoluteTolerance();  

@@ -6,6 +6,7 @@
 #include "Shannon2004Cvode.hpp"
 #include <fstream>
 #include <boost/algorithm/string.hpp>
+#include <boost/circular_buffer.hpp>
 #include <string>
 #include <sstream>
 #include <iostream>
@@ -19,6 +20,8 @@ int LoadStatesFromFile(boost::shared_ptr<AbstractCvodeCell>, std::string file_pa
 void OutputVariablesToFile(boost::shared_ptr<AbstractCvodeCell>, std::string file_path);
 
 std::vector<double> GetNthVariable(std::vector<std::vector<double>>, unsigned int);
+
+std::vector<double> cGetNthVariable(boost::circular_buffer<std::vector<double>>, unsigned int);
 
 double mrms(std::vector<double>, std::vector<double>);
 

@@ -30,20 +30,20 @@ public:
     
     std::vector<boost::shared_ptr<AbstractCvodeCell>> models;
 
-    //models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_2011_endoFromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_2011_endoFromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Celldecker_2009FromCellMLCvode(p_solver, p_stimulus)));
-    //models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
-    //models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
 
     std::string username = std::string(getenv("USER"));
     boost::filesystem::create_directory("/tmp/"+username);
 
-    const double sampling_timestep = 0.01;
+    const double sampling_timestep = 0.1;
     const unsigned int paces  = 10000;
     OdeSolution current_solution;
     std::ofstream errors_file;
     
-    for(unsigned int i=0; i < 2; i++){
+    for(unsigned int i=0; i < 8; i++){
       boost::shared_ptr<AbstractCvodeCell> p_model = models[0];
       boost::shared_ptr<RegularStimulus> p_regular_stim = p_model->UseCellMLDefaultStimulus();
       const double duration   = p_regular_stim->GetDuration();
@@ -51,7 +51,7 @@ public:
       std::cout << "Testing model: " + model_name + "\n";
 
       double period = 1000;
-      if(i < 1)
+      if(i < 4)
 	period = 500;
       
       p_regular_stim->SetPeriod(period);
@@ -84,14 +84,9 @@ public:
 
       errors_file.precision(18);
       
-      errors_file << "APD 2-Norm MRMS 2-Norm-Trace MRMS-Trace ";
+      errors_file << "APD 2-Norm MRMS 2-Norm-Trace MRMS-Trace \n";
 
       std::vector<std::string> names = p_model->GetSystemInformation()->rGetStateVariableNames();
-
-      for(unsigned int i = 0; i < names.size(); i++){
-	errors_file << names[i] << " ";
-      }
-      errors_file << "\n";
       
       unsigned int voltage_index = p_model->GetSystemInformation()->GetStateVariableIndex("membrane_voltage");
       std::vector<double> times;
@@ -115,11 +110,11 @@ public:
 	  errors_file << mrms(current_state_variables.back(),  previous_state_variables.back()) << " ";
 	  errors_file << TwoNormTrace(current_state_variables, previous_state_variables) << " ";
 	  errors_file << mrmsTrace(current_state_variables, previous_state_variables) << " ";
-	  /* for(unsigned int k = 0; k < current_state_variables.back().size(); k++){
-	    errors_file << current_state_variables.back()[k] << " ";
-	    }*/
-	}
+	  // for(unsigned int k = 0; k < current_state_variables.back().size(); k++){
+	  //   errors_file << current_state_variables.back()[k] << " ";
+	  // }
 	errors_file << "\n";
+	}
       }
       errors_file.close();
     }

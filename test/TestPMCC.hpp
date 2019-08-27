@@ -1,3 +1,5 @@
+#include <boost/filesystem.hpp>
+#include <fstream>
 #include <cxxtest/TestSuite.h>
 #include "CellProperties.hpp"
 #include "SteadyStateRunner.hpp"
@@ -7,10 +9,6 @@
 #include "Shannon2004Cvode.hpp"
 #include "FakePetscSetup.hpp"
 #include "SimulationTools.hpp"
-#include <boost/filesystem.hpp>
-#include <fstream>
-#include <boost/circular_buffer.hpp>
-
 /* These header files are generated from the cellml files provided at github.com/chaste/cellml */
 
 #include "beeler_reuter_model_1977Cvode.hpp"
@@ -22,22 +20,53 @@
 class TestGroundTruthSimulation : public CxxTest::TestSuite
 {
 private:
-  const unsigned int buffer_size = 100;
-
-  double CalculatePMCC(std::vector<double> values){
+  const unsigned int buffer_size = 150;
+ 
+  std::vector<std::vector<double>> LogDifferences(std::vector<double> &values){
+    std::vector<double> x_vals, y_vals;
+    x_vals.reserve(buffer_size);
+    y_vals.reserve(buffer_size);
+    for(unsigned int i=0; i<values.size()-1; i++){
+      double tmp  = abs(values[i] - values.back());
+      if(tmp != 0){
+	tmp = log(tmp);
+	y_vals.push_back(tmp);
+	x_vals.push_back(i);
+      }
+    }
+    return std::vector<std::vector<double>>({x_vals, y_vals});
+  }
+  
+  double CalculatePMCC(std::vector<std::vector<double>> values){
     const unsigned int N = values.size();
-    double sum_xy = 0, sum_x, sum_y = 0, sum_x2, sum_y2=0;
-
-    sum_x  = N*N/2;
-    sum_x2 = N*(N+1)*(2*N+1)/6;
+    // const double sum_x = N*(N-1)/2;
+    // const double sum_x2 = (N-1)*N*(2*N-1)/6;
+    double sum_x = 0, sum_x2 = 0, sum_y = 0, sum_y2 = 0, sum_xy = 0;
     
-    for(unsigned int i = 0; i < N; i++){
-      sum_y  += values[i];
-      sum_y2 += values[i]*values[i];
-      sum_xy += values[i]*i;
+    for(unsigned int i = 1; i <= N; i++){
+      sum_x  += values[0][i];
+      sum_x2 += values[0][i]*values[0][i];
+      sum_y  += values[1][i];
+      sum_y2 += values[1][i]*values[1][i];
+      sum_xy += values[0][i]*values[1][i];
     }
 
-    double pmcc = (N*sum_xy - sum_x*sum_y)/pow((N*(sum_x2 - (sum_x*sum_x)))*(N*sum_y2 - sum_y*sum_y), 0.5);
+    double pmcc = (N*sum_xy - sum_x*sum_y)/sqrt((N*sum_x2 - sum_x*sum_x)*(N*sum_y2 - sum_y*sum_y));
+    
+    if(abs(pmcc)>1){
+      std::cout << pmcc << " ";
+      for(unsigned int i = 0; i < buffer_size; i++){
+	std::cout << values[1][i] << " ";
+      }
+      std::cout << "\n";
+    }
+
+    if(abs(pmcc)>0.8){
+      std::cout << pmcc << " " << "\n";
+    }
+    
+    TS_ASSERT(abs(pmcc <= 1.001));
+
     return pmcc;
   }
   
@@ -61,9 +90,9 @@ public:
     std::string username = std::string(getenv("USER"));
     boost::filesystem::create_directory("/tmp/"+username);
     
-    for(unsigned int i = 0; i < 2; i++){
+    for(unsigned int i = 1; i < 2; i++){
       double period = 1000;
-      if(i<1)
+      if(i<4)
 	period = 500;
 
       boost::shared_ptr<AbstractCvodeCell> p_model = models[i];
@@ -71,27 +100,39 @@ public:
       
       const std::string model_name = p_model->GetSystemInformation()->GetSystemName();
       boost::filesystem::create_directory("/tmp/"+username+"/"+model_name);
-      boost::filesystem::create_directory("/tmp/"+username+"/"+model_name+"/GroundTruth2Hz");
-      boost::filesystem::create_directory("/tmp/"+username+"/"+model_name+"/GroundTruth1Hz");
+
       const double duration   = p_regular_stim->GetDuration();
 
       p_regular_stim->SetPeriod(period);
       p_regular_stim->SetStartTime(0);
-      p_model->SetTolerances(1e-12, 1e-12);
+      p_model->SetTolerances(1e-8, 1e-8);
       p_model->SetMaxSteps(1e5);
       
-      const unsigned int paces  = 10000;
+      const unsigned int paces = 5000;
       OdeSolution current_solution;
       std::ofstream output_file;
+      std::string errors_file_path;
+      
       const std::vector<std::string> state_variable_names = p_model->rGetStateVariableNames();
+
+      if(period == 500){
+	TS_ASSERT_EQUALS(LoadStatesFromFile(p_model, "/home/joey/code/chaste-project-data/"+model_name+"/GroundTruth1Hz/final_state_variables.dat"), 0);
+	boost::filesystem::create_directory("/tmp/"+username+"/"+model_name);      
+	errors_file_path = "/tmp/"+username+"/"+model_name+"/1Hz2Hzerrors.dat";
+      }
+      else{
+	TS_ASSERT_EQUALS(LoadStatesFromFile(p_model, "/home/joey/code/chaste-project-data/"+model_name+"/GroundTruth2Hz/final_state_variables.dat"), 0);
+	boost::filesystem::create_directory("/tmp/"+username+"/"+model_name);      
+	errors_file_path = "/tmp/"+username+"/"+model_name+"/2Hz1Hzerrors.dat";
+      }
 
       std::cout << "Testing " << model_name << " with period " << period << "\n";
       p_model->SetMaxTimestep(1000);
       if(period==500){
-	output_file.open("/tmp/"+username+"/"+model_name+"/1Hz2Hzpmcc.dat");
+	output_file.open("/tmp/"+username+"/"+model_name+"/pmcc1Hz2Hz.dat");
       }
       else{
-	output_file.open("/tmp/"+username+"/"+model_name+"/2Hz1Hzpmcc.dat");
+	output_file.open("/tmp/"+username+"/"+model_name+"/pmcc2Hz1Hz.dat");
       }
       TS_ASSERT_EQUALS(output_file.is_open(), true);
       
@@ -102,19 +143,23 @@ public:
     
       /*Run the simulation*/
 
-      unsigned int number_of_state_variables  = p_model->GetNumberOfStateVariables();
-      
-      for(unsigned int i = 0; i < paces - 1; i++){
+      std::vector<double> current_state_variables = p_model->GetStdVecStateVariables(), previous_state_variables;
+      for(unsigned int i = 0; i < paces; i++){
+	previous_state_variables = current_state_variables;
 	p_model->SolveAndUpdateState(0, duration);
 	p_model->SolveAndUpdateState(duration, period);
-	std::vector<double> state_variables = p_model->GetStdVecStateVariables();
+	current_state_variables = p_model->GetStdVecStateVariables();
 
-	/*If values is full, this will remove the oldest value so that values will only contain up to 50 points*/  
-	values.push_back(state_variables);
+	double mrms_val = mrms(current_state_variables, previous_state_variables);
+	/*If values is full, this will remove the oldest value so that values will only contain up to buffer_size points*/
+	values.push_back(current_state_variables);
+	values.back().push_back(mrms_val);
 
-	if(i>0 && i%50 == 0){
-	  for(unsigned int i = 0; i < number_of_state_variables; i++){
-	    output_file << CalculatePMCC(values[i]) << " ";
+	if(i>buffer_size && i % 20 == 0){
+	  for(unsigned int i = 0; i < values.size(); i++){
+	    std::vector<double> state_trace = cGetNthVariable(values, i);
+	    std::vector<std::vector<double>> values = LogDifferences(state_trace);
+	    output_file << CalculatePMCC(values) << " ";
 	  }
 	  output_file << "\n";
 	}
@@ -124,5 +169,5 @@ public:
 #else
     std::cout << "Cvode is not enabled.\n";
 #endif
-  }
+   }
 };

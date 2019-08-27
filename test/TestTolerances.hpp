@@ -1,4 +1,5 @@
 #include <cxxtest/TestSuite.h>
+#include <sstream>
 #include "CellProperties.hpp"
 #include "SteadyStateRunner.hpp"
 #include "AbstractCvodeCell.hpp"
@@ -40,13 +41,12 @@ public:
     std::vector<double> tolerances = {1e-4, 1e-6, 1e-8, 1e-10};
 
     for(unsigned int i = 0; i < tolerances.size(); i++){
-      for(unsigned int j = 0; j < models.size(); j++)
+      unsigned int j = 1;
 	if(j<4)
 	  PrintErrors(models[j], tolerances[i], 1000);
 	else
-	  PrintErrors(models[j], tolerances[i], 500);
+	  PrintErrors(models[j], tolerances[i], 500);   
     }
-  }
   
   void PrintErrors(boost::shared_ptr<AbstractCvodeCell> p_model, double tolerance, const double period){
 
@@ -60,32 +60,25 @@ public:
     const std::vector<std::string> state_variable_names = p_model->rGetStateVariableNames();
     const std::string model_name = p_model->GetSystemInformation()->GetSystemName();
     const unsigned int paces = 10000;
-    const double sampling_timestep = 0.01;
-    std::string file_path;
+    std::stringstream file_path;
 	
       if(period==500){
 	TS_ASSERT_EQUALS(LoadStatesFromFile(p_model, "/home/joey/code/chaste-project-data/"+model_name+"/GroundTruth1Hz/final_state_variables.dat"), 0);
 	boost::filesystem::create_directory("/tmp/"+username+"/"+model_name);      
-	file_path = "/tmp/"+username+"/"+model_name+"/1Hz2Hz-ts-"+std::to_string(tolerance)+".dat";
+	file_path << "/tmp/"+username+"/"+model_name+"/1Hz2Hz-st-" << std::scientific << tolerance << ".dat";
       }
       else{
 	TS_ASSERT_EQUALS(LoadStatesFromFile(p_model, "/home/joey/code/chaste-project-data/"+model_name+"/GroundTruth2Hz/final_state_variables.dat"), 0);
 	boost::filesystem::create_directory("/tmp/"+username+"/"+model_name);      
-	file_path = "/tmp/"+username+"/"+model_name+"/2Hz1Hz-ts-"+std::to_string(tolerance)+".dat";
+        file_path << "/tmp/"+username+"/"+model_name+"/2Hz1Hz-st-" << std::scientific << tolerance << ".dat";
       }
       std::ofstream errors_file;
-      errors_file.open(file_path);
+      errors_file.open(file_path.str());
       TS_ASSERT_EQUALS(errors_file.is_open(), true);
 
       errors_file.precision(18);
       
       errors_file << "APD90 2-Norm MRMS 2-Norm-Trace MRMS-Trace";
-
-      std::vector<std::string> names = p_model->GetSystemInformation()->rGetStateVariableNames();
-
-      for(unsigned int i = 0; i < names.size(); i++){
-	errors_file << names[i] << " ";
-      }
       errors_file << "\n";
       
       //      unsigned int voltage_index = p_model->GetSystemInformation()->GetStateVariableIndex("membrane_voltage");
@@ -95,26 +88,17 @@ public:
       double duration = p_regular_stim->GetDuration();
       for(unsigned int i = 0; i < paces; i++){
 	previous_state_variables = current_state_variables;
-	if(i>0 && i % 50 == 1){
-	  OdeSolution current_solution = p_model->Compute(0, duration, sampling_timestep);
-	  current_state_variables = current_solution.rGetSolutions();
-	  current_solution = p_model->Compute(duration, period, sampling_timestep);
-	  std::vector<std::vector<double>> state_variables = current_solution.rGetSolutions();
-	  current_state_variables.insert(current_state_variables.end(), ++state_variables.begin(), state_variables.end()); 
+	if(i>0 && i % 10 == 1){
+	  std::vector<double> previous_state_variables = p_model->GetStdVecStateVariables();
+	  p_model->SolveAndUpdateState(0, duration);
+	  p_model->SolveAndUpdateState(duration, period);
+	  std::vector<double> current_state_variables = p_model->GetStdVecStateVariables();
 	  errors_file << CalculateAPD(p_model, period, duration, 90.0) << " ";     
-	  errors_file << TwoNorm(current_state_variables.back(), previous_state_variables.back()) << " ";
-	  errors_file << mrms(current_state_variables.back(),  previous_state_variables.back()) << " ";
-	  errors_file << TwoNormTrace(current_state_variables, previous_state_variables) << " ";
-	  errors_file << mrmsTrace(current_state_variables, previous_state_variables) << " ";
+	  errors_file << TwoNorm(current_state_variables, previous_state_variables) << " ";
+	  errors_file << mrms(current_state_variables,  previous_state_variables) << " ";
 	  errors_file << "\n";
 	}
-	else if(i % 50 == 0){
-	  OdeSolution solution = p_model->Compute(0, duration, sampling_timestep);
-	  current_state_variables = solution.rGetSolutions();
-	  solution = p_model->Compute(duration, period, sampling_timestep);
-	  std::vector<std::vector<double>> tmp_state_variables = solution.rGetSolutions();
-	  current_state_variables.insert(current_state_variables.end(), ++tmp_state_variables.begin(), tmp_state_variables.end());
-	}
+
 	else{
 	  p_model->SolveAndUpdateState(0, duration);
 	  p_model->SolveAndUpdateState(duration, period);
