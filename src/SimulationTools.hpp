@@ -1,5 +1,4 @@
 #include "CellProperties.hpp"
-#include "SteadyStateRunner.hpp"
 #include "AbstractCvodeCell.hpp"
 #include "RegularStimulus.hpp"
 #include "EulerIvpOdeSolver.hpp"
@@ -32,3 +31,39 @@ double mrmsTrace(std::vector<std::vector<double>>, std::vector<std::vector<doubl
 double TwoNormTrace(std::vector<std::vector<double>>, std::vector<std::vector<double>>);
 
 double CalculateAPD(boost::shared_ptr<AbstractCvodeCell>, double, double, double);
+
+std::vector<double> FitExponential(std::vector<double> x_vals, std::vector<double> y_vals);
+
+double CalculatePace2Norm(boost::shared_ptr<AbstractCvodeCell> p_model, std::vector<double> first_states, std::vector<double> second_states, double period, double duration);
+
+double CalculatePaceMrms(boost::shared_ptr<AbstractCvodeCell> p_model, std::vector<double> first_states, std::vector<double> second_states, double period, double duration);
+
+void WriteStatesToFile(std::vector<double> states, std::ofstream &f_out);
+
+std::vector<std::vector<double>> GetPace(std::vector<double> initial_conditions, boost::shared_ptr<AbstractCvodeCell> p_model, double period, double duration); 
+
+template<typename Container>
+double CalculatePMCC(Container values){
+  const unsigned int N = values.size();
+  // const double sum_x = N*(N-1)/2;
+  //const double sum_x2 = (N-1)*N*(2*N-1)/6;
+
+  if(values.size()<=2 || values.size() <= 2){
+    return -NAN;
+  }
+    
+  double sum_x = 0, sum_x2 = 0, sum_y = 0, sum_y2 = 0, sum_xy = 0;
+
+  for(unsigned int i = 0; i < N; i++){
+    sum_x += i;
+    sum_x2+= i*i;
+    sum_y += values[i];
+    sum_y2+= values[i]*values[i];
+    sum_xy+= i*values[i];
+  }
+
+  double pmcc = (N*sum_xy - sum_x*sum_y)/sqrt((N*sum_x2 - sum_x*sum_x)*(N*sum_y2 - sum_y*sum_y));
+  
+  return pmcc;
+}
+

@@ -34,6 +34,7 @@ int LoadStatesFromFile(boost::shared_ptr<AbstractCvodeCell> p_model, std::string
   for(unsigned int i = 0; i < p_model->GetNumberOfStateVariables(); i++){
     state_variables.push_back(std::stod(state_variables_str[i]));
   }
+  file_in.close();
   p_model->SetStateVariables(state_variables);
   return 0;
 }
@@ -110,9 +111,14 @@ double CalculateAPD(boost::shared_ptr<AbstractCvodeCell> p_model, double period,
   p_model->SetMaxSteps(1e5);
   p_model->SetTolerances(1e-12, 1e-12);
  
-  OdeSolution solution = p_model->Compute(0, period, sampling_timestep);
+  OdeSolution solution = p_model->Compute(0, duration, sampling_timestep);
   std::vector<std::vector<double>> state_variables = solution.rGetSolutions();
   std::vector<double> times = solution.rGetTimes();
+
+  solution = p_model->Compute(duration, period, sampling_timestep);
+
+  state_variables.insert(state_variables.end(), ++solution.rGetSolutions().begin(), solution.rGetSolutions().end());
+  times.insert(times.end(), ++solution.rGetTimes().begin(), solution.rGetTimes().end());
   int voltage_index = p_model->GetSystemInformation()->GetStateVariableIndex("membrane_voltage");
 
   const std::vector<double> voltages = GetNthVariable(state_variables, voltage_index);
@@ -123,4 +129,72 @@ double CalculateAPD(boost::shared_ptr<AbstractCvodeCell> p_model, double period,
   p_model->SetTolerances(rel_tol, abs_tol);
   p_model->SetStateVariables(initial_conditions);
   return apd;
+}
+
+std::vector<std::vector<double>> GetPace(std::vector<double> initial_conditions, boost::shared_ptr<AbstractCvodeCell> p_model, double period, double duration){ 
+  double sampling_timestep = 0.1;
+  const std::vector<double> original_states = p_model->GetStdVecStateVariables();
+  const double rel_tol = p_model->GetRelativeTolerance();
+  const double abs_tol = p_model->GetAbsoluteTolerance();  
+  
+  p_model->SetMaxSteps(1e5);
+  p_model->SetTolerances(1e-12, 1e-12);
+  p_model->SetStateVariables(initial_conditions);
+
+  OdeSolution solution = p_model->Compute(0, duration, sampling_timestep);
+  std::vector<std::vector<double>> state_variables = solution.rGetSolutions();
+  solution = p_model->Compute(duration, period, sampling_timestep);
+  
+  state_variables.insert(state_variables.end(), ++solution.rGetSolutions().begin(), solution.rGetSolutions().end());
+  
+
+  p_model->SetTolerances(rel_tol, abs_tol);
+  p_model->SetStateVariables(original_states);
+  return state_variables;
+}
+
+
+double CalculatePace2Norm(boost::shared_ptr<AbstractCvodeCell> p_model, std::vector<double> first_states, std::vector<double> second_states, double period, double duration){
+  std::vector<std::vector<double>> A = GetPace(first_states, p_model, period, duration);
+  std::vector<std::vector<double>> B = GetPace(second_states, p_model, period, duration);
+  return TwoNormTrace(A, B);
+}
+
+
+double CalculatePaceMrms(boost::shared_ptr<AbstractCvodeCell> p_model, std::vector<double> first_states, std::vector<double> second_states, double period, double duration){
+  std::vector<std::vector<double>> A = GetPace(first_states, p_model, period, duration);
+    std::vector<std::vector<double>> B = GetPace(second_states, p_model, period, duration);
+    return mrmsTrace(A, B);
+}
+
+double CalculatePMCC(std::vector<std::vector<double>> values){
+  const unsigned int N = values[0].size();
+  // const double sum_x = N*(N-1)/2;
+  // const double sum_x2 = (N-1)*N*(2*N-1)/6;
+  if(values[0].size()<=2 || values[1].size() <= 2){
+    //TS_ASSERT(false);
+    return -NAN;
+  }
+  double sum_x = 0, sum_x2 = 0, sum_y = 0, sum_y2 = 0, sum_xy = 0;
+  
+  for(unsigned int i = 0; i < N; i++){
+    sum_x  += values[0][i];
+    sum_x2 += values[0][i]*values[0][i];
+    sum_y  += values[1][i];
+    sum_y2 += values[1][i]*values[1][i];
+    sum_xy += values[0][i]*values[1][i];
+  }
+  
+  double pmcc = (N*sum_xy - sum_x*sum_y)/sqrt((N*sum_x2 - sum_x*sum_x)*(N*sum_y2 - sum_y*sum_y));
+  //    TS_ASSERT(abs(pmcc <= 1.001) || pmcc == NAN);
+  
+  return pmcc;
+}
+
+void WriteStatesToFile(std::vector<double> states, std::ofstream &f_out){
+  for(auto i = states.begin(); i!=states.end(); ++i){
+    f_out << *i << " ";
+  }
+  f_out << "\n";
+  return;
 }

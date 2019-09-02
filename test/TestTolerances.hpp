@@ -24,7 +24,6 @@ public:
   std::string username;
   void TestTolerances()
   {
-#ifdef CHASTE_CVODE
     boost::shared_ptr<RegularStimulus> p_stimulus;
     boost::shared_ptr<AbstractIvpOdeSolver> p_solver;    
     std::vector<boost::shared_ptr<AbstractCvodeCell>> models;
@@ -38,16 +37,18 @@ public:
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
     username = std::string(getenv("USER"));
     boost::filesystem::create_directory("/tmp/"+username);
-    std::vector<double> tolerances = {1e-4, 1e-6, 1e-8, 1e-10};
+    std::vector<double> tolerances = {1e-6, 1e-8, 1e-9, 1e-10};
 
     for(unsigned int i = 0; i < tolerances.size(); i++){
-      unsigned int j = 1;
-	if(j<4)
+      // for(unsigned int j = 0; j < models.size(); j++){
+      unsigned int j = 0;
+      if(j<4)
 	  PrintErrors(models[j], tolerances[i], 1000);
 	else
 	  PrintErrors(models[j], tolerances[i], 500);   
+	//      }
     }
-  
+  }
   void PrintErrors(boost::shared_ptr<AbstractCvodeCell> p_model, double tolerance, const double period){
 
     boost::shared_ptr<RegularStimulus> p_regular_stim  = p_model->UseCellMLDefaultStimulus();
@@ -84,30 +85,24 @@ public:
       //      unsigned int voltage_index = p_model->GetSystemInformation()->GetStateVariableIndex("membrane_voltage");
       std::vector<double> times;
       std::ifstream apd_file;
-      std::vector<std::vector<double>> current_state_variables, previous_state_variables;
+      std::vector<double> current_state_variables, previous_state_variables;
+      current_state_variables = p_model->GetStdVecStateVariables();
       double duration = p_regular_stim->GetDuration();
       for(unsigned int i = 0; i < paces; i++){
 	previous_state_variables = current_state_variables;
-	if(i>0 && i % 10 == 1){
-	  std::vector<double> previous_state_variables = p_model->GetStdVecStateVariables();
-	  p_model->SolveAndUpdateState(0, duration);
-	  p_model->SolveAndUpdateState(duration, period);
-	  std::vector<double> current_state_variables = p_model->GetStdVecStateVariables();
+
+	p_model->SolveAndUpdateState(0, duration);
+	p_model->SolveAndUpdateState(duration, period);
+	current_state_variables = p_model->GetStdVecStateVariables();
+	if(i % 10 == 0){
 	  errors_file << CalculateAPD(p_model, period, duration, 90.0) << " ";     
 	  errors_file << TwoNorm(current_state_variables, previous_state_variables) << " ";
 	  errors_file << mrms(current_state_variables,  previous_state_variables) << " ";
-	  errors_file << "\n";
-	}
-
-	else{
-	  p_model->SolveAndUpdateState(0, duration);
-	  p_model->SolveAndUpdateState(duration, period);
+	  errors_file << CalculatePace2Norm(p_model, previous_state_variables, current_state_variables, period, duration) << " ";
+	  errors_file << CalculatePaceMrms(p_model, previous_state_variables, current_state_variables, period, duration)  << "\n";
 	}
       }
       errors_file.close();
   }
-#else
-      std::cout << "Cvode is not enabled.\n";
-#endif
 };
 

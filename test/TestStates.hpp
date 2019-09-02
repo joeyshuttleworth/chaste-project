@@ -56,9 +56,9 @@ public:
       p_regular_stim->SetPeriod(period);
       p_regular_stim->SetStartTime(0);
       p_model->SetTolerances(1e-8, 1e-8);
-      p_model->SetMaxSteps(1e5);
+      p_model->SetMaxSteps(1e6);
     
-      const unsigned int paces = 5000;
+      const unsigned int paces = 10000;
       std::ofstream output_file;
       if(period==500)
 	output_file.open("/tmp/"+username+"/"+model_name+"/StateVariablesPlot1Hz2Hz.dat");
