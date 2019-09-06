@@ -8,5 +8,6 @@ TestSamplingRates.hpp
 TestErrorMeasures.hpp
 TestAPD.hpp
 TestBenchmark.hpp
+TestExtrapolationMethod.hpp
 TestPMCC.hpp
 TestStates.hpp

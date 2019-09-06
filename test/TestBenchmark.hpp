@@ -18,15 +18,55 @@
 #include "shannon_wang_puglisi_weber_bers_2004Cvode.hpp"
 #include "decker_2009Cvode.hpp"
 
-class TestGroundTruthSimulation : public CxxTest::TestSuite
+/*Output the total number of paces to reach limiting behaviour by SmartSimulation over all models for different choices of buffer_size and extrapolation_constant*/
+
+class TestBenchmark : public CxxTest::TestSuite
 {
 private:
-  const double threshold = 1.5e-07;
-  
+  const double threshold = 1.8e-07;
+  const unsigned int paces = 2500;
+  std::ofstream output_file;
+  std::string username;
+
+  const std::vector<unsigned int> buffer_sizes = {25, 50, 100, 150, 200, 300 ,400};
+  const std::vector<double>       extrapolation_constants = {0.10, 0.25, 0.50, 0.75, 0.90, 1, 1.1};
+
 public:
-  void TestTusscherSimulation()
-  {
+  unsigned int RunModel(boost::shared_ptr<AbstractCvodeCell> p_model, double period, unsigned int buffer_size, double extrapolation_constant){
+      const std::string model_name = p_model->GetSystemInformation()->GetSystemName();
+      std::cout << "Testing " << model_name << " with period " << period << "\n";
+      const double duration = p_model->UseCellMLDefaultStimulus()->GetDuration();      
+      std::string input_path;
+
+      if(period == 500)
+	input_path = "/home/"+username+"/code/chaste-project-data/"+model_name+"/GroundTruth1Hz/final_state_variables.dat";
+      else if(period == 1000)
+	input_path = "/home/"+username+"/code/chaste-project-data/"+model_name+"/GroundTruth2Hz/final_state_variables.dat";
+      
+      unsigned int j;
+      /*Run the simulations*/
+      SmartSimulation simulation(p_model, period, input_path);
+      simulation.Initialise(buffer_size, extrapolation_constant);
+      for(j = 0; j < paces; j++){
+	if(simulation.RunPace())
+	  std::cout << "Model " << model_name << " period " << period << " Extrapolation method finished after " << j << " paces \n";
+	
+	if(simulation.is_finished()){
+	  break;
+	}	
+      }
+
+      /*Check that the methods have converged to the same place*/
+      std::vector<double> vec1 = simulation.GetStateVariables();
+      output_file << model_name << " " << period << " ";
+      WriteStatesToFile(vec1, output_file);
+      output_file << CalculateAPD(p_model, period, duration, 90) << "\n";
+      return j;
+  }
+  
+  void TestMain(){
 #ifdef CHASTE_CVODE
+    username = std::string(getenv("USER"));
     boost::shared_ptr<RegularStimulus> p_stimulus;
     boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
 
@@ -40,104 +80,38 @@ public:
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Celldecker_2009FromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_2011_endoFromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Celldecker_2009FromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_2011_endoFromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Celldecker_2009FromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
-
     
-    std::string username = std::string(getenv("USER"));
     boost::filesystem::create_directory("/tmp/"+username);
+    output_file.open("/tmp/"+username+"/BenchmarkStates.dat");
+    output_file.precision(18);
+    std::ofstream f_results;
+    f_results.open("/tmp/joey/BenchmarkResults.dat");
 
-    std::ofstream output_file;
-    
-    for(unsigned int i = 0; i < 8; i++){
-      double period = 1000;
-      if(i<4)
-	period = 500;
-      boost::shared_ptr<AbstractCvodeCell> p_model = models[i];
-      
-      const std::string model_name = p_model->GetSystemInformation()->GetSystemName();
-      std::cout << "Testing " << model_name << " with period " << period << "\n";
-      boost::filesystem::create_directory("/tmp/"+username);
-      boost::filesystem::create_directory("/tmp/"+username+"/"+model_name);
-      boost::filesystem::create_directory("/tmp/"+username+"/"+model_name+"/TestBenchmark");
-
-      const double duration = 2;
-      
-      std::string input_path;
-      if(period==500){
-	//      	TS_ASSERT_EQUALS(LoadStatesFromFile(p_model, "/home/joey/code/chaste-project-data/"+model_name+"/GroundTruth1Hz/final_state_variables.dat"), 0);
-	input_path = "/home/joey/code/chaste-project-data/"+model_name+"/GroundTruth1Hz/final_state_variables.dat";
-      }
-      
-      else{
-	//	TS_ASSERT_EQUALS(LoadStatesFromFile(p_model, "/home/joey/code/chaste-project-data/"+model_name+"/GroundTruth2Hz/final_state_variables.dat"), 0);
-	input_path = "/home/joey/code/chaste-project-data/"+model_name+"/GroundTruth2Hz/final_state_variables.dat";
-      }
-      const unsigned int paces  = 10000;
-      
-      SmartSimulation smart_simulation(models[i], period, input_path); 
-      smart_simulation.Initialise();
-      Simulation simulation(models[i+8], period, input_path);
-
-      if(period==500)
-	output_file.open("/tmp/"+username+"/"+model_name+"/TestBenchmark/benchmarks1Hz2Hz.dat");
-      else
-	output_file.open("/tmp/"+username+"/"+model_name+"/TestBenchmark/benchmarks2Hz1Hz.dat");
-
-      TS_ASSERT_EQUALS(output_file.is_open(), true);
-
-      /*Set the output to be very precise */
-      output_file.precision(18);
-
-      /*Run the simulations*/
-      for(unsigned int j = 0; j < paces; j++){
-	if(simulation.RunPaces(1))
-	  std::cout << "Model " << model_name << " period " << period << " Brute force method finished after " << i << " paces \n";
-	if(smart_simulation.RunPaces(1))
-	  std::cout << "Model " << model_name << " period " << period << " Extrapolation method finished after " << i << " paces \n";
-
-	output_file << simulation.GetMrms() << " " << smart_simulation.GetMrms() << "\n";
- 	
-	if(simulation.is_finished() && smart_simulation.is_finished()){
-	  break;
-	}
-	
-      }
-      /*Check that the methods have converged to the same place*/
-      std::ofstream tmp1, tmp2;
-      tmp1.precision(18);
-      tmp2.precision(18);
-      
-      tmp1 << "\n";
-      tmp1.close();
-      if(period==500)
-	tmp1.open("/tmp/"+username+"/"+model_name+"/TestBenchmark/1Hz2Hzfinal_apd90.dat");
-      else
-	tmp1.open("/tmp/"+username+"/"+model_name+"/TestBenchmark/2Hz1Hzfinal_apd90.dat");
-      tmp1 << CalculateAPD(p_model, period, duration, 90) << "\n";
-      tmp1.close();
-      if(period == 500){
-	tmp1.open("/tmp/"+username+"/"+model_name+"/TestBenchmark/1Hz2HzExtrapolationTrace.dat");
-      }
-      else{
-	tmp1.open("/tmp/"+username+"/"+model_name+"/TestBenchmark/2Hz1HzExtrapolationTrace.dat");
-      }
-      std::vector<double> vec1 = smart_simulation.GetStateVariables();
-      std::vector<std::vector<double>> pace1 = GetPace(vec1, models[i], period, duration);
-      for(unsigned int j = 0; j < pace1.size(); j++){
-	WriteStatesToFile(pace1[j], tmp1);
-      }
-      tmp1.close();
-      tmp2.close();
-	  
-      output_file.close();
+    for(unsigned int i = 0; i < extrapolation_constants.size(); i++){
+      f_results << extrapolation_constants[i] << "\t";
     }
+
+    f_results << "\n";
+    
+    for(unsigned int j = 0; j < buffer_sizes.size(); j++){
+      f_results << buffer_sizes[j] << " ";
+      for(unsigned int k = 0; k < extrapolation_constants.size(); k++){
+	unsigned int benchmark = 0;
+	for(unsigned int i = 0; i < 8; i++){
+	  double period = 1000;
+	  if(i<4)
+	    period = 500;
+	  benchmark += RunModel(models[i], period, buffer_sizes[j], extrapolation_constants[k]);
+	}
+	std::cout << "Score is: " << benchmark << "\n";
+	f_results << benchmark << "\t";
+	TS_ASSERT(output_file.is_open());
+      }
+        f_results <<"\n";
+    }
+    output_file << "\n";
+    output_file.close();
+    f_results.close();
 #else
     std::cout << "Cvode is not enabled.\n";
 #endif

@@ -44,7 +44,7 @@ public:
     std::ofstream errors_file;
     
     for(unsigned int i=0; i < 8; i++){
-      boost::shared_ptr<AbstractCvodeCell> p_model = models[0];
+      boost::shared_ptr<AbstractCvodeCell> p_model = models[i%4];
       boost::shared_ptr<RegularStimulus> p_regular_stim = p_model->UseCellMLDefaultStimulus();
       const double duration   = p_regular_stim->GetDuration();
       const std::string model_name = p_model->GetSystemInformation()->GetSystemName();

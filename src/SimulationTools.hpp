@@ -42,6 +42,8 @@ void WriteStatesToFile(std::vector<double> states, std::ofstream &f_out);
 
 std::vector<std::vector<double>> GetPace(std::vector<double> initial_conditions, boost::shared_ptr<AbstractCvodeCell> p_model, double period, double duration); 
 
+double CalculatePMCC(std::vector<double>, std::vector<double>);
+
 template<typename Container>
 double CalculatePMCC(Container values){
   const unsigned int N = values.size();
@@ -66,4 +68,5 @@ double CalculatePMCC(Container values){
   
   return pmcc;
 }
+
 

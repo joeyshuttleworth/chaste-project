@@ -167,22 +167,24 @@ double CalculatePaceMrms(boost::shared_ptr<AbstractCvodeCell> p_model, std::vect
     return mrmsTrace(A, B);
 }
 
-double CalculatePMCC(std::vector<std::vector<double>> values){
-  const unsigned int N = values[0].size();
+
+
+double CalculatePMCC(std::vector<double> x, std::vector<double> y){
+  const unsigned int N = x.size();
   // const double sum_x = N*(N-1)/2;
   // const double sum_x2 = (N-1)*N*(2*N-1)/6;
-  if(values[0].size()<=2 || values[1].size() <= 2){
+  if(x.size() <= 2){
     //TS_ASSERT(false);
     return -NAN;
   }
   double sum_x = 0, sum_x2 = 0, sum_y = 0, sum_y2 = 0, sum_xy = 0;
   
   for(unsigned int i = 0; i < N; i++){
-    sum_x  += values[0][i];
-    sum_x2 += values[0][i]*values[0][i];
-    sum_y  += values[1][i];
-    sum_y2 += values[1][i]*values[1][i];
-    sum_xy += values[0][i]*values[1][i];
+    sum_x  += x[i];
+    sum_x2 += x[i]*x[i];
+    sum_y  += y[i];
+    sum_y2 += y[i]*y[i];
+    sum_xy += x[i]*y[i];
   }
   
   double pmcc = (N*sum_xy - sum_x*sum_y)/sqrt((N*sum_x2 - sum_x*sum_x)*(N*sum_y2 - sum_y*sum_y));

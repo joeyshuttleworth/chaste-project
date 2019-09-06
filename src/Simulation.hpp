@@ -41,6 +41,7 @@ public:
     p_model->SetMaxSteps(1e5);
     p_model->SetMaxTimestep(1000);
     p_model->SetTolerances(TolAbs, TolRel);
+    p_model->SetMinimalReset(false); //Not sure if this is needed
     number_of_state_variables = p_model->GetSystemInformation()->rGetStateVariableNames().size();
     state_variables = p_model->GetStdVecStateVariables();
     if(input_path.length()>=1){
@@ -48,28 +49,22 @@ public:
     }  
   }
 
-  bool RunPaces(unsigned int paces){
+  bool RunPace(){
     if(finished)
       return false;
-    for(unsigned int i = 0; i < paces; i++){
-      /*Solve in two parts*/
-      std::vector<double> tmp_state_variables = p_model->GetStdVecStateVariables();
-      p_model->SolveAndUpdateState(0, p_stimulus->GetDuration());
-      p_model->SolveAndUpdateState(p_stimulus->GetDuration(), period);
-      std::vector<double> new_state_variables = p_model->GetStdVecStateVariables();
-      current_mrms = mrms(tmp_state_variables, new_state_variables);
-      p_model->SetStateVariables(new_state_variables);
-      if(current_mrms < threshold){
-	finished = true;
-	return true;
-      }
+    /*Solve in two parts*/
+    std::vector<double> tmp_state_variables = p_model->GetStdVecStateVariables();
+    p_model->SolveAndUpdateState(0, p_stimulus->GetDuration());
+    p_model->SolveAndUpdateState(p_stimulus->GetDuration(), period);
+    std::vector<double> new_state_variables = p_model->GetStdVecStateVariables();
+    current_mrms = mrms(tmp_state_variables, new_state_variables);
+    p_model->SetStateVariables(new_state_variables);
+    if(current_mrms < threshold){
+      finished = true;
+      return true;
     }
+      
     return false;
-  }
-
-  void RunPace(){
-    RunPaces(1);
-    return;
   }
 
   void WriteToFile(std::string){
@@ -77,9 +72,9 @@ public:
   }
 
   double GetMrms(){
-     if(finished)
-       return NAN;
-     else
+    if(finished)
+      return NAN;
+    else
       return current_mrms;
   }
   
@@ -95,19 +90,23 @@ public:
 class SmartSimulation : public Simulation{
 
 private:
-  const unsigned int buffer_size = 200;
+  unsigned int buffer_size = 200;
+  double  extrapolation_coefficient;
   boost::circular_buffer<std::vector<double>>  states_buffer;
   boost::circular_buffer<double> mrms_buffer;
   unsigned int jumps = 0;
   const unsigned int max_jumps = 1;
-
-  double ExtrapolateState(unsigned int state_index){
-    
+  std::vector<double> safe_state_variables;
+  unsigned int pace = 0;
+  
+  std::ofstream errors;
+  
+  bool ExtrapolateState(unsigned int state_index){
+ 
     /* Calculate the log absolute differences of the state and store these in y_vals. Store the corresponding x values in x_vals*/
-    std::vector<double> y_vals, x_vals;
+    std::vector<double> y_vals, x_vals;  
     std::vector<double> state = cGetNthVariable(states_buffer, state_index);
-     // if(CalculatePMCC(state)<-0.9)  //return the unchanged value if there is no negative correlation (PMCC > -0.9 or PMCC = NAN) 
-     //   return state.back();
+
     for(unsigned int i = 0; i < buffer_size; i++){
       double tmp = abs(state[i] - state[i+1]);
       if(tmp != 0){
@@ -115,15 +114,16 @@ private:
 	x_vals.push_back(i);
       }
     }
-
+    if(CalculatePMCC(x_vals, y_vals)<-0.9)  //return the unchanged value if there is no negative correlation (PMCC > -0.95 or PMCC = NAN) 
+      return false;
     /*Compute the required sums*/
-
+    
     double sum_x = 0, sum_y = 0, sum_x2 = 0, sum_xy = 0;
     const unsigned int N = x_vals.size();
 
     if(N<=2){
       std::cout << "N = "<< N << "!\n";
-      return state.back();
+      return false;
     }
     
     for(unsigned int i = 0; i < N; i++){
@@ -133,100 +133,166 @@ private:
       sum_xy+= x_vals[i]*y_vals[i];
     }
 
-    double tau  = -(N*sum_xy - sum_x*sum_y) / (N*sum_x2 - sum_x*sum_x);
+    double beta  = (N*sum_xy - sum_x*sum_y) / (N*sum_x2 - sum_x*sum_x);
 
-    double intercept = (sum_y*sum_x2 - sum_x*sum_xy) / (N*sum_x2 - sum_x*sum_x);
+    double alpha = (sum_y*sum_x2 - sum_x*sum_xy) / (N*sum_x2 - sum_x*sum_x);
 
-    double alpha = exp(intercept-buffer_size*tau+tau);
-    
+
+    if(alpha < -50){
+      //The difference will be much smaller that solver tolerances so there is no point going any further
+      return false;
+    }
+
+    if(beta > 0){
+      //The difference is increasing
+      return false;
+    }
+
+    const double tau = -1/beta;
+    double change_in_variable =  abs(extrapolation_coefficient * exp(alpha - tau/buffer_size + 1/tau) / (exp(1/tau) - 1));
+
     /*Is V(t) increasing or decreasing?*/    
     
     if(state.back() - state.front() < 0)
-      alpha = - alpha;
+      change_in_variable = - change_in_variable;
     
-    std::cout << "(Gradient, Intercept) = (" << -tau << "," << intercept << ")\n";
-
-    double change_in_variable = alpha / (exp(tau)-1);
-
-    double new_value = state.back() + change_in_variable;   //Being careful 
+    std::cout << "(Gradient, Intercept) = (" << beta << "," << alpha << ")\n";
+    
+    double new_value = state.back() + change_in_variable; 
+    
+    output_file << state_index << " " << beta << " " << alpha << "\n";
+    
     std::cout << "Change in " << p_model->GetSystemInformation()->rGetStateVariableNames()[state_index] << " is: " << change_in_variable << "\n" << "New value is " << new_value << "\n";
-    if(std::isfinite(new_value)) 
-      return new_value;
-    else
-      return state.back();
+    std::cout << "Old value: " << state.back() << "\n";
+    if(std::isfinite(new_value)){
+      state_variables[state_index] = new_value;
+      return true;
+    }
+    else{
+      return false;
+    }
   }
   
-  void ExtrapolateStates(){
+  bool ExtrapolateStates(){
     if(jumps>=max_jumps)
-      return;
-    if(!states_buffer.full())
-      return;
+      return false;
+    if(!mrms_buffer.full())
+      return false;
     double mrms_pmcc = CalculatePMCC(mrms_buffer);
     std::vector<double> new_state_variables;
-    new_state_variables.reserve(number_of_state_variables);
-    if(mrms_pmcc < -0.95){
-      for(unsigned int i = 0; i < number_of_state_variables; i++){
-	new_state_variables.push_back(ExtrapolateState(i));
-      }
-    std::cout << "Jumped to new variables\n";
-
+    bool extrapolated = false;
     std::ofstream f_out;
-    if(period == 500)
-      f_out.open("/tmp/joey/"+p_model->GetSystemInformation()->GetSystemName() + "/TestBenchmark/1Hz2HzJump.dat");
+    std::string model_name = p_model->GetSystemInformation()->GetSystemName();
+    if(mrms_pmcc < -0.95){
+      safe_state_variables = state_variables;
+      if(period == 500)
+	f_out.open("/tmp/joey/"+ model_name + "/1Hz2HzJump.dat");
+      else
+	f_out.open("/tmp/joey/"+p_model->GetSystemInformation()->GetSystemName() + "/2Hz1HzJump.dat");
+      std::cout << "start of buffer " << pace - buffer_size + 1<< "\n";
+      pace++;
+      output_file.open("/tmp/joey/"+p_model->GetSystemInformation()->GetSystemName()+"/"+ std::to_string(int(period)) + "JumpParameters.dat");
+      output_file << pace << " " << buffer_size << " " << extrapolation_coefficient << "\n";
+
+      WriteStatesToFile(state_variables, f_out);
+
+      std::ofstream f_buffer;
+      f_buffer.open("/tmp/joey/"+model_name+"/Buffer.dat");
+      
+      for(unsigned int i = 0; i < number_of_state_variables; i++){
+	if(ExtrapolateState(i))
+	  extrapolated = true;
+	WriteStatesToFile(cGetNthVariable(states_buffer, i), f_buffer);
+      }
+      
+      output_file.close();
+      
+      WriteStatesToFile(state_variables, f_out);
+
+      f_buffer.close();
+      
+      f_out.close();
+    
+      /*Write new variables to file*/
+      std::ofstream output;
+      for(unsigned int i = 0; i < state_variables.size(); i++){
+	output << state_variables[i] << " ";
+      }
+      p_model->SetStateVariables(state_variables);
+      for(unsigned int i = 0; i < state_variables.size(); i++){
+	output << state_variables[i] << " ";
+      }
+      output.close();
+      if(extrapolated){
+	mrms_buffer.clear();
+	states_buffer.clear();
+
+	std::cout << "Jumped to new variables\n";
+	jumps++;
+      }
+      return extrapolated;
+    }
     else
-      f_out.open("/tmp/joey/"+p_model->GetSystemInformation()->GetSystemName() + "/TestBenchmark/2Hz1HzJump.dat");
-    WriteStatesToFile(new_state_variables, f_out);
-    f_out.close();
-    
-    jumps++;
-    
-    /*Write new variables to file&*/
-    std::ofstream output;
-    output.precision(18);
-    output.open("/tmp/jump.dat");
-    for(unsigned int i = 0; i < state_variables.size(); i++){
-      output << state_variables[i] << " ";
-    }
-    output << "\n";
-    state_variables = new_state_variables;
-    p_model->SetStateVariables(new_state_variables);
-    for(unsigned int i = 0; i < state_variables.size(); i++){
-      output << state_variables[i] << " ";
-    }
-    output.close();
-    }
-    return;
+      return false;
   }
   
 public:
 
   using Simulation::Simulation;
-  
-  bool RunPaces(unsigned int paces){
+
+  bool RunPace(){
+    bool extrapolated = false;
     if(is_finished())
       return false;
-    for(unsigned int i = 0; i < paces; i++){
-      /*Solve in two parts*/
-      p_model->SolveAndUpdateState(0, p_stimulus->GetDuration());
-      p_model->SolveAndUpdateState(p_stimulus->GetDuration(), period);
-      std::vector<double> new_state_variables = p_model->GetStdVecStateVariables();
+    extrapolated = ExtrapolateStates();
+    if(!extrapolated){
+    /*Solve in two parts*/
+      try{
+	p_model->SolveAndUpdateState(0, p_stimulus->GetDuration());
+	p_model->SolveAndUpdateState(p_stimulus->GetDuration(), period);
+	pace++;
+      }
+      catch(Exception &e){
+	std::cout << "RunPaces failed - returning to old state_variables\n";
+	state_variables = safe_state_variables;
+	p_model->SetStateVariables(state_variables);
+	std::ofstream errors;
+	errors.open("/tmp/joey/ExtrapolationErrors.dat", std::fstream::app);
+	errors << p_model->GetSystemInformation()->GetSystemName() << " " << period << " " << buffer_size << " " << extrapolation_coefficient << "\n \n \n";
+	errors << e.GetMessage();
+	errors << "\n\n\n\n";
+	errors.close();
+	mrms_buffer.clear();
+	states_buffer.clear();
+	return false;
+      }
+      std::vector<double> new_state_variables = GetStateVariables();
       states_buffer.push_back(new_state_variables);
       current_mrms = mrms(new_state_variables, state_variables);
       mrms_buffer.push_back(current_mrms);
       state_variables = new_state_variables;
       if(current_mrms < threshold){
-  	finished = true;
-  	return true;
+	finished = true;
+	return true;
       }
-      ExtrapolateStates();
+    }
+    else{
+      states_buffer.clear();
+      mrms_buffer.clear();
+      current_mrms = 0;
     }
     return false;
   }
+    
+    
   
-  void Initialise(){
+  void Initialise(unsigned int _buffer_size, double _extrapolation_constant){
+    buffer_size = _buffer_size;
     states_buffer.set_capacity(buffer_size);
     mrms_buffer.set_capacity(buffer_size);
+    states_buffer.push_back(GetStateVariables());
+    extrapolation_coefficient = _extrapolation_constant;
+    safe_state_variables = state_variables;
   }
-
 };
 
