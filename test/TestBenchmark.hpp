@@ -24,15 +24,15 @@ class TestBenchmark : public CxxTest::TestSuite
 {
 private:
   const double threshold = 1.8e-07;
-  const unsigned int paces = 2500;
+  const unsigned int paces = 5000;
   std::ofstream output_file;
   std::string username;
 
-  const std::vector<unsigned int> buffer_sizes = {25, 50, 100, 150, 200, 300 ,400};
-  const std::vector<double>       extrapolation_constants = {0.10, 0.25, 0.50, 0.75, 0.90, 1, 1.1};
-
+  const std::vector<unsigned int> buffer_sizes = {50}; //{25, 50, 100, 150, 200, 300 ,400};
+  const std::vector<double>       extrapolation_constants = {0.9};
+  const std::vector<double> apds = {231.87874670168091, 186.378828929472235, 228.391097821924944, 186.568452124915893, 268.928719750840457, 212.495013520340706, 268.49004986811957, 211.93350538338558};
 public:
-  unsigned int RunModel(boost::shared_ptr<AbstractCvodeCell> p_model, double period, unsigned int buffer_size, double extrapolation_constant){
+  unsigned int RunModel(boost::shared_ptr<AbstractCvodeCell> p_model, double period, unsigned int buffer_size, double extrapolation_constant, unsigned int index){
       const std::string model_name = p_model->GetSystemInformation()->GetSystemName();
       std::cout << "Testing " << model_name << " with period " << period << "\n";
       const double duration = p_model->UseCellMLDefaultStimulus()->GetDuration();      
@@ -61,6 +61,10 @@ public:
       output_file << model_name << " " << period << " ";
       WriteStatesToFile(vec1, output_file);
       output_file << CalculateAPD(p_model, period, duration, 90) << "\n";
+      double apd = CalculateAPD(p_model, period, duration, 90);
+      double apd_error = CalculateAPD(p_model, period, duration, 90) - apds[index];
+      std::cout << "apd error " << apds[index] << " " << apd_error << " " <<apd <<  "\n";
+      TS_ASSERT(abs(CalculateAPD(p_model, period, duration, 90) - apds[index]) < 0.1);
       return j;
   }
   
@@ -101,7 +105,7 @@ public:
 	  double period = 1000;
 	  if(i<4)
 	    period = 500;
-	  benchmark += RunModel(models[i], period, buffer_sizes[j], extrapolation_constants[k]);
+	  benchmark += RunModel(models[i], period, buffer_sizes[j], extrapolation_constants[k], i);
 	}
 	std::cout << "Score is: " << benchmark << "\n";
 	f_results << benchmark << "\t";

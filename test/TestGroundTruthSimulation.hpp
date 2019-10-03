@@ -41,7 +41,7 @@ public:
     std::string username = std::string(getenv("USER"));
     boost::filesystem::create_directory("/tmp/"+username);
     
-    for(unsigned int i = 0; i < 2; i++){
+    for(unsigned int i = 0; i < 8; i++){
       double period = 1000;
       if(i<1)
 	period = 500;

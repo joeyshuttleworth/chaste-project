@@ -21,7 +21,6 @@
 class TestGroundTruthSimulation : public CxxTest::TestSuite
 {
 private:
-  const double threshold = 1.8e-07;
   const unsigned int buffer_size = 100;
   const double e_c = 1;
 public:
@@ -57,7 +56,7 @@ public:
     std::ofstream output_file;
     int benchmark = 0;
     
-    for(unsigned int i = 4; i < 5; i++){
+    for(unsigned int i = 1; i < 8; i++){
       double period = 1000;
       if(i<4)
 	period = 500;
@@ -99,13 +98,22 @@ public:
       
       /*Run the simulations*/
       for(unsigned int j = 0; j < paces; j++){
-	if(simulation.RunPace())
-	  std::cout << "Model " << model_name << " period " << period << " Brute force method finished after " << j << " paces \n";
+	// if(simulation.RunPace())
+	//   std::cout << "Model " << model_name << " period " << period << " Brute force method finished after " << j << " paces \n";
 	if(smart_simulation.RunPace())
 	  std::cout << "Model " << model_name << " period " << period << " Extrapolation method finished after " << j << " paces \n";
 
-	output_file << simulation.GetMrms() << " " << smart_simulation.GetMrms() << " ";
-	WriteStatesToFile(smart_simulation.GetStateVariables(), output_file);
+	// output_file << simulation.GetMrms() << " " << smart_simulation.GetMrms() << " ";
+
+	// for(unsigned int k = 0; k < smart_simulation.GetStateVariables().size(); k++){
+	//   output_file << smart_simulation.GetStateVariables()[k] << " ";
+	// }
+
+	
+	// for(unsigned int k = 0; k < smart_simulation.GetStateVariables().size(); k++){
+	//   output_file << simulation.GetStateVariables()[k] << " ";
+	// }
+	// output_file << "\n";
 	if(simulation.is_finished()){
 	  benchmark += j;
 	  break;
@@ -122,11 +130,13 @@ public:
       
       tmp1 << "\n";
       tmp1.close();
-      if(period==500)
+      if(period==500){
 	tmp1.open("/tmp/"+username+"/"+model_name+"/TestExtrapolation/1Hz2Hzfinal_apd90.dat");
-      else
+      }
+      else{
 	tmp1.open("/tmp/"+username+"/"+model_name+"/TestExtrapolation/2Hz1Hzfinal_apd90.dat");
-      tmp1 << CalculateAPD(p_model, period, duration, 90) << "\n";
+      }
+      tmp1 << CalculateAPD(p_model, period, duration, 90) << " " << CalculateAPD(models[i+8], period, duration, 90) << "\n";
       tmp1.close();
       if(period == 500){
 	tmp1.open("/tmp/"+username+"/"+model_name+"/TestExtrapolation/1Hz2HzExtrapolationTrace.dat");

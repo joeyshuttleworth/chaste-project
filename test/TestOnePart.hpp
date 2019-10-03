@@ -6,9 +6,10 @@
 #include "EulerIvpOdeSolver.hpp"
 #include "Shannon2004Cvode.hpp"
 #include "FakePetscSetup.hpp"
+#include <boost/filesystem.hpp>
 #include <fstream>
 
-#include "beeler_reuter_model_1977Cvode.hpp"
+#include "decker_2009Cvode.hpp"
 #include "ten_tusscher_model_2004_epiCvode.hpp"
 #include "ohara_rudy_2011_endoCvode.hpp"
 #include "shannon_wang_puglisi_weber_bers_2004Cvode.hpp"
@@ -19,40 +20,36 @@ public:
     void TestTusscherSimulation()
     {
 #ifdef CHASTE_CVODE
-        boost::shared_ptr<RegularStimulus> p_stimulus;
-        boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
-        boost::shared_ptr<AbstractCvodeCell> p_model(new Cellohara_rudy_2011_endoFromCellMLCvode(p_solver, p_stimulus));
-	boost::shared_ptr<RegularStimulus> p_regular_stim = p_model->UseCellMLDefaultStimulus();
-	std::ofstream output_file;
+      boost::shared_ptr<RegularStimulus> p_stimulus;
+      boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
+      
+      const int paces = 10000;
+      const double period = 1000;
+      
+      std::vector<boost::shared_ptr<AbstractCvodeCell>> models;
+      
+      models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_2011_endoFromCellMLCvode(p_solver, p_stimulus)));
+      models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Celldecker_2009FromCellMLCvode(p_solver, p_stimulus)));
+      models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
+      models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
 
-	output_file.open("/tmp/joey/OnePart.dat");
-	const double period = 1000;
-        p_regular_stim->SetPeriod(period);
+      for(unsigned int i = 0; i < 4; i++){
+	boost::shared_ptr<AbstractCvodeCell> p_model = models[i];
+	boost::shared_ptr<RegularStimulus> p_regular_stim = p_model->UseCellMLDefaultStimulus();
+	
+	p_regular_stim->SetPeriod(period);
 	p_regular_stim->SetStartTime(0);
-	p_model->SetTolerances(1e-12,1e-12);
-	
-	double max_timestep = p_regular_stim->GetDuration();
-	double sampling_timestep = 0.5;
-	
-        p_model->SetMaxTimestep(max_timestep);
+     	p_model->SetTolerances(1e-12,1e-12);
 	p_model->SetMaxSteps(1e5);
 	
-	int paces = 1000;
-	OdeSolution solution;
-   
+	p_regular_stim->SetStartTime(0);
+	//	double duration = p_regular_stim->GetDuration();
+	
 	for(int i=0; i < paces; i++){
-	  solution = p_model->Compute(0, period, sampling_timestep);
-	  std::vector<double> states = solution.rGetSolutions().back();
-	  for(unsigned int j = 0; j < states.size(); j++){
-	    output_file << states[j] << " ";
-	  }
-	  output_file << "\n";
+	  p_model->Solve(0, period, 1000);
 	}
-
-	solution.WriteToFile("ohara_rudy", "OnePartTrace", "ms");
-	output_file.close();
-       
-#else
+      }
+#else 
         std::cout << "Cvode is not enabled.\n";
 #endif
     }
