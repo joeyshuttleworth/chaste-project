@@ -8,7 +8,7 @@
 void RunSimulation(boost::shared_ptr<AbstractCvodeCell> p_model, unsigned int paces, unsigned int period, double tolerances){
   boost::shared_ptr<RegularStimulus> p_stimulus;
   boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
-  
+
   p_stimulus = p_model->UseCellMLDefaultStimulus();
   p_stimulus->SetStartTime(0);
   for(unsigned int i = 0; i < paces - 1; i++){
@@ -97,20 +97,20 @@ double mrmsTrace(std::vector<std::vector<double>> A, std::vector<std::vector<dou
       norm += pow((a - b)/(1+abs(a)), 2);
     }
   }
-  return sqrt(norm/(A.size() * A[0].size()));  
+  return sqrt(norm/(A.size() * A[0].size()));
 }
 
-double CalculateAPD(boost::shared_ptr<AbstractCvodeCell> p_model, double period, double duration, double  percentage){ 
+double CalculateAPD(boost::shared_ptr<AbstractCvodeCell> p_model, double period, double duration, double percentage){
   double apd;
 
   double sampling_timestep = 0.1;
   const std::vector<double> initial_conditions = p_model->GetStdVecStateVariables();
   const double rel_tol = p_model->GetRelativeTolerance();
-  const double abs_tol = p_model->GetAbsoluteTolerance();  
-  
+  const double abs_tol = p_model->GetAbsoluteTolerance();
+
   p_model->SetMaxSteps(1e5);
   p_model->SetTolerances(1e-12, 1e-12);
- 
+
   OdeSolution solution = p_model->Compute(0, duration, sampling_timestep);
   std::vector<std::vector<double>> state_variables = solution.rGetSolutions();
   std::vector<double> times = solution.rGetTimes();

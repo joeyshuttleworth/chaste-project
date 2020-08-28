@@ -104,7 +104,7 @@ public:
     unsigned int voltage_index = p_model->GetSystemInformation()->GetStateVariableIndex("membrane_voltage");
 
     std::vector<double> voltages = GetNthVariable(final_trace, voltage_index);
-
+    
     /*Output terminal state variables to file*/
     for(unsigned int i = 0; i < final_trace[0].size(); i++){
       variables_file << final_trace.back()[i] << " ";

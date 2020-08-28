@@ -62,7 +62,7 @@ public:
 	    std::vector<double> current_times = current_solution->rGetTimes();
 	    for(unsigned int j = 0; j < number_of_variables; j++){
 	      for(unsigned int k = 0; k < current_solution->GetNumberOfTimeSteps(); k++){
-		sum_2 = sum_2 + pow(current_solution->rGetSolutions()[k][j] - last_solution->rGetSolutions()[k][j]);
+          sum_2 = sum_2 + pow(current_solution->rGetSolutions()[k][j] - last_solution->rGetSolutions()[k][j], 2);
 	      }
 	    }
 	    changes_file << sqrt(sum_2) << " " << sqrt(sum_mrms / number_of_variables) << "\n";

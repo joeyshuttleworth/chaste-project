@@ -53,7 +53,6 @@ double CalculatePMCC(Container values){
   if(values.size()<=2 || values.size() <= 2){
     return -NAN;
   }
-    
   double sum_x = 0, sum_x2 = 0, sum_y = 0, sum_y2 = 0, sum_xy = 0;
 
   for(unsigned int i = 0; i < N; i++){
@@ -65,7 +64,6 @@ double CalculatePMCC(Container values){
   }
 
   double pmcc = (N*sum_xy - sum_x*sum_y)/sqrt((N*sum_x2 - sum_x*sum_x)*(N*sum_y2 - sum_y*sum_y));
-  
   return pmcc;
 }
 
