@@ -42,7 +42,9 @@ public:
     finished = false;
     p_stimulus = p_model->UseCellMLDefaultStimulus();
     p_stimulus->SetStartTime(0);
-    p_stimulus->SetPeriod(period);
+    //There's no need to be near the second stimulus because Solve is called for
+    //each pace
+    p_stimulus->SetPeriod(2*period);
     p_model->SetMaxSteps(1e5);
     p_model->SetMaxTimestep(1000);
     p_model->SetTolerances(TolAbs, TolRel);
@@ -249,8 +251,8 @@ private:
         jumps++;
       }
       p_model->SetStateVariables(state_variables);
-      // p_model->SetVoltage(p_model->CalculateAnalyticVoltage());
-      if(std::abs(p_model->CalculateAnalyticVoltage() - safe_state_variables[0]) > 5){
+      bool bad_extrapolation = false;
+      if(bad_extrapolation){
         /* Reset back to old vars and try again later */
         p_model->SetStateVariables(safe_state_variables);
         mrms_buffer.clear();
