@@ -26,6 +26,92 @@ class TestGroundTruthSimulation : public CxxTest::TestSuite
 private:
   const unsigned int buffer_size = 100;
   const double e_c = 1;
+
+  bool compareMethods(boost::shared_ptr<AbstractCvodeCell> brute_force_model, boost::shared_ptr<AbstractCvodeCell> smart_model){
+    bool brute_finished = false;
+    bool smart_finished = false;
+    const unsigned int paces  = 2000;
+    SmartSimulation smart_simulation(smart_model, 500);
+    Simulation      simulation(brute_force_model, 500);
+    smart_simulation.Initialise(buffer_size, e_c);
+
+    std::string username = std::string(getenv("USER"));
+
+    const std::string model_name = brute_force_model->GetSystemInformation()->GetSystemName();
+    const std::string model_name2 = smart_model->GetSystemInformation()->GetSystemName();
+
+    std::cout << "Testing " << model_name  << "\n";
+    boost::filesystem::create_directory("/tmp/"+username);
+    boost::filesystem::create_directory("/tmp/"+username+"/"+model_name);
+    boost::filesystem::create_directory("/tmp/"+username+"/"+model_name+"/TestExtrapolation");
+    TS_ASSERT_EQUALS(model_name , model_name2);
+
+    std::ofstream smart_output_file, brute_output_file;
+    smart_output_file.open("/tmp/"+username+"/"+model_name+"/TestExtrapolation/smart.dat");
+    brute_output_file.open("/tmp/"+username+"/"+model_name+"/TestExtrapolation/bruteforce.dat");
+
+    std::vector<std::string> state_names = brute_force_model->rGetStateVariableNames();
+
+    smart_output_file << "pace ";
+    brute_output_file << "pace ";
+
+    for(unsigned int i = 0; i < state_names.size(); i++){
+      smart_output_file << state_names[i] << " ";
+      brute_output_file << state_names[i] << " ";
+    }
+    smart_output_file << "\n";
+    brute_output_file << "\n";
+
+    /*Run the simulations*/
+    for(unsigned int j = 0; j < paces; j++){
+      if(!smart_finished){
+        if(smart_simulation.RunPace()){
+          std::cout << "Model " << model_name << " period " << 500 << " extrapolation method finished after " << j << " paces \n";
+          smart_finished = true;
+        }
+        std::vector<double> state_vars = smart_model->GetStdVecStateVariables();
+        smart_output_file << j << " ";
+        for(unsigned int i = 0; i < state_vars.size(); i++){
+          smart_output_file << state_vars[i] << " ";
+        }
+        smart_output_file << "\n";
+      }
+
+      if(!brute_finished){
+        if(simulation.RunPace()){
+          std::cout << "Model " << model_name << " period " << 500 << " brute force method finished after " << j << " paces \n";
+          brute_finished = true;
+        }
+        std::vector<double> state_vars = brute_force_model->GetStdVecStateVariables();
+        brute_output_file << j << " ";
+        for(unsigned int i = 0; i < state_vars.size(); i++){
+          brute_output_file << state_vars[i] << " ";
+        }
+        brute_output_file << "\n";
+      }
+
+      if(smart_finished && brute_finished)
+        break;
+    }
+
+    std::vector<double> brute_states = brute_force_model->GetStdVecStateVariables();
+    std::vector<double> smart_states = smart_model->GetStdVecStateVariables();
+
+    for(unsigned int i = 0; i < brute_states.size(); i++){
+      std::cout << brute_states[i] << "\t" << smart_states[i] << "\n";
+    }
+
+    /*Check that the methods have converged to the same place*/
+    double mrms_difference = mrms(simulation.GetStateVariables(), smart_simulation.GetStateVariables());
+
+    std::cout << "MRMS between solutions is " << mrms_difference << "\n";
+
+    TS_ASSERT_LESS_THAN(mrms_difference, 1e-3);
+    TS_ASSERT(smart_finished && brute_finished);
+
+    return brute_finished&&smart_finished;
+  }
+
 public:
   void TestTusscherSimulation()
   {
@@ -33,91 +119,14 @@ public:
     boost::shared_ptr<RegularStimulus> p_stimulus;
     boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
 
-    boost::shared_ptr<Cellten_tusscher_model_2006_epiFromCellMLCvode> p_model3(new Cellten_tusscher_model_2006_epiFromCellMLCvode(p_solver, p_stimulus));
-    boost::shared_ptr<Cellten_tusscher_model_2006_epiFromCellMLCvode> p_model4(new Cellten_tusscher_model_2006_epiFromCellMLCvode(p_solver, p_stimulus));
     boost::shared_ptr<Cellohara_rudy_cipa_v1_2017FromCellMLCvode> p_model1(new Cellohara_rudy_cipa_v1_2017FromCellMLCvode(p_solver, p_stimulus));
     boost::shared_ptr<Cellohara_rudy_cipa_v1_2017FromCellMLCvode> p_model2(new Cellohara_rudy_cipa_v1_2017FromCellMLCvode(p_solver, p_stimulus));
+    boost::shared_ptr<Cellten_tusscher_model_2006_epiFromCellMLCvode> p_model3(new Cellten_tusscher_model_2006_epiFromCellMLCvode(p_solver, p_stimulus));
+    boost::shared_ptr<Cellten_tusscher_model_2006_epiFromCellMLCvode> p_model4(new Cellten_tusscher_model_2006_epiFromCellMLCvode(p_solver, p_stimulus));
 
-    std::string username = std::string(getenv("USER"));
-    boost::filesystem::create_directory("/tmp/"+username);
+    compareMethods(p_model1, p_model2);
+    compareMethods(p_model3, p_model4);
 
-    // int benchmark = 0;
-
-    const std::string model_name = p_model1->GetSystemInformation()->GetSystemName();
-    std::cout << "Testing " << model_name  << "\n";
-    boost::filesystem::create_directory("/tmp/"+username);
-    boost::filesystem::create_directory("/tmp/"+username+"/"+model_name);
-    boost::filesystem::create_directory("/tmp/"+username+"/"+model_name+"/TestExtrapolation");
-
-    // const double duration = 2;
-
-    const unsigned int paces  = 1500;
-    SmartSimulation smart_simulation(p_model1, 500);
-    Simulation      simulation(p_model2, 500);
-    smart_simulation.Initialise(buffer_size, e_c);
-
-    std::ofstream smart_output_file;
-    std::ofstream brute_output_file;
-
-    smart_output_file.open("/tmp/"+username+"/"+model_name+"/TestExtrapolation/smart.dat");
-    brute_output_file.open("/tmp/"+username+"/"+model_name+"/TestExtrapolation/bruteforce.dat");
-
-    TS_ASSERT_EQUALS(smart_output_file.is_open(), true);
-    TS_ASSERT_EQUALS(brute_output_file.is_open(), true);
-
-    /*Set the output to be very precise */
-    smart_output_file.precision(18);
-    brute_output_file.precision(18);
-
-    smart_output_file << "membrane_voltage" << "\n";
-    brute_output_file << "membrane_voltage" << "\n";
-
-    // p_model->SetIntegrationConstant(initial_v);
-    // p_model2->SetIntegrationConstant(initial_v);
-
-    bool finished1 = false;
-    bool finished2 = false;
-
-    p_model1->SetIntegrationConstant(-85.0133852794686);
-    p_model2->SetIntegrationConstant(-85.0133852794686);
-
-
-    /*Run the simulations*/
-    for(unsigned int j = 0; j < paces; j++){
-      std::cout << "pace " << j << "\n";
-      if(!finished1){
-        if(smart_simulation.RunPace()){
-          std::cout << "Model " << model_name << " period " << 500 << " extrapolation method finished after " << j << " paces \n";
-          finished1 = true;
-        }
-        // else
-        //   smart_output_file << p_model->CalculateAnalyticVoltage() << "\n";
-      }
-
-      if(!finished2){
-        if(simulation.RunPace()){
-          std::cout << "Model " << model_name << " period " << 500 << " brute force method finished after " << j << " paces \n";
-          finished2 = true;
-        }
-        // else
-        //   brute_output_file << p_model2->CalculateAnalyticVoltage() << "\n";
-      }
-      if(finished1 && finished2)
-        break;
-    }
-
-    std::vector<double> states = p_model1->GetStdVecStateVariables();
-    std::vector<std::string> state_names = p_model1->rGetStateVariableNames();
-
-    smart_output_file.close();
-    brute_output_file.close();
-
-    /*Check that the methods have converged to the same place*/
-
-    std::cout << "MRMS between solutions is " << mrms(simulation.GetStateVariables(), smart_simulation.GetStateVariables()) << "\n";
-    // std::cout << "Pace MRMS between solutions is " << CalculatePaceMrms(p_model1, simulation.GetStateVariables(), smart_simulation.GetStateVariables(), 500, p_model->UseCellMLDefaultStimulus()) << "\n";
-
-    // std::cout << "Difference in APDs " << CalculateAPD(p_model, 500, 2, 90) - CalculateAPD(p_model2, 500, 2, 90) << "\n";
 
 #else
     std::cout << "Cvode is not enabled.\n";

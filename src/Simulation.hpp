@@ -267,7 +267,6 @@ private:
   }
 
 public:
-
   using Simulation::Simulation;
 
   bool RunPace(){
@@ -310,7 +309,6 @@ public:
       mrms_buffer.clear();
       current_mrms = 0;
     }
-    // p_model->SetVoltage(p_model->CalculateAnalyticVoltage());
     return false;
   }
 
