@@ -60,11 +60,12 @@ def make_plot(model_name):
         plt.axhline(smart_var[jump_pace-2] + V_diff, color="grey", linestyle = "-.")
 
         plt.plot(jump_pace, smart_var[jump_pace-1] + V_diff, label="point", markersize=5, color='red', marker='x')
-        plt.legend(["extrapolation method solution", "brute force solution", "fitted curve", "Terminal value from brute force method on numeric model", "Predicted terminal value from fitted curve", "Point extrapolated to"], prop={'size': 5})
+        plt.legend(["extrapolation method solution", "brute force solution", "fitted curve", "terminal value from brute force method on numeric model", "predicted terminal value from fitted curve", "point extrapolated to"], prop={'size': 5})
         plt.title(model_name + " " + state_var)
         if not os.path.exists("data"):
             os.mkdir("data")
         plt.savefig("data/"+model_name+"_"+state_var+".png")
+        plt.clf()
         line_no += 1
 
 if __name__=="__main__":
