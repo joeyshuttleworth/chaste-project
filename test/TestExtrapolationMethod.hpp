@@ -13,13 +13,10 @@
 
 /* These header files are generated from the cellml files provided at github.com/chaste/cellml */
 
-#include "beeler_reuter_model_1977Cvode.hpp"
-#include "ten_tusscher_model_2004_epiCvode.hpp"
-#include "ohara_rudy_2011_endoCvode.hpp"
-#include "shannon_wang_puglisi_weber_bers_2004Cvode.hpp"
-#include "decker_2009Cvode.hpp"
 #include "ten_tusscher_model_2006_epiCvode.hpp"
 #include "ohara_rudy_cipa_v1_2017Cvode.hpp"
+#include "ten_tusscher_model_2006_epi_analytic_voltageCvode.hpp"
+#include "ohara_rudy_cipa_v1_2017_analytic_voltageCvode.hpp"
 
 class TestGroundTruthSimulation : public CxxTest::TestSuite
 {
@@ -27,7 +24,7 @@ private:
   const unsigned int buffer_size = 100;
   const double e_c = 1;
 
-  bool compareMethods(boost::shared_ptr<AbstractCvodeCell> brute_force_model, boost::shared_ptr<AbstractCvodeCell> smart_model){
+  bool compareMethods(boost::shared_ptr<AbstractCvodeCell> brute_force_model, boost::shared_ptr<AbstractCvodeCell> smart_model, boost::shared_ptr<AbstractCvodeCell> numerical_comparison_model){
     bool brute_finished = false;
     bool smart_finished = false;
     const unsigned int paces  = 2000;
@@ -89,10 +86,13 @@ private:
         }
         brute_output_file << "\n";
       }
-
       if(smart_finished && brute_finished)
         break;
     }
+
+    /* Run the numerical voltage version */
+    numerical_voltage_simulation = Simulation(numerical_comparison_model, 500);
+    numerical_voltage_simulation.RunPaces(10000);
 
     std::vector<double> brute_states = brute_force_model->GetStdVecStateVariables();
     std::vector<double> smart_states = smart_model->GetStdVecStateVariables();
@@ -102,7 +102,7 @@ private:
     }
 
     /*Check that the methods have converged to the same place*/
-    double mrms_difference = mrms(simulation.GetStateVariables(), smart_simulation.GetStateVariables());
+    double mrms_difference = mrms(numerical_voltage_simulation.GetStateVariables(), smart_simulation.GetStateVariables());
 
     std::cout << "MRMS between solutions is " << mrms_difference << "\n";
 
@@ -119,13 +119,18 @@ public:
     boost::shared_ptr<RegularStimulus> p_stimulus;
     boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
 
-    boost::shared_ptr<Cellohara_rudy_cipa_v1_2017FromCellMLCvode> p_model1(new Cellohara_rudy_cipa_v1_2017FromCellMLCvode(p_solver, p_stimulus));
-    boost::shared_ptr<Cellohara_rudy_cipa_v1_2017FromCellMLCvode> p_model2(new Cellohara_rudy_cipa_v1_2017FromCellMLCvode(p_solver, p_stimulus));
-    boost::shared_ptr<Cellten_tusscher_model_2006_epiFromCellMLCvode> p_model3(new Cellten_tusscher_model_2006_epiFromCellMLCvode(p_solver, p_stimulus));
-    boost::shared_ptr<Cellten_tusscher_model_2006_epiFromCellMLCvode> p_model4(new Cellten_tusscher_model_2006_epiFromCellMLCvode(p_solver, p_stimulus));
+    std::vector<boost::shared_ptr<AbstractCvodeCell>> p_models[] ={ new Cellohara_rudy_cipa_v1_2017_analytic_voltageFromCellMLCvode(p_solver, p_stimulus),
+                                                                    new Cellohara_rudy_cipa_v1_2017_analytic_voltageFromCellMLCvode(p_solver, p_stimulus),
+                                                                    new Cellten_tusscher_model_2006_epi_analytic_voltageFromCellMLCvode(p_solver, p_stimulus),
+                                                                    new Cellten_tusscher_model_2006_epi_analytic_voltageFromCellMLCvode(p_solver, p_stimulus)
+    };
 
-    compareMethods(p_model1, p_model2);
-    compareMethods(p_model3, p_model4);
+    boost::shared_ptr<AbstractCvodecell> p_model_comparison = {new Cellohara_rudy_cipa_v1_2017FromCellMLCvode(p_solver, p_stimulus),
+                                                               new Cellten_tusscher_model_2006_epiFromCellMLCvode(p_solver, p_stimulus)
+    };
+
+    compareMethods(p_model[0], p_model[1], p_model_comparison[0]);
+    compareMethods(p_model[2], p_model[3], p_model_comparison[1]);
 
 
 #else
