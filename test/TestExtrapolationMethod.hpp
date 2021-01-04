@@ -7,14 +7,15 @@
 #include "Shannon2004Cvode.hpp"
 #include "FakePetscSetup.hpp"
 #include "Simulation.hpp"
+#include "SmartSimulation.hpp"
 
 #include <boost/filesystem.hpp>
 #include <fstream>
 
 /* These header files are generated from the cellml files provided at github.com/chaste/cellml */
-// #include "ten_tusscher_model_2006_epiCvode.hpp"
 #include "ohara_rudy_cipa_v1_2017Cvode.hpp"
 #include "ohara_rudy_cipa_v1_2017_analyticCvode.hpp"
+
 
 class TestGroundTruthSimulation : public CxxTest::TestSuite
 {
@@ -23,9 +24,8 @@ private:
   const double extrapolation_coefficient = 1;
 
   bool compareMethods(boost::shared_ptr<AbstractCvodeCell> brute_force_model, boost::shared_ptr<AbstractCvodeCell> smart_model){
-    SmartSimulation smart_simulation(smart_model, 500, "", 1e-7);
-    Simulation      simulation(brute_force_model, 500,"",  1e-7);
-    smart_simulation.Initialise(100, 1);
+    SmartSimulation smart_simulation(smart_model, 500);
+    Simulation      simulation(brute_force_model, 500);
 
     std::string username = std::string(getenv("USER"));
 
@@ -84,10 +84,13 @@ private:
         }
         brute_output_file << "\n";
       }
-
       if(smart_finished && brute_finished)
         break;
     }
+
+    // /* Run the numerical voltage version */
+    // numerical_voltage_simulation = Simulation(numerical_comparison_model, 500);
+    // numerical_voltage_simulation.RunPaces(10000);
 
     std::vector<double> brute_states = brute_force_model->GetStdVecStateVariables();
     std::vector<double> smart_states = smart_model->GetStdVecStateVariables();
@@ -114,15 +117,10 @@ public:
     boost::shared_ptr<RegularStimulus> p_stimulus;
     boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
 
-    boost::shared_ptr<AbstractCvodeCell> p_model1(new Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode(p_solver, p_stimulus));
-    boost::shared_ptr<AbstractCvodeCell> p_model2(new Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode(p_solver, p_stimulus));
-    // boost::shared_ptr<Cellten_tusscher_model_2006_epiFromCellMLCvode> p_model3(new Cellten_tusscher_model_2006_epiFromCellMLCvode(p_solver, p_stimulus));
-    // boost::shared_ptr<Cellten_tusscher_model_2006_epiFromCellMLCvode> p_model4(new Cellten_tusscher_model_2006_epiFromCellMLCvode(p_solver, p_stimulus));
+    boost::shared_ptr<AbstractCvodeCell> p_model1(new Cellohara_rudy_cipa_v1_2017FromCellMLCvode(p_solver, p_stimulus));
+    boost::shared_ptr<AbstractCvodeCell> p_model2(new Cellohara_rudy_cipa_v1_2017FromCellMLCvode(p_solver, p_stimulus));
 
     compareMethods(p_model1, p_model2);
-    // compareMethods(p_model3, p_model4);
-
-
 #else
     std::cout << "Cvode is not enabled.\n";
 #endif

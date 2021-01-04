@@ -64,7 +64,7 @@ def make_plot(model_name):
         plt.title(model_name + " " + state_var)
         if not os.path.exists("data"):
             os.mkdir("data")
-        plt.savefig("data/"+model_name+"_"+state_var+".png")
+        plt.savefig("data/"+model_name+"_"+state_var+".eps", format="eps")
         plt.clf()
         line_no += 1
 
