@@ -12,28 +12,20 @@
 #include <fstream>
 
 /* These header files are generated from the cellml files provided at github.com/chaste/cellml */
-
-#include "beeler_reuter_model_1977Cvode.hpp"
-#include "ten_tusscher_model_2004_epiCvode.hpp"
-#include "ohara_rudy_2011_endoCvode.hpp"
-#include "shannon_wang_puglisi_weber_bers_2004Cvode.hpp"
-#include "decker_2009Cvode.hpp"
-#include "ten_tusscher_model_2006_epiCvode.hpp"
+// #include "ten_tusscher_model_2006_epiCvode.hpp"
 #include "ohara_rudy_cipa_v1_2017Cvode.hpp"
+#include "ohara_rudy_cipa_v1_2017_analyticCvode.hpp"
 
 class TestGroundTruthSimulation : public CxxTest::TestSuite
 {
 private:
   const unsigned int buffer_size = 100;
-  const double e_c = 1;
+  const double extrapolation_coefficient = 1;
 
   bool compareMethods(boost::shared_ptr<AbstractCvodeCell> brute_force_model, boost::shared_ptr<AbstractCvodeCell> smart_model){
-    bool brute_finished = false;
-    bool smart_finished = false;
-    const unsigned int paces  = 2000;
-    SmartSimulation smart_simulation(smart_model, 500);
-    Simulation      simulation(brute_force_model, 500);
-    smart_simulation.Initialise(buffer_size, e_c);
+    SmartSimulation smart_simulation(smart_model, 500, "", 1e-7);
+    Simulation      simulation(brute_force_model, 500,"",  1e-7);
+    smart_simulation.Initialise(100, 1);
 
     std::string username = std::string(getenv("USER"));
 
@@ -63,6 +55,9 @@ private:
     brute_output_file << "\n";
 
     /*Run the simulations*/
+    bool brute_finished = false;
+    bool smart_finished = false;
+    const unsigned int paces  = 2000;
     for(unsigned int j = 0; j < paces; j++){
       if(!smart_finished){
         if(smart_simulation.RunPace()){
@@ -119,13 +114,13 @@ public:
     boost::shared_ptr<RegularStimulus> p_stimulus;
     boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
 
-    boost::shared_ptr<Cellohara_rudy_cipa_v1_2017FromCellMLCvode> p_model1(new Cellohara_rudy_cipa_v1_2017FromCellMLCvode(p_solver, p_stimulus));
-    boost::shared_ptr<Cellohara_rudy_cipa_v1_2017FromCellMLCvode> p_model2(new Cellohara_rudy_cipa_v1_2017FromCellMLCvode(p_solver, p_stimulus));
-    boost::shared_ptr<Cellten_tusscher_model_2006_epiFromCellMLCvode> p_model3(new Cellten_tusscher_model_2006_epiFromCellMLCvode(p_solver, p_stimulus));
-    boost::shared_ptr<Cellten_tusscher_model_2006_epiFromCellMLCvode> p_model4(new Cellten_tusscher_model_2006_epiFromCellMLCvode(p_solver, p_stimulus));
+    boost::shared_ptr<AbstractCvodeCell> p_model1(new Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode(p_solver, p_stimulus));
+    boost::shared_ptr<AbstractCvodeCell> p_model2(new Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode(p_solver, p_stimulus));
+    // boost::shared_ptr<Cellten_tusscher_model_2006_epiFromCellMLCvode> p_model3(new Cellten_tusscher_model_2006_epiFromCellMLCvode(p_solver, p_stimulus));
+    // boost::shared_ptr<Cellten_tusscher_model_2006_epiFromCellMLCvode> p_model4(new Cellten_tusscher_model_2006_epiFromCellMLCvode(p_solver, p_stimulus));
 
     compareMethods(p_model1, p_model2);
-    compareMethods(p_model3, p_model4);
+    // compareMethods(p_model3, p_model4);
 
 
 #else

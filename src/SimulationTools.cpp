@@ -1,10 +1,5 @@
 #include "SimulationTools.hpp"
 
-#include "beeler_reuter_model_1977Cvode.hpp"
-#include "ten_tusscher_model_2004_epiCvode.hpp"
-#include "ohara_rudy_2011_endoCvode.hpp"
-#include "shannon_wang_puglisi_weber_bers_2004Cvode.hpp"
-
 void RunSimulation(boost::shared_ptr<AbstractCvodeCell> p_model, unsigned int paces, unsigned int period, double tolerances){
   boost::shared_ptr<RegularStimulus> p_stimulus;
   boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
