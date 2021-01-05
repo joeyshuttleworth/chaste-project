@@ -101,7 +101,7 @@ double Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode::calculateAnalyticVol
 
         // We have a default stimulus specified in the CellML file metadata
         this->mHasDefaultStimulusFromCellML = true;
-        mUseAnalyticJacobian = true;
+        mUseAnalyticJacobian = false;
         mHasAnalyticJacobian = true;
 
         NV_Ith_S(this->mParameters, 0) = 0; // (var_IKr__D) [dimensionless]
@@ -476,7 +476,7 @@ double Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode::calculateAnalyticVol
         // calculateAnalyticVoltage();
         // Inputs:
         // Time units: millisecond
-        double var_chaste_interface__membrane__v = calculateAnalyticVoltage(); 
+        double var_chaste_interface__membrane__v = calculateAnalyticVoltage();
         // Units: millivolt; Initial value: -88.00190465
         double var_chaste_interface__intracellular_ions__cai = NV_Ith_S(rY, 1);
         // Units: millimolar; Initial value: 8.6e-05

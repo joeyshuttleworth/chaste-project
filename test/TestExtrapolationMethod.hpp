@@ -50,6 +50,8 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /* These header files are generated from the cellml files provided at github.com/chaste/cellml */
 #include "ohara_rudy_cipa_v1_2017Cvode.hpp"
 #include "ohara_rudy_cipa_v1_2017_analyticCvode.hpp"
+#include "ten_tusscher_model_2006_epiCvode.hpp"
+#include "ten_tusscher_model_2006_epi_analyticCvode.hpp"
 
 
 class TestGroundTruthSimulation : public CxxTest::TestSuite
@@ -154,8 +156,12 @@ public:
 
     boost::shared_ptr<AbstractCvodeCell> p_model1(new Cellohara_rudy_cipa_v1_2017FromCellMLCvode(p_solver, p_stimulus));
     boost::shared_ptr<AbstractCvodeCell> p_model2(new Cellohara_rudy_cipa_v1_2017FromCellMLCvode(p_solver, p_stimulus));
+    boost::shared_ptr<AbstractCvodeCell> p_model3(new Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode(p_solver, p_stimulus));
+    boost::shared_ptr<AbstractCvodeCell> p_model4(new Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode(p_solver, p_stimulus));
 
+    compareMethods(p_model3, p_model4);
     compareMethods(p_model1, p_model2);
+
 #else
     std::cout << "Cvode is not enabled.\n";
 #endif
