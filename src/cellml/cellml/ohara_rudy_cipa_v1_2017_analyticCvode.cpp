@@ -473,7 +473,6 @@ double Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode::calculateAnalyticVol
 
     void Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode::EvaluateYDerivatives(double var_chaste_interface__environment__time, const N_Vector rY, N_Vector rDY)
     {
-        // calculateAnalyticVoltage();
         // Inputs:
         // Time units: millisecond
         double var_chaste_interface__membrane__v = calculateAnalyticVoltage();
