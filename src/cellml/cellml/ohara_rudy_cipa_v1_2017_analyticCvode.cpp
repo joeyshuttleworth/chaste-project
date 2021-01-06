@@ -57,9 +57,10 @@ double Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode::calculateAnalyticVol
   const double nass = state_vars[4];//7.268004498;
   const double kss = state_vars[6];
   const double cansr = state_vars[8];//1.619574538;
-  const double mIntegrationConstant = 156.801125;
 
-  double analytic_voltage = faradays_constant*vmyo*(ki+nai+2*cai_tot+(kss+nass+2*cass_tot)*vss/vmyo+2*cajsr_tot*vjsr/vmyo+2*cansr*vnsr/vmyo - mIntegrationConstant) /(Acap*cm);
+  double analytic_voltage = faradays_constant*vmyo*(ki+nai+2*cai_tot+(kss+nass+2*cass_tot)*vss/vmyo+2*cajsr_tot*vjsr/vmyo+2*cansr*vnsr/vmyo) /(Acap*cm) + mIntegrationConstant;
+
+  // std::cout << analytic_voltage << " " << state_vars[0] << "\n";
   return analytic_voltage;
 }
 
@@ -129,6 +130,7 @@ double Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode::calculateAnalyticVol
         NV_Ith_S(this->mParameters, 22) = 0.00080000000000000004; // (var_INaCa_i__Gncx_b) [milliS_per_microF]
         NV_Ith_S(this->mParameters, 23) = 30.0; // (var_INaK__Pnak_b) [milliS_per_microF]
         NV_Ith_S(this->mParameters, 24) = 0.02; // (var_Ito__Gto_b) [milliS_per_microF]
+        mIntegrationConstant = NV_Ith_S(mStateVariables,0) - calculateAnalyticVoltage();
     }
 
     Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode::~Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode()
@@ -138,6 +140,7 @@ double Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode::calculateAnalyticVol
     
     double Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode::GetIIonic(const std::vector<double>* pStateVariables)
     {
+      throw std::exception();
         // For state variable interpolation (SVI) we read in interpolated state variables,
         // otherwise for ionic current interpolation (ICI) we use the state variables of this model (node).
         N_Vector rY;
@@ -475,7 +478,8 @@ double Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode::calculateAnalyticVol
     {
         // Inputs:
         // Time units: millisecond
-        double var_chaste_interface__membrane__v = calculateAnalyticVoltage();
+      double var_chaste_interface__membrane__v = calculateAnalyticVoltage();
+      // double var_chaste_interface__membrane__v = NV_Ith_S(rY,0);
         // Units: millivolt; Initial value: -88.00190465
         double var_chaste_interface__intracellular_ions__cai = NV_Ith_S(rY, 1);
         // Units: millimolar; Initial value: 8.6e-05
@@ -1060,7 +1064,7 @@ double Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode::calculateAnalyticVol
 
     void Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode::EvaluateAnalyticJacobian(double var_chaste_interface__environment__time, N_Vector rY, N_Vector rDY, CHASTE_CVODE_DENSE_MATRIX rJacobian, N_Vector rTmp1, N_Vector rTmp2, N_Vector rTmp3)
     {
-        double var_chaste_interface__membrane__v = (mSetVoltageDerivativeToZero ? this->mFixedVoltage : NV_Ith_S(rY, 0));
+      double var_chaste_interface__membrane__v = (mSetVoltageDerivativeToZero ? this->mFixedVoltage : calculateAnalyticVoltage());
         // Units: millivolt; Initial value: -88.00190465
         double var_chaste_interface__intracellular_ions__cai = NV_Ith_S(rY, 1);
         // Units: millimolar; Initial value: 8.6e-05

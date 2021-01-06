@@ -34,6 +34,7 @@ class Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode : public AbstractCvode
     //
 
   double calculateAnalyticVoltage();
+  double mIntegrationConstant;
 
 public:
 

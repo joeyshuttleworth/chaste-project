@@ -301,8 +301,8 @@ double Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode::calculateAnalyti
     {
         // Inputs:
         // Time units: millisecond
-      // double var_chaste_interface__membrane__V = (mSetVoltageDerivativeToZero ? this->mFixedVoltage : NV_Ith_S(rY, 0));
-        double var_chaste_interface__membrane__V = calculateAnalyticVoltage();
+      double var_chaste_interface__membrane__V = (mSetVoltageDerivativeToZero ? this->mFixedVoltage : NV_Ith_S(rY,0));
+      // double var_chaste_interface__membrane__V = (mSetVoltageDerivativeToZero ? this->mFixedVoltage : calculateAnalyticVoltage());
         // Units: millivolt; Initial value: -85.23
         double var_chaste_interface__calcium_dynamics__Ca_i = NV_Ith_S(rY, 1);
         // Units: millimolar; Initial value: 0.000126

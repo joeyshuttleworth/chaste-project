@@ -59,8 +59,9 @@ private:
     /*Run the simulations*/
     bool brute_finished = false;
     bool smart_finished = false;
-    const unsigned int paces  = 2000;
+    const unsigned int paces  = 1;
     for(unsigned int j = 0; j < paces; j++){
+      std::cout << "pace: "<< j << "\n";
       if(!smart_finished){
         if(smart_simulation.RunPace()){
           std::cout << "Model " << model_name << " period " << 500 << " extrapolation method finished after " << j << " paces \n";
@@ -124,7 +125,7 @@ public:
     boost::shared_ptr<AbstractCvodeCell> p_model3(new Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode(p_solver, p_stimulus));
     boost::shared_ptr<AbstractCvodeCell> p_model4(new Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode(p_solver, p_stimulus));
 
-    // compareMethods(p_model1, p_model2);
+    compareMethods(p_model1, p_model2);
     compareMethods(p_model3, p_model4);
 
 #else
