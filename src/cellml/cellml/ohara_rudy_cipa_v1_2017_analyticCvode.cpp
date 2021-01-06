@@ -1012,7 +1012,7 @@ double Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode::calculateAnalyticVol
             d_dt_chaste_interface_var_membrane__v = -var_ICaL__ICaK - var_ICaL__ICaL - var_ICaL__ICaNa - var_ICab__ICab - var_IK1__IK1 - var_IKb__IKb - var_IKr__IKr - var_IKs__IKs - var_INa__INa - var_INaCa_i__INaCa_i - var_INaCa_i__INaCa_ss - var_INaK__INaK - var_INaL__INaL - var_INab__INab - var_IpCa__IpCa - var_Ito__Ito - var_membrane__Istim; // millivolt / millisecond
         }
         
-        NV_Ith_S(rDY,0) = d_dt_chaste_interface_var_membrane__v;
+        NV_Ith_S(rDY,0) = 0;
         NV_Ith_S(rDY,1) = d_dt_chaste_interface_var_intracellular_ions__cai;
         NV_Ith_S(rDY,2) = d_dt_chaste_interface_var_CaMK__CaMKt;
         NV_Ith_S(rDY,3) = d_dt_chaste_interface_var_intracellular_ions__nai;
