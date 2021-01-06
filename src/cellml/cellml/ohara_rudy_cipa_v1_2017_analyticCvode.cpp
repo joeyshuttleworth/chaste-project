@@ -60,9 +60,7 @@ double Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode::calculateAnalyticVol
   const double mIntegrationConstant = 156.801125;
 
   double analytic_voltage = faradays_constant*vmyo*(ki+nai+2*cai_tot+(kss+nass+2*cass_tot)*vss/vmyo+2*cajsr_tot*vjsr/vmyo+2*cansr*vnsr/vmyo - mIntegrationConstant) /(Acap*cm);
-
-  std::cout << analytic_voltage << " " << state_vars[0] << "\n";
-
+  std::cout << analytic_voltage << "\n";
   return analytic_voltage;
 }
 
@@ -93,7 +91,7 @@ double Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode::calculateAnalyticVol
     Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode::Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode(boost::shared_ptr<AbstractIvpOdeSolver> pOdeSolver /* unused; should be empty */, boost::shared_ptr<AbstractStimulusFunction> pIntracellularStimulus)
         : AbstractCvodeCell(
                 pOdeSolver,
-                48,
+                47,
                 0,
                 pIntracellularStimulus)
     {
@@ -478,102 +476,101 @@ double Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode::calculateAnalyticVol
     {
         // Inputs:
         // Time units: millisecond
-      double var_chaste_interface__membrane__v = (mSetVoltageDerivativeToZero ? this->mFixedVoltage : NV_Ith_S(rY, 0));
-      calculateAnalyticVoltage();
+      double var_chaste_interface__membrane__v = calculateAnalyticVoltage();
         // Units: millivolt; Initial value: -88.00190465
-        double var_chaste_interface__intracellular_ions__cai = NV_Ith_S(rY, 1);
+        double var_chaste_interface__intracellular_ions__cai = NV_Ith_S(rY, 0);
         // Units: millimolar; Initial value: 8.6e-05
-        double var_chaste_interface__CaMK__CaMKt = NV_Ith_S(rY, 2);
+        double var_chaste_interface__CaMK__CaMKt = NV_Ith_S(rY, 1);
         // Units: millimolar; Initial value: 0.0125840447
-        double var_chaste_interface__intracellular_ions__nai = NV_Ith_S(rY, 3);
+        double var_chaste_interface__intracellular_ions__nai = NV_Ith_S(rY, 2);
         // Units: millimolar; Initial value: 7.268004498
-        double var_chaste_interface__intracellular_ions__nass = NV_Ith_S(rY, 4);
+        double var_chaste_interface__intracellular_ions__nass = NV_Ith_S(rY, 3);
         // Units: millimolar; Initial value: 7.268089977
-        double var_chaste_interface__intracellular_ions__ki = NV_Ith_S(rY, 5);
+        double var_chaste_interface__intracellular_ions__ki = NV_Ith_S(rY, 4);
         // Units: millimolar; Initial value: 144.6555918
-        double var_chaste_interface__intracellular_ions__kss = NV_Ith_S(rY, 6);
+        double var_chaste_interface__intracellular_ions__kss = NV_Ith_S(rY, 5);
         // Units: millimolar; Initial value: 144.6555651
-        double var_chaste_interface__intracellular_ions__cass = NV_Ith_S(rY, 7);
+        double var_chaste_interface__intracellular_ions__cass = NV_Ith_S(rY, 6);
         // Units: millimolar; Initial value: 8.49e-05
-        double var_chaste_interface__intracellular_ions__cansr = NV_Ith_S(rY, 8);
+        double var_chaste_interface__intracellular_ions__cansr = NV_Ith_S(rY, 7);
         // Units: millimolar; Initial value: 1.619574538
-        double var_chaste_interface__intracellular_ions__cajsr = NV_Ith_S(rY, 9);
+        double var_chaste_interface__intracellular_ions__cajsr = NV_Ith_S(rY, 8);
         // Units: millimolar; Initial value: 1.571234014
-        double var_chaste_interface__INa__m = NV_Ith_S(rY, 10);
+        double var_chaste_interface__INa__m = NV_Ith_S(rY, 9);
         // Units: dimensionless; Initial value: 0.007344121102
-        double var_chaste_interface__INa__hf = NV_Ith_S(rY, 11);
+        double var_chaste_interface__INa__hf = NV_Ith_S(rY, 10);
         // Units: dimensionless; Initial value: 0.6981071913
-        double var_chaste_interface__INa__hs = NV_Ith_S(rY, 12);
+        double var_chaste_interface__INa__hs = NV_Ith_S(rY, 11);
         // Units: dimensionless; Initial value: 0.6980895801
-        double var_chaste_interface__INa__j = NV_Ith_S(rY, 13);
+        double var_chaste_interface__INa__j = NV_Ith_S(rY, 12);
         // Units: dimensionless; Initial value: 0.6979908432
-        double var_chaste_interface__INa__hsp = NV_Ith_S(rY, 14);
+        double var_chaste_interface__INa__hsp = NV_Ith_S(rY, 13);
         // Units: dimensionless; Initial value: 0.4549485525
-        double var_chaste_interface__INa__jp = NV_Ith_S(rY, 15);
+        double var_chaste_interface__INa__jp = NV_Ith_S(rY, 14);
         // Units: dimensionless; Initial value: 0.6979245865
-        double var_chaste_interface__INaL__mL = NV_Ith_S(rY, 16);
+        double var_chaste_interface__INaL__mL = NV_Ith_S(rY, 15);
         // Units: dimensionless; Initial value: 0.0001882617273
-        double var_chaste_interface__INaL__hL = NV_Ith_S(rY, 17);
+        double var_chaste_interface__INaL__hL = NV_Ith_S(rY, 16);
         // Units: dimensionless; Initial value: 0.5008548855
-        double var_chaste_interface__INaL__hLp = NV_Ith_S(rY, 18);
+        double var_chaste_interface__INaL__hLp = NV_Ith_S(rY, 17);
         // Units: dimensionless; Initial value: 0.2693065357
-        double var_chaste_interface__Ito__a = NV_Ith_S(rY, 19);
+        double var_chaste_interface__Ito__a = NV_Ith_S(rY, 18);
         // Units: dimensionless; Initial value: 0.001001097687
-        double var_chaste_interface__Ito__iF = NV_Ith_S(rY, 20);
+        double var_chaste_interface__Ito__iF = NV_Ith_S(rY, 19);
         // Units: dimensionless; Initial value: 0.9995541745
-        double var_chaste_interface__Ito__iS = NV_Ith_S(rY, 21);
+        double var_chaste_interface__Ito__iS = NV_Ith_S(rY, 20);
         // Units: dimensionless; Initial value: 0.5865061736
-        double var_chaste_interface__Ito__ap = NV_Ith_S(rY, 22);
+        double var_chaste_interface__Ito__ap = NV_Ith_S(rY, 21);
         // Units: dimensionless; Initial value: 0.0005100862934
-        double var_chaste_interface__Ito__iFp = NV_Ith_S(rY, 23);
+        double var_chaste_interface__Ito__iFp = NV_Ith_S(rY, 22);
         // Units: dimensionless; Initial value: 0.9995541823
-        double var_chaste_interface__Ito__iSp = NV_Ith_S(rY, 24);
+        double var_chaste_interface__Ito__iSp = NV_Ith_S(rY, 23);
         // Units: dimensionless; Initial value: 0.6393399482
-        double var_chaste_interface__ICaL__d = NV_Ith_S(rY, 25);
+        double var_chaste_interface__ICaL__d = NV_Ith_S(rY, 24);
         // Units: dimensionless; Initial value: 2.34e-09
-        double var_chaste_interface__ICaL__ff = NV_Ith_S(rY, 26);
+        double var_chaste_interface__ICaL__ff = NV_Ith_S(rY, 25);
         // Units: dimensionless; Initial value: 0.9999999909
-        double var_chaste_interface__ICaL__fs = NV_Ith_S(rY, 27);
+        double var_chaste_interface__ICaL__fs = NV_Ith_S(rY, 26);
         // Units: dimensionless; Initial value: 0.9102412777
-        double var_chaste_interface__ICaL__fcaf = NV_Ith_S(rY, 28);
+        double var_chaste_interface__ICaL__fcaf = NV_Ith_S(rY, 27);
         // Units: dimensionless; Initial value: 0.9999999909
-        double var_chaste_interface__ICaL__fcas = NV_Ith_S(rY, 29);
+        double var_chaste_interface__ICaL__fcas = NV_Ith_S(rY, 28);
         // Units: dimensionless; Initial value: 0.9998046777
-        double var_chaste_interface__ICaL__jca = NV_Ith_S(rY, 30);
+        double var_chaste_interface__ICaL__jca = NV_Ith_S(rY, 29);
         // Units: dimensionless; Initial value: 0.9999738312
-        double var_chaste_interface__ICaL__ffp = NV_Ith_S(rY, 31);
+        double var_chaste_interface__ICaL__ffp = NV_Ith_S(rY, 30);
         // Units: dimensionless; Initial value: 0.9999999909
-        double var_chaste_interface__ICaL__fcafp = NV_Ith_S(rY, 32);
+        double var_chaste_interface__ICaL__fcafp = NV_Ith_S(rY, 31);
         // Units: dimensionless; Initial value: 0.9999999909
-        double var_chaste_interface__ICaL__nca = NV_Ith_S(rY, 33);
+        double var_chaste_interface__ICaL__nca = NV_Ith_S(rY, 32);
         // Units: dimensionless; Initial value: 0.002749414044
-        double var_chaste_interface__IKr__IC1 = NV_Ith_S(rY, 34);
+        double var_chaste_interface__IKr__IC1 = NV_Ith_S(rY, 33);
         // Units: dimensionless; Initial value: 0.999637
-        double var_chaste_interface__IKr__IC2 = NV_Ith_S(rY, 35);
+        double var_chaste_interface__IKr__IC2 = NV_Ith_S(rY, 34);
         // Units: dimensionless; Initial value: 6.83208e-05
-        double var_chaste_interface__IKr__C1 = NV_Ith_S(rY, 36);
+        double var_chaste_interface__IKr__C1 = NV_Ith_S(rY, 35);
         // Units: dimensionless; Initial value: 1.80145e-08
-        double var_chaste_interface__IKr__C2 = NV_Ith_S(rY, 37);
+        double var_chaste_interface__IKr__C2 = NV_Ith_S(rY, 36);
         // Units: dimensionless; Initial value: 8.26619e-05
-        double var_chaste_interface__IKr__O = NV_Ith_S(rY, 38);
+        double var_chaste_interface__IKr__O = NV_Ith_S(rY, 37);
         // Units: dimensionless; Initial value: 0.00015551
-        double var_chaste_interface__IKr__IO = NV_Ith_S(rY, 39);
+        double var_chaste_interface__IKr__IO = NV_Ith_S(rY, 38);
         // Units: dimensionless; Initial value: 5.67623e-05
-        double var_chaste_interface__IKr__IObound = NV_Ith_S(rY, 40);
+        double var_chaste_interface__IKr__IObound = NV_Ith_S(rY, 39);
         // Units: dimensionless; Initial value: 0.0
-        double var_chaste_interface__IKr__Obound = NV_Ith_S(rY, 41);
+        double var_chaste_interface__IKr__Obound = NV_Ith_S(rY, 40);
         // Units: dimensionless; Initial value: 0.0
-        double var_chaste_interface__IKr__Cbound = NV_Ith_S(rY, 42);
+        double var_chaste_interface__IKr__Cbound = NV_Ith_S(rY, 41);
         // Units: dimensionless; Initial value: 0.0
-        double var_chaste_interface__IKs__xs1 = NV_Ith_S(rY, 43);
+        double var_chaste_interface__IKs__xs1 = NV_Ith_S(rY, 42);
         // Units: dimensionless; Initial value: 0.2707758025
-        double var_chaste_interface__IKs__xs2 = NV_Ith_S(rY, 44);
+        double var_chaste_interface__IKs__xs2 = NV_Ith_S(rY, 43);
         // Units: dimensionless; Initial value: 0.0001928503426
-        double var_chaste_interface__IK1__xk1 = NV_Ith_S(rY, 45);
+        double var_chaste_interface__IK1__xk1 = NV_Ith_S(rY, 44);
         // Units: dimensionless; Initial value: 0.9967597594
-        double var_chaste_interface__ryr__Jrelnp = NV_Ith_S(rY, 46);
+        double var_chaste_interface__ryr__Jrelnp = NV_Ith_S(rY, 45);
         // Units: dimensionless; Initial value: 2.5e-07
-        double var_chaste_interface__ryr__Jrelp = NV_Ith_S(rY, 47);
+        double var_chaste_interface__ryr__Jrelp = NV_Ith_S(rY, 46);
         // Units: dimensionless; Initial value: 3.12e-07
 
         // Mathematics
@@ -1012,72 +1009,72 @@ double Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode::calculateAnalyticVol
             d_dt_chaste_interface_var_membrane__v = -var_ICaL__ICaK - var_ICaL__ICaL - var_ICaL__ICaNa - var_ICab__ICab - var_IK1__IK1 - var_IKb__IKb - var_IKr__IKr - var_IKs__IKs - var_INa__INa - var_INaCa_i__INaCa_i - var_INaCa_i__INaCa_ss - var_INaK__INaK - var_INaL__INaL - var_INab__INab - var_IpCa__IpCa - var_Ito__Ito - var_membrane__Istim; // millivolt / millisecond
         }
         
-        NV_Ith_S(rDY,0) = d_dt_chaste_interface_var_membrane__v;
-        NV_Ith_S(rDY,1) = d_dt_chaste_interface_var_intracellular_ions__cai;
-        NV_Ith_S(rDY,2) = d_dt_chaste_interface_var_CaMK__CaMKt;
-        NV_Ith_S(rDY,3) = d_dt_chaste_interface_var_intracellular_ions__nai;
-        NV_Ith_S(rDY,4) = d_dt_chaste_interface_var_intracellular_ions__nass;
-        NV_Ith_S(rDY,5) = d_dt_chaste_interface_var_intracellular_ions__ki;
-        NV_Ith_S(rDY,6) = d_dt_chaste_interface_var_intracellular_ions__kss;
-        NV_Ith_S(rDY,7) = d_dt_chaste_interface_var_intracellular_ions__cass;
-        NV_Ith_S(rDY,8) = d_dt_chaste_interface_var_intracellular_ions__cansr;
-        NV_Ith_S(rDY,9) = d_dt_chaste_interface_var_intracellular_ions__cajsr;
-        NV_Ith_S(rDY,10) = d_dt_chaste_interface_var_INa__m;
-        NV_Ith_S(rDY,11) = d_dt_chaste_interface_var_INa__hf;
-        NV_Ith_S(rDY,12) = d_dt_chaste_interface_var_INa__hs;
-        NV_Ith_S(rDY,13) = d_dt_chaste_interface_var_INa__j;
-        NV_Ith_S(rDY,14) = d_dt_chaste_interface_var_INa__hsp;
-        NV_Ith_S(rDY,15) = d_dt_chaste_interface_var_INa__jp;
-        NV_Ith_S(rDY,16) = d_dt_chaste_interface_var_INaL__mL;
-        NV_Ith_S(rDY,17) = d_dt_chaste_interface_var_INaL__hL;
-        NV_Ith_S(rDY,18) = d_dt_chaste_interface_var_INaL__hLp;
-        NV_Ith_S(rDY,19) = d_dt_chaste_interface_var_Ito__a;
-        NV_Ith_S(rDY,20) = d_dt_chaste_interface_var_Ito__iF;
-        NV_Ith_S(rDY,21) = d_dt_chaste_interface_var_Ito__iS;
-        NV_Ith_S(rDY,22) = d_dt_chaste_interface_var_Ito__ap;
-        NV_Ith_S(rDY,23) = d_dt_chaste_interface_var_Ito__iFp;
-        NV_Ith_S(rDY,24) = d_dt_chaste_interface_var_Ito__iSp;
-        NV_Ith_S(rDY,25) = d_dt_chaste_interface_var_ICaL__d;
-        NV_Ith_S(rDY,26) = d_dt_chaste_interface_var_ICaL__ff;
-        NV_Ith_S(rDY,27) = d_dt_chaste_interface_var_ICaL__fs;
-        NV_Ith_S(rDY,28) = d_dt_chaste_interface_var_ICaL__fcaf;
-        NV_Ith_S(rDY,29) = d_dt_chaste_interface_var_ICaL__fcas;
-        NV_Ith_S(rDY,30) = d_dt_chaste_interface_var_ICaL__jca;
-        NV_Ith_S(rDY,31) = d_dt_chaste_interface_var_ICaL__ffp;
-        NV_Ith_S(rDY,32) = d_dt_chaste_interface_var_ICaL__fcafp;
-        NV_Ith_S(rDY,33) = d_dt_chaste_interface_var_ICaL__nca;
-        NV_Ith_S(rDY,34) = d_dt_chaste_interface_var_IKr__IC1;
-        NV_Ith_S(rDY,35) = d_dt_chaste_interface_var_IKr__IC2;
-        NV_Ith_S(rDY,36) = d_dt_chaste_interface_var_IKr__C1;
-        NV_Ith_S(rDY,37) = d_dt_chaste_interface_var_IKr__C2;
-        NV_Ith_S(rDY,38) = d_dt_chaste_interface_var_IKr__O;
-        NV_Ith_S(rDY,39) = d_dt_chaste_interface_var_IKr__IO;
-        NV_Ith_S(rDY,40) = d_dt_chaste_interface_var_IKr__IObound;
-        NV_Ith_S(rDY,41) = d_dt_chaste_interface_var_IKr__Obound;
-        NV_Ith_S(rDY,42) = d_dt_chaste_interface_var_IKr__Cbound;
-        NV_Ith_S(rDY,43) = d_dt_chaste_interface_var_IKs__xs1;
-        NV_Ith_S(rDY,44) = d_dt_chaste_interface_var_IKs__xs2;
-        NV_Ith_S(rDY,45) = d_dt_chaste_interface_var_IK1__xk1;
-        NV_Ith_S(rDY,46) = d_dt_chaste_interface_var_ryr__Jrelnp;
-        NV_Ith_S(rDY,47) = d_dt_chaste_interface_var_ryr__Jrelp;
+        // NV_Ith_S(rDY,0) = d_dt_chaste_interface_var_membrane__v;
+        NV_Ith_S(rDY,0) = d_dt_chaste_interface_var_intracellular_ions__cai;
+        NV_Ith_S(rDY,1) = d_dt_chaste_interface_var_CaMK__CaMKt;
+        NV_Ith_S(rDY,2) = d_dt_chaste_interface_var_intracellular_ions__nai;
+        NV_Ith_S(rDY,3) = d_dt_chaste_interface_var_intracellular_ions__nass;
+        NV_Ith_S(rDY,4) = d_dt_chaste_interface_var_intracellular_ions__ki;
+        NV_Ith_S(rDY,5) = d_dt_chaste_interface_var_intracellular_ions__kss;
+        NV_Ith_S(rDY,6) = d_dt_chaste_interface_var_intracellular_ions__cass;
+        NV_Ith_S(rDY,7) = d_dt_chaste_interface_var_intracellular_ions__cansr;
+        NV_Ith_S(rDY,8) = d_dt_chaste_interface_var_intracellular_ions__cajsr;
+        NV_Ith_S(rDY,9) = d_dt_chaste_interface_var_INa__m;
+        NV_Ith_S(rDY,10) = d_dt_chaste_interface_var_INa__hf;
+        NV_Ith_S(rDY,11) = d_dt_chaste_interface_var_INa__hs;
+        NV_Ith_S(rDY,12) = d_dt_chaste_interface_var_INa__j;
+        NV_Ith_S(rDY,13) = d_dt_chaste_interface_var_INa__hsp;
+        NV_Ith_S(rDY,14) = d_dt_chaste_interface_var_INa__jp;
+        NV_Ith_S(rDY,15) = d_dt_chaste_interface_var_INaL__mL;
+        NV_Ith_S(rDY,16) = d_dt_chaste_interface_var_INaL__hL;
+        NV_Ith_S(rDY,17) = d_dt_chaste_interface_var_INaL__hLp;
+        NV_Ith_S(rDY,18) = d_dt_chaste_interface_var_Ito__a;
+        NV_Ith_S(rDY,19) = d_dt_chaste_interface_var_Ito__iF;
+        NV_Ith_S(rDY,20) = d_dt_chaste_interface_var_Ito__iS;
+        NV_Ith_S(rDY,21) = d_dt_chaste_interface_var_Ito__ap;
+        NV_Ith_S(rDY,22) = d_dt_chaste_interface_var_Ito__iFp;
+        NV_Ith_S(rDY,23) = d_dt_chaste_interface_var_Ito__iSp;
+        NV_Ith_S(rDY,24) = d_dt_chaste_interface_var_ICaL__d;
+        NV_Ith_S(rDY,25) = d_dt_chaste_interface_var_ICaL__ff;
+        NV_Ith_S(rDY,26) = d_dt_chaste_interface_var_ICaL__fs;
+        NV_Ith_S(rDY,27) = d_dt_chaste_interface_var_ICaL__fcaf;
+        NV_Ith_S(rDY,28) = d_dt_chaste_interface_var_ICaL__fcas;
+        NV_Ith_S(rDY,29) = d_dt_chaste_interface_var_ICaL__jca;
+        NV_Ith_S(rDY,30) = d_dt_chaste_interface_var_ICaL__ffp;
+        NV_Ith_S(rDY,31) = d_dt_chaste_interface_var_ICaL__fcafp;
+        NV_Ith_S(rDY,32) = d_dt_chaste_interface_var_ICaL__nca;
+        NV_Ith_S(rDY,33) = d_dt_chaste_interface_var_IKr__IC1;
+        NV_Ith_S(rDY,34) = d_dt_chaste_interface_var_IKr__IC2;
+        NV_Ith_S(rDY,35) = d_dt_chaste_interface_var_IKr__C1;
+        NV_Ith_S(rDY,36) = d_dt_chaste_interface_var_IKr__C2;
+        NV_Ith_S(rDY,37) = d_dt_chaste_interface_var_IKr__O;
+        NV_Ith_S(rDY,38) = d_dt_chaste_interface_var_IKr__IO;
+        NV_Ith_S(rDY,39) = d_dt_chaste_interface_var_IKr__IObound;
+        NV_Ith_S(rDY,40) = d_dt_chaste_interface_var_IKr__Obound;
+        NV_Ith_S(rDY,41) = d_dt_chaste_interface_var_IKr__Cbound;
+        NV_Ith_S(rDY,42) = d_dt_chaste_interface_var_IKs__xs1;
+        NV_Ith_S(rDY,43) = d_dt_chaste_interface_var_IKs__xs2;
+        NV_Ith_S(rDY,44) = d_dt_chaste_interface_var_IK1__xk1;
+        NV_Ith_S(rDY,45) = d_dt_chaste_interface_var_ryr__Jrelnp;
+        NV_Ith_S(rDY,46) = d_dt_chaste_interface_var_ryr__Jrelp;
     }
 
     void Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode::EvaluateAnalyticJacobian(double var_chaste_interface__environment__time, N_Vector rY, N_Vector rDY, CHASTE_CVODE_DENSE_MATRIX rJacobian, N_Vector rTmp1, N_Vector rTmp2, N_Vector rTmp3)
     {
       throw std::exception();
-        double var_chaste_interface__membrane__v = (mSetVoltageDerivativeToZero ? this->mFixedVoltage : NV_Ith_S(rY, 0));
+      double var_chaste_interface__membrane__v = calculateAnalyticVoltage();// (mSetVoltageDerivativeToZero ? this->mFixedVoltage : NV_Ith_S(rY, 0));
         // Units: millivolt; Initial value: -88.00190465
-        double var_chaste_interface__intracellular_ions__cai = NV_Ith_S(rY, 1);
+        double var_chaste_interface__intracellular_ions__cai = NV_Ith_S(rY, 0);
         // Units: millimolar; Initial value: 8.6e-05
-        double var_chaste_interface__CaMK__CaMKt = NV_Ith_S(rY, 2);
+        double var_chaste_interface__CaMK__CaMKt = NV_Ith_S(rY, 1);
         // Units: millimolar; Initial value: 0.0125840447
-        double var_chaste_interface__intracellular_ions__nai = NV_Ith_S(rY, 3);
+        double var_chaste_interface__intracellular_ions__nai = NV_Ith_S(rY, 2);
         // Units: millimolar; Initial value: 7.268004498
-        double var_chaste_interface__intracellular_ions__nass = NV_Ith_S(rY, 4);
+        double var_chaste_interface__intracellular_ions__nass = NV_Ith_S(rY, 3);
         // Units: millimolar; Initial value: 7.268089977
-        double var_chaste_interface__intracellular_ions__ki = NV_Ith_S(rY, 5);
+        double var_chaste_interface__intracellular_ions__ki = NV_Ith_S(rY, 4);
         // Units: millimolar; Initial value: 144.6555918
-        double var_chaste_interface__intracellular_ions__kss = NV_Ith_S(rY, 6);
+        double var_chaste_interface__intracellular_ions__kss = NV_Ith_S(rY, 5);
         // Units: millimolar; Initial value: 144.6555651
         double var_chaste_interface__intracellular_ions__cass = NV_Ith_S(rY, 7);
         // Units: millimolar; Initial value: 8.49e-05
@@ -1147,17 +1144,17 @@ double Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode::calculateAnalyticVol
         // Units: dimensionless; Initial value: 5.67623e-05
         double var_chaste_interface__IKr__IObound = NV_Ith_S(rY, 40);
         // Units: dimensionless; Initial value: 0.0
-        double var_chaste_interface__IKr__Cbound = NV_Ith_S(rY, 42);
+        double var_chaste_interface__IKr__Cbound = NV_Ith_S(rY, 41);
         // Units: dimensionless; Initial value: 0.0
-        double var_chaste_interface__IKs__xs1 = NV_Ith_S(rY, 43);
+        double var_chaste_interface__IKs__xs1 = NV_Ith_S(rY, 42);
         // Units: dimensionless; Initial value: 0.2707758025
-        double var_chaste_interface__IKs__xs2 = NV_Ith_S(rY, 44);
+        double var_chaste_interface__IKs__xs2 = NV_Ith_S(rY, 43);
         // Units: dimensionless; Initial value: 0.0001928503426
-        double var_chaste_interface__IK1__xk1 = NV_Ith_S(rY, 45);
+        double var_chaste_interface__IK1__xk1 = NV_Ith_S(rY, 44);
         // Units: dimensionless; Initial value: 0.9967597594
-        double var_chaste_interface__ryr__Jrelnp = NV_Ith_S(rY, 46);
+        double var_chaste_interface__ryr__Jrelnp = NV_Ith_S(rY, 45);
         // Units: dimensionless; Initial value: 2.5e-07
-        double var_chaste_interface__ryr__Jrelp = NV_Ith_S(rY, 47);
+        double var_chaste_interface__ryr__Jrelp = NV_Ith_S(rY, 46);
         // Units: dimensionless; Initial value: 3.12e-07
         const double var_x0 = 2463.3848322107292 * NV_Ith_S(mParameters, 9);
         const double var_x1 = 0.074871767015605231 * var_chaste_interface__membrane__v;
@@ -2903,10 +2900,10 @@ void OdeSystemInformation<Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode>::
     this->mFreeVariableName = "time";
     this->mFreeVariableUnits = "millisecond";
 
-    // NV_Ith_S(rY, 0):
-    this->mVariableNames.push_back("membrane_voltage");
-    this->mVariableUnits.push_back("millivolt");
-    this->mInitialConditions.push_back(-88.00190465);
+    // // NV_Ith_S(rY, 0):
+    // this->mVariableNames.push_back("membrane_voltage");
+    // this->mVariableUnits.push_back("millivolt");
+    // this->mInitialConditions.push_back(-88.00190465);
 
     // NV_Ith_S(rY, 1):
     this->mVariableNames.push_back("cytosolic_calcium_concentration");
