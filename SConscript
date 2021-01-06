@@ -1,4 +1,4 @@
-"""Copyright (c) 2005-2017, University of Oxford.
+"""Copyright (c) 2005-2021, University of Oxford.
 All rights reserved.
 
 University of Oxford means the Chancellor, Masters and Scholars of the
@@ -44,10 +44,14 @@ project_name = os.path.basename(os.path.dirname(os.path.dirname(os.getcwd())))
 
 # Chaste libraries used by this project.
 # Select which line to uncomment based on what your project needs, or alter as required.
-chaste_libs_used = ['core']
+# chaste_libs_used = ['core']
 #chaste_libs_used = ['cell_based']
-#chaste_libs_used = ['heart']
+chaste_libs_used = ['heart']
 #chaste_libs_used = ['cell_based', 'heart']
+
+# Change some flags just for this project
+env = SConsTools.CloneEnv(env)
+env['PYCML_EXTRA_ARGS'] = ['--expose-annotated-variables']
 
 # Do the build magic
 result = SConsTools.DoProjectSConscript(project_name, chaste_libs_used, globals())
