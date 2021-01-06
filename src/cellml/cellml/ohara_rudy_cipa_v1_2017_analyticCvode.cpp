@@ -60,6 +60,9 @@ double Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode::calculateAnalyticVol
   const double mIntegrationConstant = 156.801125;
 
   double analytic_voltage = faradays_constant*vmyo*(ki+nai+2*cai_tot+(kss+nass+2*cass_tot)*vss/vmyo+2*cajsr_tot*vjsr/vmyo+2*cansr*vnsr/vmyo - mIntegrationConstant) /(Acap*cm);
+
+  std::cout << analytic_voltage << " " << state_vars[0] << "\n";
+
   return analytic_voltage;
 }
 
@@ -475,7 +478,8 @@ double Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode::calculateAnalyticVol
     {
         // Inputs:
         // Time units: millisecond
-        double var_chaste_interface__membrane__v = calculateAnalyticVoltage();
+      double var_chaste_interface__membrane__v = (mSetVoltageDerivativeToZero ? this->mFixedVoltage : NV_Ith_S(rY, 0));
+      calculateAnalyticVoltage();
         // Units: millivolt; Initial value: -88.00190465
         double var_chaste_interface__intracellular_ions__cai = NV_Ith_S(rY, 1);
         // Units: millimolar; Initial value: 8.6e-05
@@ -1060,6 +1064,7 @@ double Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode::calculateAnalyticVol
 
     void Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode::EvaluateAnalyticJacobian(double var_chaste_interface__environment__time, N_Vector rY, N_Vector rDY, CHASTE_CVODE_DENSE_MATRIX rJacobian, N_Vector rTmp1, N_Vector rTmp2, N_Vector rTmp3)
     {
+      throw std::exception();
         double var_chaste_interface__membrane__v = (mSetVoltageDerivativeToZero ? this->mFixedVoltage : NV_Ith_S(rY, 0));
         // Units: millivolt; Initial value: -88.00190465
         double var_chaste_interface__intracellular_ions__cai = NV_Ith_S(rY, 1);

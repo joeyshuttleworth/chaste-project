@@ -124,7 +124,7 @@ public:
     boost::shared_ptr<AbstractCvodeCell> p_model3(new Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode(p_solver, p_stimulus));
     boost::shared_ptr<AbstractCvodeCell> p_model4(new Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode(p_solver, p_stimulus));
 
-    // compareMethods(p_model1, p_model2);
+    compareMethods(p_model1, p_model2);
     compareMethods(p_model3, p_model4);
 
 #else
