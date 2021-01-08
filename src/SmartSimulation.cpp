@@ -143,6 +143,9 @@ bool SmartSimulation::RunPace(){
       mStatesBuffer.clear();
       // The solver has been crashed so don't do any more extrapolations.
       mMaxJumps=0;
+      if(mMaxJumps==0){
+        throw std::exception();
+      }
       return false;
     }
     std::vector<double> new_state_variables = GetStateVariables();
@@ -172,7 +175,7 @@ bool SmartSimulation::ExtrapolateStates(){
     std::string model_name = mpModel->GetSystemInformation()->GetSystemName();
     const std::string dir_name = "/tmp/chaste/" + model_name;
     boost::filesystem::create_directory(dir_name);
-    if(mrms_pmcc < -0.98){
+    if(mrms_pmcc < -0.99){
       mSafeStateVariables = mStateVariables;
       if(mPeriod == 500)
         f_out.open(dir_name + "/1Hz2HzJump.dat");

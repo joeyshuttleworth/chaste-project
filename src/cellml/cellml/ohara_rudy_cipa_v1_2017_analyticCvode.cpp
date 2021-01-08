@@ -57,7 +57,9 @@ double Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode::CalculateAnalyticVol
   const double kss = NV_Ith_S(rY, 5);
   const double cansr = NV_Ith_S(rY, 7);//1.619574538;
 
-  double analytic_voltage = faradays_constant*vmyo*(ki+nai+2*cai_tot+(kss+nass+2*cass_tot)*vss/vmyo+2*cajsr_tot*vjsr/vmyo+2*cansr*vnsr/vmyo) /(Acap*cm) + mIntegrationConstant;
+  const double C0 = 156.801125;
+
+  double analytic_voltage = faradays_constant*vmyo*(ki+nai+2*cai_tot+(kss+nass+2*cass_tot)*vss/vmyo+2*cajsr_tot*vjsr/vmyo+2*cansr*vnsr/vmyo - C0) /(Acap*cm) + mIntegrationConstant;
 
   return analytic_voltage;
 }

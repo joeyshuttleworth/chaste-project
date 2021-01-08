@@ -78,5 +78,5 @@ def make_plot(model_name):
         line_no += 1
 
 if __name__=="__main__":
-    # make_plot("ohara_rudy_cipa_v1_2017")
+    make_plot("ohara_rudy_cipa_v1_2017")
     make_plot("tentusscher_model_2006_epi")
