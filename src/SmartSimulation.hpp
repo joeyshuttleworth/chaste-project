@@ -54,15 +54,20 @@ public:
     mpStimulus = mpModel->UseCellMLDefaultStimulus();
     mpStimulus->SetStartTime(0);
     mpStimulus->SetPeriod(2*mPeriod);
+    mPeriod = _period;
     mpModel->SetMaxSteps(1e5);
     mpModel->SetMaxTimestep(1000);
     mpModel->SetTolerances(mTolAbs, mTolRel);
     mpModel->SetMinimalReset(false); //Not sure if this is needed
     mNumberOfStateVariables = mpModel->GetSystemInformation()->rGetStateVariableNames().size();
     mStateVariables = mpModel->GetStdVecStateVariables();
+    mSafeStateVariables=mStateVariables;
     if(input_path.length()>=1){
       LoadStatesFromFile(mpModel, input_path);
     }
+
+    mMrmsBuffer.set_capacity(mBufferSize);
+    mStatesBuffer.set_capacity(mBufferSize);
 
     Simulation(_p_model, _period, input_path, _tol_abs, _tol_rel);
   }
@@ -75,7 +80,7 @@ private:
   boost::circular_buffer<std::vector<double>>  mStatesBuffer;
   boost::circular_buffer<double> mMrmsBuffer;
   unsigned int mJumps = 0;
-  unsigned int mMaxJumps = 100;
+  unsigned int mMaxJumps = 1;
   std::vector<double> mSafeStateVariables;
   unsigned int pace = 0;
   std::ofstream errors;

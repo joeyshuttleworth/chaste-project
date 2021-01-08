@@ -48,7 +48,6 @@ bool SmartSimulation::ExtrapolateState(unsigned int state_index){
   /* Calculate the log absolute differences of the state and store these in y_vals. Store the corresponding x values in x_vals*/
   std::vector<double> y_vals;
   std::vector<double> x_vals;
-
   y_vals.reserve(mBufferSize);
   x_vals.reserve(mBufferSize);
 
@@ -61,7 +60,6 @@ bool SmartSimulation::ExtrapolateState(unsigned int state_index){
     }
   }
   const double pmcc = CalculatePMCC(x_vals, y_vals);
-
   /*Compute the required sums*/
 
   double sum_x = 0, sum_y = 0, sum_x2 = 0, sum_xy = 0;
@@ -85,20 +83,14 @@ bool SmartSimulation::ExtrapolateState(unsigned int state_index){
 
   mOutputFile << state_index << " " << beta << " " << alpha << "\n";
 
-  if(pmcc>-0.75){  //return the unchanged value if there is no negative correlation (PMCC > -0.9 or PMCC = NAN) 
-    //      std::cout <<  p_model->GetSystemInformation()->rGetStateVariableNames()[state_index]<< ": PMCC was " << pmcc << " Ignoring. \n";
-    return false;
-  }
-
-  if(exp(alpha) < 100*mTolRel*state.back()){
-    //The difference will be about as small as solver tolerances so there is no point going any further
-    //std::cout << p_model->GetSystemInformation()->rGetStateVariableNames()[state_index] << ": Alpha too small!\n";
+  if(pmcc>-0.75){  //return the unchanged value if there is no negative correlation (PMCC > -0.9 or PMCC = NAN)
+    // std::cout <<  mpModel->GetSystemInformation()->rGetStateVariableNames()[state_index]<< ": PMCC was " << pmcc << " Ignoring. \n";
     return false;
   }
 
   if(beta > 0){
     //The difference is increasing
-    //std::cout << p_model->GetSystemInformation()->rGetStateVariableNames()[state_index] << ": Beta is positive\n";
+    // std::cout << mpModel->GetSystemInformation()->rGetStateVariableNames()[state_index] << ": Beta is positive\n";
     return false;
   }
 
@@ -111,8 +103,6 @@ bool SmartSimulation::ExtrapolateState(unsigned int state_index){
   if(state.back() - state.front() < 0)
     change_in_variable = - change_in_variable;
 
-  // std::cout << "(Gradient, Intercept) = (" << beta << "," << alpha << ")\n";
-
   double new_value = state.back() + change_in_variable;
 
   // std::cout << "Change in " << p_model->GetSystemInformation()->rGetStateVariableNames()[state_index] << " is: " << change_in_variable << "\n" << "New value is " << new_value << "\n";
@@ -122,6 +112,7 @@ bool SmartSimulation::ExtrapolateState(unsigned int state_index){
     return true;
   }
   else{
+    std::cout << "nan variable\n";
     return false;
   }
 }
@@ -150,7 +141,6 @@ bool SmartSimulation::RunPace(){
       errors.close();
       mMrmsBuffer.clear();
       mStatesBuffer.clear();
-      mMaxJumps = 0;
       return false;
     }
     std::vector<double> new_state_variables = GetStateVariables();
@@ -164,8 +154,6 @@ bool SmartSimulation::RunPace(){
     }
   }
   else{
-    mStatesBuffer.clear();
-    mMrmsBuffer.clear();
     mCurrentMrms = 0;
   }
   return false;
@@ -177,57 +165,56 @@ bool SmartSimulation::ExtrapolateStates(){
     if(!mMrmsBuffer.full())
       return false;
     double mrms_pmcc = CalculatePMCC(mMrmsBuffer);
-    std::vector<double> new_state_variables;
     bool extrapolated = false;
     std::ofstream f_out;
     std::string model_name = mpModel->GetSystemInformation()->GetSystemName();
-    if(mrms_pmcc < -0.975){
-      mSafeStateVariables = mSafeStateVariables;
+    const std::string dir_name = "/tmp/chaste/" + model_name;
+    boost::filesystem::create_directory(dir_name);
+    if(mrms_pmcc < -0.98){
+      mSafeStateVariables = mStateVariables;
       if(mPeriod == 500)
-        f_out.open("/tmp/joey/"+ model_name + "/1Hz2HzJump.dat");
+        f_out.open(dir_name + "/1Hz2HzJump.dat");
       else
-        f_out.open("/tmp/joey/"+mpModel->GetSystemInformation()->GetSystemName() + "/2Hz1HzJump.dat");
+        f_out.open(dir_name + "/2Hz1HzJump.dat");
       std::cout << "Extrapolating - start of buffer is " << pace - mBufferSize + 1<< "\n";
-      pace++;
-      mOutputFile.open("/tmp/joey/"+mpModel->GetSystemInformation()->GetSystemName()+"/"+ std::to_string(int(mPeriod)) + "JumpParameters.dat");
+
+
+      boost::filesystem::create_directory(dir_name + "/LastExtrapolationLog");
+      mOutputFile.open(dir_name + "/" + std::to_string(int(mPeriod)) + "JumpParameters.dat");
       mOutputFile << pace << " " << mBufferSize << " " << mExtrapolationConstant << "\n";
 
-      WriteStatesToFile(mSafeStateVariables, f_out);
+      WriteStatesToFile(mStateVariables, f_out);
 
       std::ofstream f_buffer;
-      f_buffer.open("/tmp/joey/"+model_name+"/Buffer.dat");
+      f_buffer.open(dir_name + "/Buffer.dat");
 
       for(unsigned int i = 0; i < mStateVariables.size(); i++){
-        if(ExtrapolateState(i))
+        if(ExtrapolateState(i)){
           extrapolated = true;
+        }
         WriteStatesToFile(cGetNthVariable(mStatesBuffer, i), f_buffer);
       }
 
       mOutputFile.close();
-
-      WriteStatesToFile(mSafeStateVariables, f_out);
-
+      WriteStatesToFile(mStateVariables, f_out);
       f_buffer.close();
-
       f_out.close();
 
       /*Write new variables to file*/
       std::ofstream output;
-      for(unsigned int i = 0; i < mSafeStateVariables.size(); i++){
-        output << mSafeStateVariables[i] << " ";
+      for(unsigned int i = 0; i < mStateVariables.size(); i++){
+        output << mStateVariables[i] << " ";
       }
-      for(unsigned int i = 0; i < mSafeStateVariables.size(); i++){
-        output << mSafeStateVariables[i] << " ";
+      for(unsigned int i = 0; i < mStateVariables.size(); i++){
+        output << mStateVariables[i] << " ";
       }
       output.close();
       if(extrapolated){
-        mMrmsBuffer.clear();
-        mStatesBuffer.clear();
-
-        //	std::cout << "Jumped to new variables\n";
         mJumps++;
+        mpModel->SetStateVariables(mStateVariables);
       }
-      mpModel->SetStateVariables(mSafeStateVariables);
+      mMrmsBuffer.clear();
+      mStatesBuffer.clear();
       return extrapolated;
     }
     else

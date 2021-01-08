@@ -31,7 +31,7 @@ class Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode : public AbstractC
 
   double mIntegrationConstant = 0;
 
-  double calculateAnalyticVoltage();
+  double calculateAnalyticVoltage(N_Vector rY);
     //
     // Settable parameters and readable variables
     //

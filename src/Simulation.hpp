@@ -99,6 +99,7 @@ public:
       return false;
     /*Solve in two parts*/
     std::vector<double> tmp_state_variables = mpModel->GetStdVecStateVariables();
+    // mpModel->SetForceReset(true);
     mpModel->SolveAndUpdateState(0, mpStimulus->GetDuration());
     mpStimulus->SetPeriod(mPeriod*2);
     mpModel->SolveAndUpdateState(mpStimulus->GetDuration(), mPeriod);
@@ -106,7 +107,6 @@ public:
     std::vector<double> new_state_variables = mpModel->GetStdVecStateVariables();
     mCurrentMrms = mrms(tmp_state_variables, new_state_variables);
     mpModel->SetStateVariables(new_state_variables);
-    // mpModel->SetVoltage(mpModel->CalculateAnalyticVoltage());
     if(mCurrentMrms < mThreshold){
       mFinished = true;
       return true;
@@ -115,12 +115,16 @@ public:
   }
 
   /**Output a pace to file*/
-  void WriteToFile(std::string filename){
+  void WritePaceToFile(std::string filename){
     OdeSolution solution = mpModel->Compute(0, mpStimulus->GetDuration(), 1);
-    solution.WriteToFile(filename, filename, "ms");
+    solution.WriteToFile("pace", filename, "ms");
     solution = mpModel->Compute(mpStimulus->GetDuration(), mPeriod, 1);
-    solution.WriteToFile(filename, filename, "ms");
+    solution.WriteToFile("pace", filename, "ms");
     return;
+  }
+
+  OdeSolution GetPace(){
+    return mpModel->Compute(0, mPeriod, mSamplingTimestep);
   }
 
   double GetMrms(){
