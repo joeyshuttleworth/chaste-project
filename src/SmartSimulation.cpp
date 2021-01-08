@@ -141,6 +141,8 @@ bool SmartSimulation::RunPace(){
       errors.close();
       mMrmsBuffer.clear();
       mStatesBuffer.clear();
+      // The solver has been crashed so don't do any more extrapolations.
+      mMaxJumps=0;
       return false;
     }
     std::vector<double> new_state_variables = GetStateVariables();

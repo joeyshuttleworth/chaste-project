@@ -33,7 +33,7 @@ class Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode : public AbstractCvode
     // Settable parameters and readable variables
     //
 
-  double calculateAnalyticVoltage();
+  double CalculateAnalyticVoltage(const N_Vector&);
   double mIntegrationConstant;
 
 public:

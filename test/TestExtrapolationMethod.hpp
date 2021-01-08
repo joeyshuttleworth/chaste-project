@@ -114,11 +114,7 @@ private:
     std::string brute_filename = model_name + "_brute_final_pace.dat";
 
 
-    // std::cout << "Outputting final paces as " << smart_filename << " and " << brute_filename << "\n";
-
-
-    // smart_simulation.WritePaceToFile(smart_filename);
-    // simulation.WritePaceToFile(brute_filename);
+    std::cout << "Outputting final paces as " << smart_filename << " and " << brute_filename << "\n";
 
     std::ofstream smart_pace_file, brute_pace_file;
     smart_pace_file.open("/tmp/"+username+"/"+smart_filename);
@@ -154,7 +150,7 @@ public:
     boost::shared_ptr<AbstractCvodeCell> p_model3(new Cellten_tusscher_model_2006_epiFromCellMLCvode(p_solver, p_stimulus));
     boost::shared_ptr<AbstractCvodeCell> p_model4(new Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode(p_solver, p_stimulus));
 
-    // compareMethods(p_model1, p_model2);
+    compareMethods(p_model1, p_model2);
     compareMethods(p_model3, p_model4);
 
 #else
