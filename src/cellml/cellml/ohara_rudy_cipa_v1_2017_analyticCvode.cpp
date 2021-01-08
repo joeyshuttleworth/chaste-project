@@ -3243,6 +3243,10 @@ void OdeSystemInformation<Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode>::
     this->mParameterUnits.push_back("milliS_per_microF");
 
     // Derived Quantity index [0]:
+    this->mDerivedQuantityNames.push_back("membrane_voltage");
+    this->mDerivedQuantityUnits.push_back("millivolt");
+
+    // Derived Quantity index [0]:
     this->mDerivedQuantityNames.push_back("SR_release_current");
     this->mDerivedQuantityUnits.push_back("millimolar_per_millisecond");
 
