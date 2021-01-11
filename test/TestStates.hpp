@@ -127,7 +127,7 @@ public:
 
       output_file << "\n";
 
-      for(unsigned int i = 0; i < paces; i++){	
+      for(unsigned int i = 0; i < paces; i++){
 	p_model->SolveAndUpdateState(0, duration);
 	p_model->SolveAndUpdateState(duration, period);
 	current_states = p_model->GetStdVecStateVariables();
