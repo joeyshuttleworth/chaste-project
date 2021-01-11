@@ -71,9 +71,10 @@ def make_plot(model_name):
 
         plt.legend(["extrapolation method solution", "brute force solution", "fitted curve", "terminal value from brute force method on numeric model", "predicted terminal value from fitted curve", "point extrapolated to"], prop={'size': 5}, bbox_to_anchor=bbox, loc=loc)
         plt.title(model_name + " " + state_var)
-        if not os.path.exists("data"):
-            os.mkdir("data")
-        plt.savefig("data/"+model_name+"_"+state_var+".pdf", format="pdf")
+        if not os.path.exists("plots"):
+            os.mkdir("plots")
+        plt.savefig("plots/"+model_name+"_"+state_var+".pdf", format="pdf")
+
         plt.clf()
         line_no += 1
 

@@ -66,97 +66,30 @@ public:
   Simulation(){
     return;
   }
-  Simulation(boost::shared_ptr<AbstractCvodeCell> _p_model, double _period, std::string input_path = "", double _tol_abs=1e-7, double _tol_rel=1e-7) : mpModel(_p_model), mPeriod(_period), mTolAbs(_tol_abs), mTolRel(_tol_rel){
-    mFinished = false;
-    mpStimulus = mpModel->UseCellMLDefaultStimulus();
-    mpStimulus->SetStartTime(0);
-    //There's no need to be near the second stimulus because Solve is called for
-    //each pace
-    mpStimulus->SetPeriod(2*mPeriod);
-    mpModel->SetMaxSteps(1e5);
-    mpModel->SetMaxTimestep(1000);
-    mpModel->SetTolerances(mTolAbs, mTolRel);
-    mpModel->SetMinimalReset(false); //Not sure if this is needed
-    mNumberOfStateVariables = mpModel->GetSystemInformation()->rGetStateVariableNames().size();
-    mStateVariables = mpModel->GetStdVecStateVariables();
-    if(input_path.length()>=1){
-      LoadStatesFromFile(mpModel, input_path);
-    }
-  }
+  Simulation(boost::shared_ptr<AbstractCvodeCell> _p_model, double _period, std::string input_path = "", double _tol_abs=1e-7, double _tol_rel=1e-7);
 
   /* Run paces until max_paces is exceeded or the model reaches a steady state */
-  bool RunPaces(int max_paces){
-    for(int i = 0; i <= max_paces; i++){
-      if(RunPace())
-        return true;
-    }
-    return false;
-  }
+  bool RunPaces(int);
 
-  bool RunPace(){
-    if(mFinished)
-      return false;
-    /*Solve in two parts*/
-    std::vector<double> tmp_state_variables = mpModel->GetStdVecStateVariables();
-    // mpModel->SetForceReset(true);
-    mpModel->SolveAndUpdateState(0, mpStimulus->GetDuration());
-    mpStimulus->SetPeriod(mPeriod*2);
-    mpModel->SolveAndUpdateState(mpStimulus->GetDuration(), mPeriod);
-    mpStimulus->SetPeriod(mPeriod);
-    std::vector<double> new_state_variables = mpModel->GetStdVecStateVariables();
-    mCurrentMrms = mrms(tmp_state_variables, new_state_variables);
-    mpModel->SetStateVariables(new_state_variables);
-    if(mCurrentMrms < mThreshold){
-      mFinished = true;
-      return true;
-    }
-    return false;
-  }
+  bool RunPace();
 
   /**Output a pace to file*/
-  OdeSolution WritePaceToFile(std::string dirname, std::string filename, double sampling_timestep = 1){
-    OdeSolution solution = mpModel->Compute(0, mPeriod, 1);
-    solution.WriteToFile(dirname, filename, "ms");
-    return solution;
-  }
+  OdeSolution WritePaceToFile(std::string dirname, std::string filename, double sampling_timestep = 1);
 
-  OdeSolution GetPace(){
-    return mpModel->Compute(0, mPeriod, mSamplingTimestep);
-  }
+  OdeSolution GetPace();
 
-  double GetMrms(){
-    if(mFinished)
-      return NAN;
-    else
-      return mCurrentMrms;
-  }
-  bool is_mFinished(){
-    return mFinished;
-  }
+  double GetMrms();
 
-  std::vector<double> GetStateVariables(){
-    return mpModel->GetStdVecStateVariables();
-  }
+  std::vector<double> GetStateVariables();
 
   // Setters and getters
-  void SetThreshold(double threshold){
-    /* The threshold must be non-negative */
-    if(threshold<0){
-      throw std::exception();
-    }
-    mThreshold = threshold;
-  }
+  void SetThreshold(double threshold);
 
-  void SetstateVariables(std::vector<double> states){
-    mpModel->SetStateVariables(states);
-  }
- 
-  double GetApd(double percentage = 90){
-    OdeSolution solution = mpModel->Compute(0, mPeriod, 1);
-    solution.CalculateDerivedQuantitiesAndParameters(mpModel.get());
-    CellProperties cell_props(solution.GetAnyVariable("membrane_voltage"), solution.rGetTimes());
-    return cell_props.GetLastActionPotentialDuration(90);
-  }
+  void SetStateVariables(std::vector<double> states);
+
+  double GetApd(double percentage = 90);
+
+  bool IsFinished();
 
 };
 
