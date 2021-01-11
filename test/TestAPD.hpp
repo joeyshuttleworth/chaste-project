@@ -59,11 +59,10 @@ public:
   {
 #ifdef CHASTE_CVODE
     boost::shared_ptr<RegularStimulus> p_stimulus;
-    boost::shared_ptr<AbstractIvpOdeSolver> p_solver;    
+    boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
     boost::shared_ptr<AbstractCvodeCell> p_model(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus));
     boost::shared_ptr<RegularStimulus> p_regular_stim = p_model->UseCellMLDefaultStimulus();
     const double period = 500;
-   
     const double duration   = p_regular_stim->GetDuration();
     const std::string model_name = p_model->GetSystemInformation()->GetSystemName();
     std::ofstream output_file;
@@ -92,30 +91,30 @@ public:
     
     /*Set the output to be as precise as possible */
     output_file.precision(18);
-    
+
     TS_ASSERT_EQUALS(output_file.is_open(), true);
-    
+
     const std::vector<std::string> state_variable_names = p_model->rGetStateVariableNames();
-   
+
     unsigned int voltage_index = p_model->GetSystemInformation()->GetStateVariableIndex("membrane_voltage");
     std::vector<double> times;
     std::vector<double> sampling_timesteps = {1, 0.1, 0.01, 0.001};
-    
+
     for(unsigned int i = 0; i < sampling_timesteps.size(); i++){
       p_model->SetStateVariables(initial_conditions);
       for(unsigned int j = 0; j < paces; j++){
-	current_solution = p_model->Compute(0, duration, sampling_timesteps[i]);
-	state_variables = current_solution.rGetSolutions();
-	times = current_solution.rGetTimes();
-	current_solution = p_model->Compute(duration, period, sampling_timesteps[i]);
-	std::vector<std::vector<double>> current_state_variables = current_solution.rGetSolutions();
-	std::vector<double> current_times = current_solution.rGetTimes();
-	state_variables.insert(state_variables.end(), current_state_variables.begin(), current_state_variables.end());
-	times.insert(times.end(), current_times.begin(), current_times.end());
-	const std::vector<double> voltages = GetNthVariable(state_variables, voltage_index);
-	CellProperties cell_props = CellProperties(voltages, times); 
-	double current_apd90 = cell_props.GetLastActionPotentialDuration(90);
-	output_file << current_apd90 << " ";
+        current_solution = p_model->Compute(0, duration, sampling_timesteps[i]);
+        state_variables = current_solution.rGetSolutions();
+        times = current_solution.rGetTimes();
+        current_solution = p_model->Compute(duration, period, sampling_timesteps[i]);
+        std::vector<std::vector<double>> current_state_variables = current_solution.rGetSolutions();
+        std::vector<double> current_times = current_solution.rGetTimes();
+        state_variables.insert(state_variables.end(), current_state_variables.begin(), current_state_variables.end());
+        times.insert(times.end(), current_times.begin(), current_times.end());
+        const std::vector<double> voltages = GetNthVariable(state_variables, voltage_index);
+        CellProperties cell_props = CellProperties(voltages, times);
+        double current_apd90 = cell_props.GetLastActionPotentialDuration(90);
+        output_file << current_apd90 << " ";
       }
       output_file << "\n";
     }
@@ -125,4 +124,4 @@ public:
   std::cout << "Cvode is not enabled.\n";
 #endif
 };
-  
+
