@@ -85,7 +85,7 @@ public:
   // Setters and getters
   void SetThreshold(double threshold);
 
-  void SetstateVariables(std::vector<double> states);
+  void SetStateVariables(std::vector<double> states);
 
   double GetApd(double percentage = 90);
 

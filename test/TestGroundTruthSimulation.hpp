@@ -45,6 +45,8 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/filesystem.hpp>
 #include <fstream>
 
+#include "Simulation.hpp"
+
 /* These header files are generated from the cellml files provided at github.com/chaste/cellml */
 
 #include "beeler_reuter_model_1977Cvode.hpp"
@@ -63,12 +65,14 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    - Terminal state variables
    to separate files.
  */
+
 class TestGroundTruthSimulation : public CxxTest::TestSuite
 {
 public:
-  void TestTusscherSimulation()
+  void TestRunSimulation()
   {
 #ifdef CHASTE_CVODE
+    const int paces = 10000;
     boost::shared_ptr<RegularStimulus> p_stimulus;
     boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
 
@@ -78,33 +82,35 @@ public:
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Celldecker_2009FromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2006_epi_analyticCvodeFromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_cipa_v1_2017_analyticCvodeFromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2006_epiFromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_cipa_v1_2017FromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2006_epiFromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_cipa_v1_2017FromCellMLCvode(p_solver, p_stimulus)));
 
     std::string username = std::string(getenv("USER"));
     boost::filesystem::create_directory("/tmp/"+username);
 
     for(unsigned int i = 0; i < models.size(); i++){
+      const auto p_model = models[i];
       const std::string model_name = p_model->GetSystemInformation()->GetSystemName();
-      boost::filesystem::create_directory("/tmp/"+username+"/"+model_name);
       std::vector<double> periods = {500, 1000};
-      std::vector<std::vector<double>> initial_states = models[i]->GetStdVecStateVariables();
-      for(j =0; j < periods.size(); j++){
-        const std::string dirname = "/tmp/"+username+"/"+model_name+"/TestGroundTruth" + periods[4] + "ms/";
+      std::vector<double> initial_states = models[i]->GetStdVecStateVariables();
+      for(unsigned int j =0; j < periods.size(); j++){
+        const std::string dirname = "TestGroundTruth_" + model_name  + std::to_string(periods[j]) + "ms/";
         boost::filesystem::create_directory(dirname);
         // Initialise simulation with fine tolerances
         Simulation simulation(models[i], periods[j], "", 1e-12, 1e-12);
-        simulation->SetStateVariables(initial_states);
+        simulation.SetStateVariables(initial_states);
 
         // Turn off convergence criteria
         simulation.SetThreshold(0);
         // Run the simulation for a large number of paces
-        simulation.RunPaces(1e4);
+        simulation.RunPaces(paces);
         // Output the final pace
-        const pace_filename = "finalpace.dat";
+        const std::string pace_filename = "finalpace.dat";
         simulation.WritePaceToFile(dirname, pace_filename);
         // Output the APD90 of the final pace
-        const apd_filename = "final_apd90.dat";
+        const std::string apd_filename = "final_apd90.dat";
         std::ofstream apd_file(dirname + apd_filename);
         apd_file << simulation.GetApd(90) << "\n";
         apd_file.close();
