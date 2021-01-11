@@ -1,38 +1,3 @@
-/*
-
-Copyright (c) 2005-2021, University of Oxford.
-All rights reserved.
-
-University of Oxford means the Chancellor, Masters and Scholars of the
-University of Oxford, having an administrative office at Wellington
-Square, Oxford OX1 2JD, UK.
-
-This file is part of Chaste.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
- * Redistributions of source code must retain the above copyright notice,
-   this list of conditions and the following disclaimer.
- * Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
- * Neither the name of the University of Oxford nor the names of its
-   contributors may be used to endorse or promote products derived from this
-   software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
-GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
-OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-*/
-
 #include <cxxtest/TestSuite.h>
 #include "CellProperties.hpp"
 #include "SteadyStateRunner.hpp"
@@ -43,6 +8,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "FakePetscSetup.hpp"
 #include "Simulation.hpp"
 #include "SmartSimulation.hpp"
+#include "CellProperties.hpp"
 
 #include <boost/filesystem.hpp>
 #include <fstream>
@@ -54,14 +20,16 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ten_tusscher_model_2006_epi_analyticCvode.hpp"
 
 
-class TestGroundTruthSimulation : public CxxTest::TestSuite
+class TestExtrapolationMethod : public CxxTest::TestSuite
 {
 private:
   const unsigned int buffer_size = 100;
   const double extrapolation_coefficient = 1;
 
   bool compareMethods(boost::shared_ptr<AbstractCvodeCell> brute_force_model, boost::shared_ptr<AbstractCvodeCell> smart_model){
+    // Uses a method to extrapolate to the steady state
     SmartSimulation smart_simulation(smart_model, 500);
+    // Runs the model without using this method
     Simulation      simulation(brute_force_model, 500);
 
     std::string username = std::string(getenv("USER"));
@@ -69,21 +37,22 @@ private:
     const std::string model_name = brute_force_model->GetSystemInformation()->GetSystemName();
     const std::string model_name2 = smart_model->GetSystemInformation()->GetSystemName();
 
+    // Setup directories for output
     std::cout << "Testing " << model_name  << "\n";
     boost::filesystem::create_directory("/tmp/"+username);
     boost::filesystem::create_directory("/tmp/"+username+"/"+model_name);
     boost::filesystem::create_directory("/tmp/"+username+"/"+model_name+"/TestExtrapolation");
-    TS_ASSERT_EQUALS(model_name , model_name2);
 
+    //Open files to output states to at the start/end of each pace
     std::ofstream smart_output_file, brute_output_file;
     smart_output_file.open("/tmp/"+username+"/"+model_name+"/TestExtrapolation/smart.dat");
     brute_output_file.open("/tmp/"+username+"/"+model_name+"/TestExtrapolation/bruteforce.dat");
 
-    std::vector<std::string> state_names = brute_force_model->rGetStateVariableNames();
+    std::vector<std::string> state_names = smart_model->rGetStateVariableNames();
 
+    // Set up header line
     smart_output_file << "pace ";
     brute_output_file << "pace ";
-
     for(unsigned int i = 0; i < state_names.size(); i++){
       smart_output_file << state_names[i] << " ";
       brute_output_file << state_names[i] << " ";
@@ -91,12 +60,11 @@ private:
     smart_output_file << "\n";
     brute_output_file << "\n";
 
-    /*Run the simulations*/
+    // Run the simulations until they finish
     bool brute_finished = false;
     bool smart_finished = false;
-    const unsigned int paces  = 1;
+    const unsigned int paces  = 2000;
     for(unsigned int j = 0; j < paces; j++){
-      std::cout << "pace: "<< j << "\n";
       if(!smart_finished){
         if(smart_simulation.RunPace()){
           std::cout << "Model " << model_name << " period " << 500 << " extrapolation method finished after " << j << " paces \n";
@@ -117,7 +85,8 @@ private:
         }
         std::vector<double> state_vars = brute_force_model->GetStdVecStateVariables();
         brute_output_file << j << " ";
-        for(unsigned int i = 0; i < state_vars.size(); i++){
+        //Don't print membrane_voltage (usually the first state variable)
+        for(unsigned int i = 1; i < state_vars.size(); i++){
           brute_output_file << state_vars[i] << " ";
         }
         brute_output_file << "\n";
@@ -126,25 +95,56 @@ private:
         break;
     }
 
-    // /* Run the numerical voltage version */
-    // numerical_voltage_simulation = Simulation(numerical_comparison_model, 500);
-    // numerical_voltage_simulation.RunPaces(10000);
+    std::vector<double> brute_states = simulation.GetStateVariables();
+    std::vector<double> smart_states = smart_simulation.GetStateVariables();
 
-    std::vector<double> brute_states = brute_force_model->GetStdVecStateVariables();
-    std::vector<double> smart_states = smart_model->GetStdVecStateVariables();
+    if(brute_states.size() == smart_states.size()+1){
+      brute_states.erase(brute_states.begin());
+    }
 
-    for(unsigned int i = 0; i < brute_states.size(); i++){
-      std::cout << brute_states[i] << "\t" << smart_states[i] << "\n";
+
+    for(unsigned int i = 0; i < smart_states.size() && i < brute_states.size(); i++){
+      std::cout << brute_states[i] << " " << smart_states[i] << "\n";
     }
 
     /*Check that the methods have converged to the same place*/
-    double mrms_difference = mrms(simulation.GetStateVariables(), smart_simulation.GetStateVariables());
-
+    // First calculate and output the mrms error between the solutions
+    double mrms_difference = mrms(brute_states, smart_states);
     std::cout << "MRMS between solutions is " << mrms_difference << "\n";
+
+    //Calculate difference in APD90
+    OdeSolution smart_solution = smart_simulation.GetPace();
+    OdeSolution brute_solution = simulation.GetPace();
+
+    // Needed to get derived quantities
+    smart_solution.CalculateDerivedQuantitiesAndParameters(smart_model.get());
+    std::vector<double> brute_voltages = brute_solution.GetAnyVariable("membrane_voltage");
+    std::vector<double> smart_voltages = smart_solution.GetAnyVariable("membrane_voltage");
+
+    std::string smart_filename = model_name + "_smart_final_pace.dat";
+    std::string brute_filename = model_name + "_brute_final_pace.dat";
+    std::cout << "Outputting final paces as " << smart_filename << " and " << brute_filename << "\n";
+    std::ofstream smart_pace_file, brute_pace_file;
+    smart_pace_file.open("/tmp/"+username+"/"+smart_filename);
+    brute_pace_file.open("/tmp/"+username+"/"+smart_filename);
+
+    smart_pace_file << "smart_pace brute_pace\n";
+    for(unsigned int i = 0; i < smart_voltages.size(); i++){
+      smart_pace_file << smart_voltages[i] << " " << brute_voltages[i] << "\n";
+    }
+
+    // Calculate difference in APD90s
+    CellProperties brute_cell_props(brute_voltages, brute_solution.rGetTimes());
+    CellProperties smart_cell_props(smart_solution.GetAnyVariable("membrane_voltage"), smart_solution.rGetTimes());
+    // Currently broken
+    // const double apd_difference = smart_cell_props.GetLastActionPotentialDuration(90) - brute_cell_props.GetLastActionPotentialDuration(90);
+    // std::cout << "Difference in APD90s " << apd_difference << "\n";
 
     TS_ASSERT_LESS_THAN(mrms_difference, 1e-3);
     TS_ASSERT(smart_finished && brute_finished);
 
+    smart_pace_file.close();
+    brute_pace_file.close();
     return brute_finished&&smart_finished;
   }
 
@@ -155,12 +155,16 @@ public:
     boost::shared_ptr<RegularStimulus> p_stimulus;
     boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
 
-    boost::shared_ptr<AbstractCvodeCell> p_model1(new Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode(p_solver, p_stimulus));
-    boost::shared_ptr<AbstractCvodeCell> p_model2(new Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode(p_solver, p_stimulus));
-    boost::shared_ptr<AbstractCvodeCell> p_model3(new Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode(p_solver, p_stimulus));
-    boost::shared_ptr<AbstractCvodeCell> p_model4(new Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode(p_solver, p_stimulus));
+    /* Compare each model with a version modified for the extrapolation method */
 
+    // ohara_rudy_cipa_v1_2017 model
+    boost::shared_ptr<AbstractCvodeCell> p_model1(new Cellohara_rudy_cipa_v1_2017FromCellMLCvode(p_solver, p_stimulus));
+    boost::shared_ptr<AbstractCvodeCell> p_model2(new Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode(p_solver, p_stimulus));
     compareMethods(p_model1, p_model2);
+
+    // ten_tusscher_model_2006_epiFromCellMLCvode
+    boost::shared_ptr<AbstractCvodeCell> p_model3(new Cellten_tusscher_model_2006_epiFromCellMLCvode(p_solver, p_stimulus));
+    boost::shared_ptr<AbstractCvodeCell> p_model4(new Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode(p_solver, p_stimulus));
     compareMethods(p_model3, p_model4);
 
 #else

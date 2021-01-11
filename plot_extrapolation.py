@@ -1,35 +1,4 @@
 #!/bin/env python3
-"""Copyright (c) 2005-2021, University of Oxford.
-All rights reserved.
-
-University of Oxford means the Chancellor, Masters and Scholars of the
-University of Oxford, having an administrative office at Wellington
-Square, Oxford OX1 2JD, UK.
-
-This file is part of Chaste.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
- * Redistributions of source code must retain the above copyright notice,
-   this list of conditions and the following disclaimer.
- * Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
- * Neither the name of the University of Oxford nor the names of its
-   contributors may be used to endorse or promote products derived from this
-   software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
-GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
-OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-"""
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -41,10 +10,10 @@ import numpy as np
 matplotlib.style.use('classic')
 
 def make_plot(model_name):
-    numeric_dir = "~/extrapolation_data_numeric/"
-    dir = "~/extrapolation_data/"
+    numeric_dir = "~/Chaste/data"
+    dir = "~/Chaste/data/"
 
-    with open(os.path.expanduser('~/extrapolation_data/') + model_name + "/500JumpParameters.dat") as csv_file:
+    with open(os.path.expanduser('~/Chaste/data/') + model_name + "_analytic/500JumpParameters.dat") as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=' ')
         lines = [row for row in csv_reader]
 
@@ -59,13 +28,13 @@ def make_plot(model_name):
 
     smart_data = pd.read_csv(dir + "smart.dat", delim_whitespace=True)
     brute_data = pd.read_csv(dir + "bruteforce.dat", delim_whitespace=True)
-    numeric_brute_data = pd.read_csv(numeric_dir + "bruteforce.dat", delim_whitespace=True)
 
-    brute_paces = brute_data['pace']
-    smart_paces = smart_data['pace']
+    # brute_paces = brute_data['pace']
+    # smart_paces = smart_data['pace']
 
     line_no = 0
     for state_var in smart_data.drop(['pace'], axis=1):
+        print("plotting extrapolation of {}".format(state_var))
         if line_no == len(extrap_parameters):
             break
         smart_var = smart_data[state_var]
@@ -76,26 +45,35 @@ def make_plot(model_name):
         beta = -1/tau
         alpha = extrap_parameters[line_no][2]
 
-        V_diff = np.exp(alpha  - buffer_size/tau)/(1 - np.exp(-1/tau));
-
+        V_diff = np.exp(alpha  - buffer_size/tau + 1/tau)/(np.exp(1/tau) - 1);
 
         if smart_var.values[jump_pace-1] - smart_var.values[jump_pace - buffer_size-1] < 0:
             V_diff = -V_diff;
 
         V = brute_var[jump_pace-1] + V_diff*(1 - np.exp(-(np.array(range(-jump_pace+1, len(brute_var) - jump_pace + 1))/tau)))
 
-        plt.plot(smart_paces, smart_var)
-        plt.plot(brute_paces, brute_var)
+        plt.plot(smart_var)
+        plt.plot(brute_var)
         plt.plot(range(0 ,len(brute_data)), V, linestyle = '--', color="orange")
-        plt.axhline(numeric_brute_data[state_var].values[-1], linestyle ='--')
+        plt.axhline(brute_var.values[-1], linestyle ='--')
         plt.axhline(smart_var[jump_pace-2] + V_diff, color="grey", linestyle = "-.")
-
         plt.plot(jump_pace, smart_var[jump_pace-1] + V_diff, label="point", markersize=5, color='red', marker='x')
-        plt.legend(["extrapolation method solution", "brute force solution", "fitted curve", "terminal value from brute force method on numeric model", "predicted terminal value from fitted curve", "point extrapolated to"], prop={'size': 5})
+
+        bbox = []
+        loc  = []
+        if V_diff > 0:
+            bbox=(1,0)
+            loc="lower right"
+        else:
+            bbox=(1,1)
+            loc="upper right"
+
+
+        plt.legend(["extrapolation method solution", "brute force solution", "fitted curve", "terminal value from brute force method on numeric model", "predicted terminal value from fitted curve", "point extrapolated to"], prop={'size': 5}, bbox_to_anchor=bbox, loc=loc)
         plt.title(model_name + " " + state_var)
         if not os.path.exists("data"):
             os.mkdir("data")
-        plt.savefig("data/"+model_name+"_"+state_var+".eps", format="eps")
+        plt.savefig("data/"+model_name+"_"+state_var+".pdf", format="pdf")
         plt.clf()
         line_no += 1
 
