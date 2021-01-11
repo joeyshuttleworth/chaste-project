@@ -90,6 +90,7 @@ public:
   double GetApd(double percentage = 90);
 
   bool IsFinished();
+
 };
 
 #endif
