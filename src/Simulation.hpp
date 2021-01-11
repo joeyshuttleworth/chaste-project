@@ -49,7 +49,6 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class Simulation
 {
-private:
 protected:
   bool mFinished;
   boost::shared_ptr<AbstractCvodeCell> mpModel;
@@ -61,7 +60,7 @@ protected:
   double mTolRel;
   double mSamplingTimestep = 1;
   double mCurrentMrms = NAN;
-  const double mThreshold = 1.8e-07;
+  double mThreshold = 1.8e-07;
   boost::shared_ptr<RegularStimulus> mpStimulus;
 public:
   Simulation(){
@@ -115,12 +114,10 @@ public:
   }
 
   /**Output a pace to file*/
-  void WritePaceToFile(std::string filename){
-    OdeSolution solution = mpModel->Compute(0, mpStimulus->GetDuration(), 1);
-    solution.WriteToFile("pace", filename, "ms");
-    solution = mpModel->Compute(mpStimulus->GetDuration(), mPeriod, 1);
-    solution.WriteToFile("pace", filename, "ms");
-    return;
+  OdeSolution WritePaceToFile(std::string dirname, std::string filename, double sampling_timestep = 1){
+    OdeSolution solution = mpModel->Compute(0, mPeriod, 1);
+    solution.WriteToFile(dirname, filename, "ms");
+    return solution;
   }
 
   OdeSolution GetPace(){
@@ -136,9 +133,31 @@ public:
   bool is_mFinished(){
     return mFinished;
   }
+
   std::vector<double> GetStateVariables(){
     return mpModel->GetStdVecStateVariables();
   }
+
+  // Setters and getters
+  void SetThreshold(double threshold){
+    /* The threshold must be non-negative */
+    if(threshold<0){
+      throw std::exception();
+    }
+    mThreshold = threshold;
+  }
+
+  void SetstateVariables(std::vector<double> states){
+    mpModel->SetStateVariables(states);
+  }
+ 
+  double GetApd(double percentage = 90){
+    OdeSolution solution = mpModel->Compute(0, mPeriod, 1);
+    solution.CalculateDerivedQuantitiesAndParameters(mpModel.get());
+    CellProperties cell_props(solution.GetAnyVariable("membrane_voltage"), solution.rGetTimes());
+    return cell_props.GetLastActionPotentialDuration(90);
+  }
+
 };
 
 #endif
