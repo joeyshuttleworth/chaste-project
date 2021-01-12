@@ -22,9 +22,14 @@ int LoadStatesFromFile(boost::shared_ptr<AbstractCvodeCell> p_model, std::string
     return -1;
   }
   std::string line;
+  std::string tmp_line;
   std::vector<std::string> state_variables_str;
   std::vector<double> state_variables;
-  std::getline(file_in, line);
+
+  // Get last line
+  while(std::getline(file_in, tmp_line))
+    line=tmp_line;
+
   boost::split(state_variables_str, line, boost::is_any_of(" "));
   for(unsigned int i = 0; i < p_model->GetNumberOfStateVariables(); i++){
     state_variables.push_back(std::stod(state_variables_str[i]));

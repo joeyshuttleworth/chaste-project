@@ -25,8 +25,9 @@ class TestExtrapolationMethod : public CxxTest::TestSuite
 private:
   const unsigned int buffer_size = 100;
   const double extrapolation_coefficient = 1;
+  const int paces = 2000;
 
-  bool compareMethods(boost::shared_ptr<AbstractCvodeCell> brute_force_model, boost::shared_ptr<AbstractCvodeCell> smart_model){
+  bool CompareMethodsPeriod(boost::shared_ptr<AbstractCvodeCell> brute_force_model, boost::shared_ptr<AbstractCvodeCell> smart_model){
     // Uses a method to extrapolate to the steady state
     SmartSimulation smart_simulation(smart_model, 500);
     // Runs the model without using this method
@@ -63,7 +64,6 @@ private:
     // Run the simulations until they finish
     bool brute_finished = false;
     bool smart_finished = false;
-    const unsigned int paces  = 2000;
     for(unsigned int j = 0; j < paces; j++){
       if(!smart_finished){
         if(smart_simulation.RunPace()){
@@ -134,11 +134,9 @@ private:
     }
 
     // Calculate difference in APD90s
-    CellProperties brute_cell_props(brute_voltages, brute_solution.rGetTimes());
-    CellProperties smart_cell_props(smart_solution.GetAnyVariable("membrane_voltage"), smart_solution.rGetTimes());
     // Currently broken
-    // const double apd_difference = smart_cell_props.GetLastActionPotentialDuration(90) - brute_cell_props.GetLastActionPotentialDuration(90);
-    // std::cout << "Difference in APD90s " << apd_difference << "\n";
+    const double apd_difference = smart_simulation.GetApd(90) - simulation.GetApd(90);
+    std::cout << "Difference in APD90s " << apd_difference << "\n";
 
     TS_ASSERT_LESS_THAN(mrms_difference, 1e-3);
     TS_ASSERT(smart_finished && brute_finished);
@@ -146,6 +144,52 @@ private:
     smart_pace_file.close();
     brute_pace_file.close();
     return brute_finished&&smart_finished;
+  }
+
+  void CompareMethodsKrBlock(boost::shared_ptr<AbstractCvodeCell> brute_model, boost::shared_ptr<AbstractCvodeCell> smart_model){
+    const std::string model_name = brute_model->GetSystemInformation()->GetSystemName();
+    std::cout << "Testing " << model_name  << "with 50% block of IKr\n";
+    //set Gkr parameter
+    double default_GKr = brute_model->GetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance");
+    brute_model->SetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance", default_GKr*0.5);
+    smart_model->SetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance", default_GKr*0.5);
+
+    Simulation simulation(brute_model, 1000);
+    SmartSimulation smart_simulation(smart_model, 1000);
+
+    simulation.RunPaces(paces);
+    smart_simulation.RunPaces(paces);
+
+    std::vector<double> brute_states = simulation.GetStateVariables();
+    std::vector<double> smart_states = smart_simulation.GetStateVariables();
+    // drop voltage (assuming it's the first variable)
+    if(brute_states.size() == smart_states.size()+1){
+      assert(brute_model->GetSystemInformation()->rGetStateVariableNames()[0] == "membrane_voltage");
+      brute_states.erase(brute_states.begin());
+    }
+    double mrms_difference = mrms(brute_states, smart_states);
+
+    OdeSolution smart_solution = smart_simulation.GetPace();
+    OdeSolution brute_solution = simulation.GetPace();
+    smart_solution.CalculateDerivedQuantitiesAndParameters(smart_model.get());
+    std::vector<double> brute_voltages = brute_solution.GetAnyVariable("membrane_voltage");
+    std::vector<double> smart_voltages = smart_solution.GetAnyVariable("membrane_voltage");
+
+    // Calculate difference in APD90s
+    CellProperties brute_cell_props(brute_voltages, brute_solution.rGetTimes());
+    CellProperties smart_cell_props(smart_solution.GetAnyVariable("membrane_voltage"), smart_solution.rGetTimes());
+    // Currently broken
+    // const double apd_difference = smart_cell_props.GetLastActionPotentialDuration(90) - brute_cell_props.GetLastActionPotentialDuration(90);
+    // std::cout << "Difference in APD90s " << apd_difference << "\n";
+
+    std::cout << "MRMS between solutions is " << mrms_difference << "\n";
+
+    TS_ASSERT_LESS_THAN(mrms_difference, 1e-3);
+    TS_ASSERT(smart_simulation.IsFinished() && simulation.IsFinished());
+
+    // reset GKr parameter
+    brute_model->SetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance", default_GKr);
+    smart_model->SetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance", default_GKr);
   }
 
 public:
@@ -160,12 +204,14 @@ public:
     // ohara_rudy_cipa_v1_2017 model
     boost::shared_ptr<AbstractCvodeCell> p_model1(new Cellohara_rudy_cipa_v1_2017FromCellMLCvode(p_solver, p_stimulus));
     boost::shared_ptr<AbstractCvodeCell> p_model2(new Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode(p_solver, p_stimulus));
-    compareMethods(p_model1, p_model2);
+    CompareMethodsPeriod(p_model1, p_model2);
+    CompareMethodsKrBlock(p_model1, p_model2);
 
     // ten_tusscher_model_2006_epiFromCellMLCvode
     boost::shared_ptr<AbstractCvodeCell> p_model3(new Cellten_tusscher_model_2006_epiFromCellMLCvode(p_solver, p_stimulus));
     boost::shared_ptr<AbstractCvodeCell> p_model4(new Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode(p_solver, p_stimulus));
-    compareMethods(p_model3, p_model4);
+    CompareMethodsPeriod(p_model3, p_model4);
+    CompareMethodsKrBlock(p_model3, p_model4);
 
 #else
     std::cout << "Cvode is not enabled.\n";

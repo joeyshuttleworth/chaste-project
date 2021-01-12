@@ -64,8 +64,13 @@ bool Simulation::IsFinished(){
   return mFinished;
 }
 
-OdeSolution Simulation::GetPace(){
-  return mpModel->Compute(0, mPeriod, mSamplingTimestep);
+OdeSolution Simulation::GetPace(bool update_vars){
+  const OdeSolution solution = mpModel->Compute(0, mPeriod, mSamplingTimestep);
+  if(update_vars)
+    mStateVariables=mpModel->GetStdVecStateVariables();
+  else
+    mpModel->SetStateVariables(mStateVariables);
+  return solution;
 }
 
 std::vector<double> Simulation::GetStateVariables(){
@@ -84,10 +89,14 @@ void Simulation::SetThreshold(double threshold){
   mThreshold = threshold;
 }
 
-double Simulation::GetApd(double percentage){
+double Simulation::GetApd(double percentage, bool update_vars){
   mpStimulus->SetPeriod(mPeriod);
   OdeSolution solution = mpModel->Compute(mPeriod-10, 2*mPeriod, 1);
   solution.CalculateDerivedQuantitiesAndParameters(mpModel.get());
   CellProperties cell_props(solution.GetAnyVariable("membrane_voltage"), solution.rGetTimes());
+  if(update_vars)
+    mStateVariables = mpModel->GetStdVecStateVariables();
+  else
+    mpModel->SetStateVariables(mStateVariables);
   return cell_props.GetLastActionPotentialDuration(90);
 }

@@ -1,2 +1,5 @@
 TestExtrapolationMethod.hpp
 TestGroundTruthSimulation.hpp
+TestErrorMeasures.hpp
+TestAPD.hpp
+TestTolerances.hpp
