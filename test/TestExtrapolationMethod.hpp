@@ -25,29 +25,26 @@ class TestExtrapolationMethod : public CxxTest::TestSuite
 private:
   const unsigned int buffer_size = 100;
   const double extrapolation_coefficient = 1;
-  const int paces = 2000;
+  const unsigned int paces = 2000;
 
   bool CompareMethodsPeriod(boost::shared_ptr<AbstractCvodeCell> brute_force_model, boost::shared_ptr<AbstractCvodeCell> smart_model){
+    std::string username = std::string(getenv("USER"));
+    const std::string model_name = brute_force_model->GetSystemInformation()->GetSystemName();
+    boost::filesystem::create_directory("/home/"+username+"/testoutput/");
+    boost::filesystem::create_directory("/home/"+username+"/testoutput/"+model_name);
+    boost::filesystem::create_directory("/home/"+username+"/testoutput/"+model_name+"/TestExtrapolationMethod");
     // Uses a method to extrapolate to the steady state
     SmartSimulation smart_simulation(smart_model, 500);
     // Runs the model without using this method
     Simulation      simulation(brute_force_model, 500);
 
-    std::string username = std::string(getenv("USER"));
-
-    const std::string model_name = brute_force_model->GetSystemInformation()->GetSystemName();
-    const std::string model_name2 = smart_model->GetSystemInformation()->GetSystemName();
-
     // Setup directories for output
     std::cout << "Testing " << model_name  << "\n";
-    boost::filesystem::create_directory("/tmp/"+username);
-    boost::filesystem::create_directory("/tmp/"+username+"/"+model_name);
-    boost::filesystem::create_directory("/tmp/"+username+"/"+model_name+"/TestExtrapolation");
 
     //Open files to output states to at the start/end of each pace
     std::ofstream smart_output_file, brute_output_file;
-    smart_output_file.open("/tmp/"+username+"/"+model_name+"/TestExtrapolation/smart.dat");
-    brute_output_file.open("/tmp/"+username+"/"+model_name+"/TestExtrapolation/bruteforce.dat");
+    smart_output_file.open("/home/"+username+"/testoutput/"+model_name+"/TestExtrapolationMethod/smart.dat");
+    brute_output_file.open("/home/"+username+"/testoutput/"+model_name+"/TestExtrapolationMethod/bruteforce.dat");
 
     std::vector<std::string> state_names = smart_model->rGetStateVariableNames();
 
@@ -135,8 +132,8 @@ private:
 
     // Calculate difference in APD90s
     // Currently broken
-    const double apd_difference = smart_simulation.GetApd(90) - simulation.GetApd(90);
-    std::cout << "Difference in APD90s " << apd_difference << "\n";
+    // const double apd_difference = smart_simulation.GetApd(90) - simulation.GetApd(90);
+    // std::cout << "Difference in APD90s " << apd_difference << "\n";
 
     TS_ASSERT_LESS_THAN(mrms_difference, 1e-3);
     TS_ASSERT(smart_finished && brute_finished);
@@ -148,6 +145,7 @@ private:
 
   void CompareMethodsKrBlock(boost::shared_ptr<AbstractCvodeCell> brute_model, boost::shared_ptr<AbstractCvodeCell> smart_model){
     const std::string model_name = brute_model->GetSystemInformation()->GetSystemName();
+
     std::cout << "Testing " << model_name  << "with 50% block of IKr\n";
     //set Gkr parameter
     double default_GKr = brute_model->GetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance");
@@ -184,6 +182,10 @@ private:
 
     std::cout << "MRMS between solutions is " << mrms_difference << "\n";
 
+    const std::string output_dir = model_name+"/TestExtrapolationMethod/IKrBlock";
+    simulation.WritePaceToFile(output_dir+"/brute", "brute_pace");
+    smart_simulation.WritePaceToFile(output_dir+"/smart", "smart_pace");
+
     TS_ASSERT_LESS_THAN(mrms_difference, 1e-3);
     TS_ASSERT(smart_simulation.IsFinished() && simulation.IsFinished());
 
@@ -196,6 +198,7 @@ public:
   void TestTusscherSimulation()
   {
 #ifdef CHASTE_CVODE
+
     boost::shared_ptr<RegularStimulus> p_stimulus;
     boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
 

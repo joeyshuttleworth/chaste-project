@@ -90,8 +90,9 @@ void Simulation::SetThreshold(double threshold){
 }
 
 double Simulation::GetApd(double percentage, bool update_vars){
-  mpStimulus->SetPeriod(mPeriod);
-  OdeSolution solution = mpModel->Compute(mPeriod-10, 2*mPeriod, 1);
+  mpStimulus->SetStartTime(10);
+  OdeSolution solution = mpModel->Compute(0, mPeriod*2, 1);
+  mpStimulus->SetStartTime(0);
   solution.CalculateDerivedQuantitiesAndParameters(mpModel.get());
   CellProperties cell_props(solution.GetAnyVariable("membrane_voltage"), solution.rGetTimes());
   if(update_vars)
