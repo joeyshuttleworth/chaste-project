@@ -156,7 +156,7 @@ double Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode::calculateAnalyti
         // Units: dimensionless; Initial value: 0.9755
         double var_chaste_interface__L_type_Ca_current_fCass_gate__fCass = NV_Ith_S(rY, 11);
         // Units: dimensionless; Initial value: 0.9953
-        
+
         if (var_chaste_interface__fast_sodium_current_m_gate__m < 0.0 - tol || var_chaste_interface__fast_sodium_current_m_gate__m > 1.0 + tol)
         {
             EXCEPTION(DumpState("State variable membrane_fast_sodium_current_m_gate has gone out of range. Check numerical parameters, for example time and space stepsizes, and/or solver tolerances"));
@@ -369,7 +369,7 @@ double Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode::calculateAnalyti
         {
             d_dt_chaste_interface_var_membrane__V = -var_L_type_Ca_current__i_CaL - var_calcium_background_current__i_b_Ca - var_calcium_pump_current__i_p_Ca - var_fast_sodium_current__i_Na - var_inward_rectifier_potassium_current__i_K1 - var_membrane__i_Stim - var_potassium_pump_current__i_p_K - var_rapid_time_dependent_potassium_current__i_Kr - var_slow_time_dependent_potassium_current__i_Ks - var_sodium_background_current__i_b_Na - var_sodium_calcium_exchanger_current__i_NaCa - var_sodium_potassium_pump_current__i_NaK - var_transient_outward_current__i_to; // millivolt / millisecond
         }
-        
+
         // NV_Ith_S(rDY,0) = d_dt_chaste_interface_var_membrane__V;
         NV_Ith_S(rDY,0) = d_dt_chaste_interface_var_calcium_dynamics__Ca_i;
         NV_Ith_S(rDY,1) = d_dt_chaste_interface_var_rapid_time_dependent_potassium_current_Xr1_gate__Xr1;
@@ -437,7 +437,7 @@ double Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode::calculateAnalyti
         // Units: millimolar; Initial value: 8.604
         double var_chaste_interface__potassium_dynamics__K_i = NV_Ith_S(rY, 17);
         // Units: millimolar; Initial value: 136.89
-        
+
         // Mathematics
         const double var_L_type_Ca_current__V_high = 15.000999999999999; // millivolt
         const double var_L_type_Ca_current__V_low = 14.999000000000001; // millivolt

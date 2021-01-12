@@ -176,9 +176,9 @@ private:
     // Calculate difference in APD90s
     CellProperties brute_cell_props(brute_voltages, brute_solution.rGetTimes());
     CellProperties smart_cell_props(smart_solution.GetAnyVariable("membrane_voltage"), smart_solution.rGetTimes());
-    // Currently broken
-    // const double apd_difference = smart_cell_props.GetLastActionPotentialDuration(90) - brute_cell_props.GetLastActionPotentialDuration(90);
-    // std::cout << "Difference in APD90s " << apd_difference << "\n";
+
+    const double apd_difference = smart_cell_props.GetLastActionPotentialDuration(90) - brute_cell_props.GetLastActionPotentialDuration(90);
+    std::cout << "Difference in APD90s " << apd_difference << "\n";
 
     std::cout << "MRMS between solutions is " << mrms_difference << "\n";
 
