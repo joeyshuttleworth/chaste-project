@@ -45,7 +45,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class SmartSimulation : public Simulation{
 public:
-  SmartSimulation(boost::shared_ptr<AbstractCvodeCell> _p_model, double _period, std::string input_path = "", double _tol_abs=1e-7, double _tol_rel=1e-7, int _buffer_size = 200, double _extrapolation_constant = 1){
+  SmartSimulation(boost::shared_ptr<AbstractCvodeCell> _p_model, double _period, std::string input_path = "", double _tol_abs=1e-7, double _tol_rel=1e-7, int _buffer_size = 200, double _extrapolation_constant = 1, std::string output_dir = "/home/chaste/testoutput/"){
     mBufferSize = _buffer_size;
     mExtrapolationConstant = _extrapolation_constant;
     mpModel = _p_model;
@@ -69,12 +69,15 @@ public:
     mMrmsBuffer.set_capacity(mBufferSize);
     mStatesBuffer.set_capacity(mBufferSize);
 
+    mOutputDir = output_dir;
+    boost::filesystem::create_directory(output_dir);
     Simulation(_p_model, _period, input_path, _tol_abs, _tol_rel);
   }
 
 
   bool RunPace();
 private:
+  std::string mOutputDir;
   unsigned int mBufferSize;
   double  mExtrapolationConstant;
   boost::circular_buffer<std::vector<double>>  mStatesBuffer;

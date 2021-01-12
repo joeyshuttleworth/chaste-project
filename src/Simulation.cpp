@@ -91,9 +91,12 @@ void Simulation::SetThreshold(double threshold){
 
 double Simulation::GetApd(double percentage, bool update_vars){
   mpStimulus->SetStartTime(10);
-  OdeSolution solution = mpModel->Compute(0, mPeriod*2, 1);
+  // Need to use fine sampling timestep to be accurate, but has the effect of increasing
+  // the solver tolerance and thus the shape of the action potential compared to lower tolerances
+  OdeSolution solution = mpModel->Compute(0, mPeriod*2, 0.01);
   mpStimulus->SetStartTime(0);
   solution.CalculateDerivedQuantitiesAndParameters(mpModel.get());
+  std::cout << "\n";
   CellProperties cell_props(solution.GetAnyVariable("membrane_voltage"), solution.rGetTimes());
   if(update_vars)
     mStateVariables = mpModel->GetStdVecStateVariables();

@@ -112,7 +112,6 @@ bool SmartSimulation::ExtrapolateState(unsigned int state_index){
     return true;
   }
   else{
-    std::cout << "nan variable\n";
     return false;
   }
 }
@@ -134,11 +133,6 @@ bool SmartSimulation::RunPace(){
       mStateVariables = mSafeStateVariables;
       mpModel->SetStateVariables(mStateVariables);
       std::ofstream errors;
-      errors.open("/tmp/joey/ExtrapolationErrors.dat", std::fstream::app);
-      errors << mpModel->GetSystemInformation()->GetSystemName() << " " << mPeriod << " " << mBufferSize << " " << mExtrapolationConstant << "\n \n \n";
-      errors << e.GetMessage();
-      errors << "\n\n\n\n";
-      errors.close();
       mMrmsBuffer.clear();
       mStatesBuffer.clear();
       // The solver has been crashed so don't do any more extrapolations.
@@ -171,49 +165,25 @@ bool SmartSimulation::ExtrapolateStates(){
       return false;
     double mrms_pmcc = CalculatePMCC(mMrmsBuffer);
     bool extrapolated = false;
-    std::ofstream f_out;
     std::string model_name = mpModel->GetSystemInformation()->GetSystemName();
-    const std::string dir_name = "/tmp/chaste/" + model_name;
+    const std::string dir_name = mOutputDir + model_name;
     boost::filesystem::create_directory(dir_name);
     if(mrms_pmcc < -0.99){
       mSafeStateVariables = mStateVariables;
-      if(mPeriod == 500)
-        f_out.open(dir_name + "/1Hz2HzJump.dat");
-      else
-        f_out.open(dir_name + "/2Hz1HzJump.dat");
       std::cout << "Extrapolating - start of buffer is " << pace - mBufferSize + 1<< "\n";
-
 
       boost::filesystem::create_directory(dir_name + "/LastExtrapolationLog");
       mOutputFile.open(dir_name + "/" + std::to_string(int(mPeriod)) + "JumpParameters.dat");
       mOutputFile << pace << " " << mBufferSize << " " << mExtrapolationConstant << "\n";
 
-      WriteStatesToFile(mStateVariables, f_out);
-
-      std::ofstream f_buffer;
-      f_buffer.open(dir_name + "/Buffer.dat");
-
       for(unsigned int i = 0; i < mStateVariables.size(); i++){
         if(ExtrapolateState(i)){
           extrapolated = true;
         }
-        WriteStatesToFile(cGetNthVariable(mStatesBuffer, i), f_buffer);
       }
 
       mOutputFile.close();
-      WriteStatesToFile(mStateVariables, f_out);
-      f_buffer.close();
-      f_out.close();
 
-      /*Write new variables to file*/
-      std::ofstream output;
-      for(unsigned int i = 0; i < mStateVariables.size(); i++){
-        output << mStateVariables[i] << " ";
-      }
-      for(unsigned int i = 0; i < mStateVariables.size(); i++){
-        output << mStateVariables[i] << " ";
-      }
-      output.close();
       if(extrapolated){
         mJumps++;
         mpModel->SetStateVariables(mStateVariables);

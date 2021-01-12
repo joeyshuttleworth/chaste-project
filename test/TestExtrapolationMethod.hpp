@@ -34,9 +34,9 @@ private:
     boost::filesystem::create_directory("/home/"+username+"/testoutput/"+model_name);
     boost::filesystem::create_directory("/home/"+username+"/testoutput/"+model_name+"/TestExtrapolationMethod");
     // Uses a method to extrapolate to the steady state
-    SmartSimulation smart_simulation(smart_model, 500);
+    SmartSimulation smart_simulation(smart_model, 500, "", 1e-8, 1e-8, 200, 1, "/home/chaste/testoutput/" + model_name + "/TestExtrapolationMethod");
     // Runs the model without using this method
-    Simulation      simulation(brute_force_model, 500);
+    Simulation      simulation(brute_force_model, 500, "", 1e-8, 1e-8);
 
     // Setup directories for output
     std::cout << "Testing " << model_name  << "\n";
@@ -122,8 +122,8 @@ private:
     std::string brute_filename = model_name + "_brute_final_pace.dat";
     std::cout << "Outputting final paces as " << smart_filename << " and " << brute_filename << "\n";
     std::ofstream smart_pace_file, brute_pace_file;
-    smart_pace_file.open("/tmp/"+username+"/"+smart_filename);
-    brute_pace_file.open("/tmp/"+username+"/"+smart_filename);
+    smart_pace_file.open("/home/"+username+"/testoutput/"+model_name+"/TestExtrapolationMethod/"+smart_filename);
+    brute_pace_file.open("/home/"+username+"/testoutput/"+model_name+"/TestExtrapolationMethod/"+smart_filename);
 
     smart_pace_file << "smart_pace brute_pace\n";
     for(unsigned int i = 0; i < smart_voltages.size(); i++){
@@ -132,8 +132,8 @@ private:
 
     // Calculate difference in APD90s
     // Currently broken
-    // const double apd_difference = smart_simulation.GetApd(90) - simulation.GetApd(90);
-    // std::cout << "Difference in APD90s " << apd_difference << "\n";
+    const double apd_difference = smart_simulation.GetApd(90) - simulation.GetApd(90);
+    std::cout << "Difference in APD90s " << apd_difference << "\n";
 
     TS_ASSERT_LESS_THAN(mrms_difference, 1e-3);
     TS_ASSERT(smart_finished && brute_finished);
