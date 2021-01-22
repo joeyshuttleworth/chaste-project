@@ -26,7 +26,6 @@ class Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode : public AbstractCvode
     void serialize(Archive & archive, const unsigned int version)
     {
         archive & boost::serialization::base_object<AbstractCvodeCell >(*this);
-        
     }
 
     //
@@ -34,7 +33,7 @@ class Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode : public AbstractCvode
     //
 
   double CalculateAnalyticVoltage(const N_Vector&);
-  double mIntegrationConstant;
+  double mIntegrationConstant = 0;
 
 public:
 

@@ -1,38 +1,3 @@
-/*
-
-Copyright (c) 2005-2021, University of Oxford.
-All rights reserved.
-
-University of Oxford means the Chancellor, Masters and Scholars of the
-University of Oxford, having an administrative office at Wellington
-Square, Oxford OX1 2JD, UK.
-
-This file is part of Chaste.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
- * Redistributions of source code must retain the above copyright notice,
-   this list of conditions and the following disclaimer.
- * Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
- * Neither the name of the University of Oxford nor the names of its
-   contributors may be used to endorse or promote products derived from this
-   software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
-GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
-OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-*/
-
 #include <cxxtest/TestSuite.h>
 #include "CellProperties.hpp"
 #include "SteadyStateRunner.hpp"
@@ -44,84 +9,114 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "SimulationTools.hpp"
 #include <boost/filesystem.hpp>
 #include <fstream>
+#include <iomanip>
+#include "Simulation.hpp"
 
 /* These header files are generated from the cellml files provided at github.com/chaste/cellml */
-
 #include "beeler_reuter_model_1977Cvode.hpp"
 #include "ten_tusscher_model_2004_epiCvode.hpp"
 #include "ohara_rudy_2011_endoCvode.hpp"
 #include "shannon_wang_puglisi_weber_bers_2004Cvode.hpp"
+#include "decker_2009Cvode.hpp"
+#include "ohara_rudy_cipa_v1_2017Cvode.hpp"
+#include "ten_tusscher_model_2006_epiCvode.hpp"
 
-class TestGroundTruthSimulation : public CxxTest::TestSuite
+// Modified models
+#include "ohara_rudy_cipa_v1_2017_analyticCvode.hpp"
+#include "ten_tusscher_model_2006_epi_analyticCvode.hpp"
+
+
+/*  Test to see how APD90s vary when the model has reached a steady state. Two
+    different tolerances are used (1e-12, 1e-12) and (1e-8, 1e-8). The former is
+    what the steady state was calculated with and the latter is more likely
+    to be used in practice.
+
+    The results should show that these APD90s are similar apart from maybe one
+    or two paces immediately after the tolerances have been modified.
+
+    This test outputs these sets of APD90s as two separate files.
+ */
+
+class TestAPD : public CxxTest::TestSuite
 {
+  const unsigned int paces=10;
 public:
-  void TestTusscherSimulation()
+  void TestRunAPDSimulation()
   {
 #ifdef CHASTE_CVODE
-    boost::shared_ptr<RegularStimulus> p_stimulus;
-    boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
-    boost::shared_ptr<AbstractCvodeCell> p_model(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus));
-    boost::shared_ptr<RegularStimulus> p_regular_stim = p_model->UseCellMLDefaultStimulus();
-    const double period = 500;
-    const double duration   = p_regular_stim->GetDuration();
-    const std::string model_name = p_model->GetSystemInformation()->GetSystemName();
-    std::ofstream output_file;
-    std::cout << "Testing model: " + model_name + "\n";
 
-    p_regular_stim->SetPeriod(period);
-    p_model->SetTolerances(1e-12, 1e-12);
-    p_model->SetMaxSteps(1e5);
-    p_model->SetMaxTimestep(1000);
-    p_regular_stim->SetStartTime(0);
-    
-    unsigned int paces  = 1000;
-    OdeSolution current_solution;
-    std::vector<std::vector<double>> state_variables;
-    std::string username = std::string(getenv("USER"));
-      
     std::vector<boost::shared_ptr<AbstractCvodeCell>> models;
+    boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
+    boost::shared_ptr<RegularStimulus> p_stimulus;
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_2011_endoFromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Celldecker_2009FromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellbeeler_reuter_model_1977FromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode(p_solver, p_stimulus)));
 
-    boost::filesystem::create_directory("/tmp/"+username);
-    boost::filesystem::create_directory("/tmp/"+username+"/"+model_name);
-    output_file.open("/tmp/"+username+"/"+model_name+"/apdplot.dat");
+    std::vector<double> periods = {1000, 500, 750, 1250};
+    std::vector<double> IKrBlocks = {0, 0.25, 0.5};
 
-    TS_ASSERT_EQUALS(LoadStatesFromFile(p_model, "/home/joey/code/chaste-project-data/"+model_name+"/GroundTruth1Hz/final_state_variables.dat"), 0);
-
-    std::vector<double> initial_conditions = MakeStdVec(p_model->rGetStateVariables());
-    
-    /*Set the output to be as precise as possible */
-    output_file.precision(18);
-
-    TS_ASSERT_EQUALS(output_file.is_open(), true);
-
-    const std::vector<std::string> state_variable_names = p_model->rGetStateVariableNames();
-
-    unsigned int voltage_index = p_model->GetSystemInformation()->GetStateVariableIndex("membrane_voltage");
-    std::vector<double> times;
-    std::vector<double> sampling_timesteps = {1, 0.1, 0.01, 0.001};
-
-    for(unsigned int i = 0; i < sampling_timesteps.size(); i++){
-      p_model->SetStateVariables(initial_conditions);
-      for(unsigned int j = 0; j < paces; j++){
-        current_solution = p_model->Compute(0, duration, sampling_timesteps[i]);
-        state_variables = current_solution.rGetSolutions();
-        times = current_solution.rGetTimes();
-        current_solution = p_model->Compute(duration, period, sampling_timesteps[i]);
-        std::vector<std::vector<double>> current_state_variables = current_solution.rGetSolutions();
-        std::vector<double> current_times = current_solution.rGetTimes();
-        state_variables.insert(state_variables.end(), current_state_variables.begin(), current_state_variables.end());
-        times.insert(times.end(), current_times.begin(), current_times.end());
-        const std::vector<double> voltages = GetNthVariable(state_variables, voltage_index);
-        CellProperties cell_props = CellProperties(voltages, times);
-        double current_apd90 = cell_props.GetLastActionPotentialDuration(90);
-        output_file << current_apd90 << " ";
+    for(auto model : models){
+      for(auto period : periods){
+        for(auto IKrBlock : IKrBlocks)
+          RunModel(model, period, IKrBlock);
       }
-      output_file << "\n";
     }
-    output_file.close();
   }
+
 #else
   std::cout << "Cvode is not enabled.\n";
 #endif
-};
+  void RunModel(boost::shared_ptr<AbstractCvodeCell> model, const double period, const double IKrBlock){
+    std::stringstream dirname;
+    const std::string CHASTE_TEST_OUTPUT = std::string(getenv("CHASTE_TEST_OUTPUT"));
+    const std::string model_name = model->GetSystemInformation()->GetSystemName();
+    std::cout << "Testing " << model_name << " with period " << int(period) <<" and IKrBlock "<< IKrBlock << "\n";
 
+    const std::string GKrParameterName = "membrane_rapid_delayed_rectifier_potassium_current_conductance";
+    const double default_GKr = model->GetParameter(GKrParameterName);
+    model->SetParameter(GKrParameterName, default_GKr*(1-IKrBlock));
+
+    dirname << model_name+"_" << std::to_string(int(period)) << "ms_" << int(100*IKrBlock)<<"_percent_block/";
+    boost::filesystem::create_directories(dirname.str());
+
+
+    Simulation simulation(model, period, CHASTE_TEST_OUTPUT + "/" + dirname.str() + "final_states.dat");
+    simulation.SetTerminateOnConvergence(false);
+
+    std::ofstream output_file(CHASTE_TEST_OUTPUT + "/" + dirname.str() + "apds_using_groundtruth_1e-8.dat");
+    std::ofstream output_file2(CHASTE_TEST_OUTPUT + "/" + dirname.str() + "apds_using_groundtruth_1e-12.dat");
+
+    output_file << std::setprecision(20);
+    std::cout   << std::setprecision(20);
+
+    // Calculate Ground Truth APD
+    simulation.SetTolerances(1e-12, 1e-12);
+
+    std::vector<double> last_state_vars, state_vars = model->GetStdVecStateVariables();
+    for(unsigned int i=0; i<paces; i++){
+      last_state_vars = state_vars;
+      const double reference_apd = simulation.GetApd(90, false);
+      simulation.RunPace();
+      state_vars = simulation.GetModel()->GetStdVecStateVariables();
+      std::cout << "mrms = " << mrms(state_vars, last_state_vars) << "\n";
+      std::cout << "APD90 of the final pace of the ground truth simulation is " << reference_apd << "\n";
+      output_file2 << reference_apd << "\n";
+    }
+    simulation.SetTolerances(1e-8, 1e-8);
+
+    for(unsigned int i = 0; i < paces; i++){
+      simulation.RunPace();
+      const double apd = simulation.GetApd(90, false);
+      std::cout << "pace, apd = " << i << ", " << apd << "\n";
+      output_file << apd << "\n";
+    }
+
+    output_file.close();
+    output_file2.close();
+    model->SetParameter(GKrParameterName, default_GKr);
+  }
+};

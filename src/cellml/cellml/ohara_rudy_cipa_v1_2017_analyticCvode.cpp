@@ -138,7 +138,6 @@ double Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode::CalculateAnalyticVol
     {
     }
 
-    
     double Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode::GetIIonic(const std::vector<double>* pStateVariables)
     {
       throw std::exception();

@@ -25,13 +25,13 @@ std::vector<double> GetNthVariable(std::vector<std::vector<double>>, unsigned in
 
 std::vector<double> cGetNthVariable(boost::circular_buffer<std::vector<double>>, unsigned int);
 
-double mrms(std::vector<double>, std::vector<double>);
+double mrms(std::vector<double>, std::vector<double>, unsigned int=0);
 
-double TwoNorm(std::vector<double>, std::vector<double>);
+double TwoNorm(std::vector<double>, std::vector<double>, unsigned int=0);
 
-double mrmsTrace(std::vector<std::vector<double>>, std::vector<std::vector<double>>);
+double mrmsTrace(std::vector<std::vector<double>>, std::vector<std::vector<double>>, unsigned int=0);
 
-double TwoNormTrace(std::vector<std::vector<double>>, std::vector<std::vector<double>>);
+double TwoNormTrace(std::vector<std::vector<double>>, std::vector<std::vector<double>>, unsigned int=0);
 
 double CalculateAPD(boost::shared_ptr<AbstractCvodeCell>, double, double, double);
 

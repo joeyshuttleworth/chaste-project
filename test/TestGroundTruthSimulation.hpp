@@ -9,6 +9,7 @@
 #include "SimulationTools.hpp"
 #include <boost/filesystem.hpp>
 #include <fstream>
+#include <algorithm>
 
 #include "Simulation.hpp"
 
@@ -30,65 +31,91 @@
    - Terminal state variables
    to separate files.
  */
-
 class TestGroundTruthSimulation : public CxxTest::TestSuite
 {
 public:
+  const int paces = 10000;
   void TestRunSimulation()
   {
 #ifdef CHASTE_CVODE
-    const int paces = 100;
     boost::shared_ptr<RegularStimulus> p_stimulus;
     boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
 
-    std::vector<boost::shared_ptr<AbstractCvodeCell>> models;
+    const std::string username = std::string(getenv("USER"));
+    boost::filesystem::create_directories("/home/" + username + "/testoutput/");
 
+    std::vector<double> periods = {1000, 500, 750, 1250};
+    std::vector<double> IKrBlocks = {0, 0.25, 0.5};
+
+    std::vector<boost::shared_ptr<AbstractCvodeCell>> models;
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_2011_endoFromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Celldecker_2009FromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2006_epiFromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_cipa_v1_2017FromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2006_epiFromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_cipa_v1_2017FromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellbeeler_reuter_model_1977FromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode(p_solver, p_stimulus)));
 
-    std::string username = std::string(getenv("USER"));
-    boost::filesystem::create_directory("/tmp/"+username);
-
-    for(unsigned int i = 0; i < models.size(); i++){
-      const auto p_model = models[i];
-      const std::string model_name = p_model->GetSystemInformation()->GetSystemName();
-      std::vector<double> periods = {500, 1000};
-      std::vector<double> initial_states = models[i]->GetStdVecStateVariables();
-      for(unsigned int j =0; j < periods.size(); j++){
-        std::cout << "Testing " << model_name << " with period " << int(periods[j]) << "\n";
-        const std::string dirname = "/home/" + username + "/testoutput/TestGroundTruth_" + model_name  + std::to_string(int(periods[j])) + "ms/";
-        boost::filesystem::create_directory(dirname);
-
-        // Initialise simulation with fine tolerances
-        Simulation simulation(models[i], periods[j], "", 1e-12, 1e-12);
-        simulation.SetStateVariables(initial_states);
-
-        // Turn off convergence criteria
-        simulation.SetThreshold(0);
-
-        // Run the simulation for a large number of paces
-        simulation.RunPaces(paces);
-
-        // Output the final pace
-        const std::string pace_filename = "final_pace.dat";
-
-        simulation.WritePaceToFile(dirname, pace_filename);
-
-        // Output the APD90 of the final pace
-        const std::string apd_filename = "final_apd90.dat";
-        std::ofstream apd_file(dirname + apd_filename);
-        apd_file << simulation.GetApd(90) << "\n";
-        apd_file.close();
+    for(auto model : models){
+      const N_Vector initial_states = model->GetStateVariables();
+      for(double period : periods){
+        for(double IKrBlock : IKrBlocks){
+          ComputeGroundTruth(model, period, IKrBlock);
+          model->SetStateVariables(initial_states);
+        }
       }
-   }
+    }
+
 #else
     std::cout << "Cvode is not enabled.\n";
 #endif
   }
+#ifdef CHASTE_CVODE
+  void ComputeGroundTruth(boost::shared_ptr<AbstractCvodeCell> model, double period, double IKrBlock){
+    const std::string username = std::string(getenv("USER"));
+    const std::string CHASTE_TEST_OUTPUT = std::string(getenv("CHASTE_TEST_OUTPUT"));
+    const std::string model_name = model->GetSystemInformation()->GetSystemName();
+    std::cout << "Testing " << model_name << " with period " << int(period) <<" and IKrBlock "<< IKrBlock << "\n";
+    std::stringstream dirname;
+    dirname << model_name+"_" << std::to_string(int(period)) << "ms_" << int(100*IKrBlock)<<"_percent_block/";
+    std::cout << dirname.str() << std::endl;
+    boost::filesystem::path dir(dirname.str());
+    dir = boost::filesystem::path(CHASTE_TEST_OUTPUT) / dir;
+
+    // Initialise simulation with fine tolerances
+    Simulation simulation(model, period, "", 1e-12, 1e-12);
+
+    // Turn off convergence criteria
+    simulation.SetTerminateOnConvergence(false);
+
+    // Set Gkr if it exists
+    std::vector<std::string> param_names = model->GetSystemInformation()->rGetParameterNames();
+    double default_GKr = DOUBLE_UNSET;
+    bool set_GKr = false;
+
+    const std::string GKrParameterName = "membrane_rapid_delayed_rectifier_potassium_current_conductance";
+    default_GKr = model->GetParameter(GKrParameterName);
+    model->SetParameter(GKrParameterName, default_GKr*(1-IKrBlock));
+
+    // Run the simulation for a large number of paces
+    simulation.RunPaces(paces);
+
+    // Output the final pace
+    const std::string pace_filename = "final_pace";
+
+    simulation.WritePaceToFile(dirname.str(), pace_filename);
+
+    // Output the APD90 of the final pace
+    const std::string apd_filename = "final_apd90.dat";
+    std::ofstream apd_file(dirname.str() + apd_filename);
+    apd_file << simulation.GetApd(90) << "\n";
+    apd_file.close();
+
+    // Print final mrms
+    std::cout << "final mrms is " << simulation.GetMrms(false) << "\n";
+
+    simulation.WriteStatesToFile(dir, "final_states.dat");
+    model->SetParameter(GKrParameterName, default_GKr);
+  }
+#endif
 };

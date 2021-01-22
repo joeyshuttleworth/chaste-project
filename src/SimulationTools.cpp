@@ -19,21 +19,26 @@ int LoadStatesFromFile(boost::shared_ptr<AbstractCvodeCell> p_model, std::string
   file_in.open(file_path);
   if(!file_in.is_open()){
     std::cout << "Couldn't open file! " + file_path + " \n";
+    EXCEPTION("Couldn't open file " + file_path);
     return -1;
   }
   std::string line;
-  std::string tmp_line;
   std::vector<std::string> state_variables_str;
   std::vector<double> state_variables;
 
-  // Get last line
-  while(std::getline(file_in, tmp_line))
-    line=tmp_line;
+  // Get second line
+  std::getline(file_in, line);
+  std::getline(file_in, line);
 
-  boost::split(state_variables_str, line, boost::is_any_of(" "));
-  for(unsigned int i = 0; i < p_model->GetNumberOfStateVariables(); i++){
-    state_variables.push_back(std::stod(state_variables_str[i]));
+  boost::split(state_variables_str, line, boost::is_any_of(" \t"), boost::token_compress_on);
+  for(auto state_var : state_variables_str){
+    try{
+      state_variables.push_back(std::stod(state_var));
+    }
+    catch(std::exception e){
+    }
   }
+
   file_in.close();
   p_model->SetStateVariables(state_variables);
   return 0;
@@ -57,9 +62,9 @@ std::vector<double> cGetNthVariable(boost::circular_buffer<std::vector<double>> 
   return vec;
 }
 
-double TwoNorm(std::vector<double> A, std::vector<double> B){
+double TwoNorm(std::vector<double> A, std::vector<double> B, unsigned int starting_index){
   double norm = 0;
-  for(unsigned int i=0; i < A.size(); i++){
+  for(unsigned int i=starting_index; i < A.size(); i++){
     double a = A[i];
     double b = B[i];
     norm += pow(a - b, 2);
@@ -67,10 +72,10 @@ double TwoNorm(std::vector<double> A, std::vector<double> B){
   return sqrt(norm);
 }
 
-double mrms(std::vector<double> A, std::vector<double> B){
+double mrms(std::vector<double> A, std::vector<double> B, unsigned int starting_index){
   double norm = 0;
   assert(A.size()==B.size());
-  for(unsigned int i=0; i < A.size(); i++){
+  for(unsigned int i=starting_index; i < A.size(); i++){
     double a = A[i];
     double b = B[i];
     norm += pow((a - b)/(1 + abs(a)), 2);
@@ -79,20 +84,20 @@ double mrms(std::vector<double> A, std::vector<double> B){
   return return_val;
 }
 
-double TwoNormTrace(std::vector<std::vector<double>> A, std::vector<std::vector<double>> B){
+double TwoNormTrace(std::vector<std::vector<double>> A, std::vector<std::vector<double>> B, unsigned int starting_index){
   double norm = 0;
   for(unsigned int i = 0; i < A.size(); i++){
-    for(unsigned int j = 0; j < A[0].size(); j++){
+    for(unsigned int j = starting_index; j < A[0].size(); j++){
       norm += pow(A[i][j] - B[i][j], 2);
     }
   }
   return sqrt(norm);
 }
 
-double mrmsTrace(std::vector<std::vector<double>> A, std::vector<std::vector<double>> B){
+double mrmsTrace(std::vector<std::vector<double>> A, std::vector<std::vector<double>> B, unsigned int starting_index){
   double norm = 0;
   for(unsigned int i = 0; i < A.size(); i++){
-    for(unsigned int j = 0; j < A[0].size(); j++){
+    for(unsigned int j = starting_index; j < A[0].size(); j++){
       double a = A[i][j];
       double b = B[i][j];
       norm += pow((a - b)/(1+abs(a)), 2);

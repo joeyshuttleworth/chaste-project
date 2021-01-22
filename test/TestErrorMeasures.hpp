@@ -10,6 +10,7 @@
 #include <boost/filesystem.hpp>
 #include <fstream>
 #include "Simulation.hpp"
+#include "OutputFileHandler.hpp"
 
 /* These header files are generated from the cellml files provided at github.com/chaste/cellml */
 
@@ -37,12 +38,17 @@ public:
 
     std::vector<boost::shared_ptr<AbstractCvodeCell>> models;
 
+    const std::vector<std::string> models_with_redudant_voltage = { "ohara_rudy_2011_endo",
+                                                                    "decker_2009",
+                                                                    "ten_tusscher_model_2004",
+                                                                    "shannon_wang_puglisi_weber_epi"
+    };
+
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_2011_endoFromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Celldecker_2009FromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellbeeler_reuter_model_1977FromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Celldecker_2009FromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode(p_solver, p_stimulus)));
 
@@ -51,7 +57,7 @@ public:
     const unsigned int paces  = 100;
 
     for(unsigned int i=0; i < models.size(); i++){
-      const double periods[] = {500, 1000};
+      std::vector<double> periods = {500, 1000};
       for(auto period : periods){
         const std::string model_name = models[i]->GetSystemInformation()->GetSystemName();
         boost::filesystem::create_directory("/home/" + username + "/testoutput/");
@@ -66,8 +72,6 @@ public:
         Simulation simulation(models[i], period, input_path, 1e-12, 1e-12);
 
         std::vector<std::vector<double>> state_variables;
-
-        std::vector<boost::shared_ptr<AbstractCvodeCell>> models;
 
         const std::vector<std::string> state_variable_names = p_model->rGetStateVariableNames();
 
@@ -100,11 +104,15 @@ public:
             std::cout << "pace " << j << std::endl;
           }
           if(i % 10==0){
-            errors_file << simulation.GetApd(90, false) << " ";
-            errors_file << TwoNorm(current_states, previous_states) << " ";
-            errors_file << mrms(current_states,  previous_states) << " ";
-            errors_file << TwoNormTrace(current_pace, previous_pace) << " ";
-            errors_file << mrmsTrace(current_pace, previous_pace) << " ";
+            unsigned int starting_index = 0;
+            if(models_with_redundant_voltage.find(model_name)!=models_with_redudant_voltage.end()){
+              start_index = 1;
+            }
+            errors_file << simulation.GetApd(90, false, starting_index) << " ";
+            errors_file << TwoNorm(current_states, previous_states, starting_index) << " ";
+            errors_file << mrms(current_states,  previous_states, starting_index) << " ";
+            errors_file << TwoNormTrace(current_pace, previous_pace, starting_index) << " ";
+            errors_file << mrmsTrace(current_pace, previous_pace, starting_index) << " ";
           }
           //Print state variables
           for(unsigned int k = 0; k < current_states.size(); k++){

@@ -3,3 +3,4 @@ TestGroundTruthSimulation.hpp
 TestErrorMeasures.hpp
 TestAPD.hpp
 TestTolerances.hpp
+TestBenchmark.hpp

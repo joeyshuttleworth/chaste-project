@@ -120,6 +120,7 @@ double Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode::calculateAnalyti
         NV_Ith_S(this->mParameters, 19) = 1000.0; // (var_sodium_calcium_exchanger_current__K_NaCa) [picoA_per_picoF]
         NV_Ith_S(this->mParameters, 20) = 2.7240000000000002; // (var_sodium_potassium_pump_current__P_NaK) [picoA_per_picoF]
         NV_Ith_S(this->mParameters, 21) = 0.29399999999999998; // (var_transient_outward_current__g_to) [nanoS_per_picoF]
+
         // initial voltage is taken from the cellml file
         const double initial_voltage = -85.23;
         mIntegrationConstant = initial_voltage - calculateAnalyticVoltage(mStateVariables);
