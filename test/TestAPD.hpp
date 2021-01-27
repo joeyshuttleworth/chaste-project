@@ -39,7 +39,7 @@
 
 class TestAPD : public CxxTest::TestSuite
 {
-  const unsigned int paces=10;
+  const unsigned int paces=100;
 public:
   void TestRunAPDSimulation()
   {
@@ -91,6 +91,7 @@ public:
     std::ofstream output_file2(CHASTE_TEST_OUTPUT + "/" + dirname.str() + "apds_using_groundtruth_1e-12.dat");
 
     output_file << std::setprecision(20);
+    output_file2 << std::setprecision(20);
     std::cout   << std::setprecision(20);
 
     // Calculate Ground Truth APD
@@ -103,7 +104,6 @@ public:
       simulation.RunPace();
       state_vars = simulation.GetModel()->GetStdVecStateVariables();
       std::cout << "mrms = " << mrms(state_vars, last_state_vars) << "\n";
-      std::cout << "APD90 of the final pace of the ground truth simulation is " << reference_apd << "\n";
       output_file2 << reference_apd << "\n";
     }
     simulation.SetTolerances(1e-8, 1e-8);
@@ -111,7 +111,6 @@ public:
     for(unsigned int i = 0; i < paces; i++){
       simulation.RunPace();
       const double apd = simulation.GetApd(90, false);
-      std::cout << "pace, apd = " << i << ", " << apd << "\n";
       output_file << apd << "\n";
     }
 
