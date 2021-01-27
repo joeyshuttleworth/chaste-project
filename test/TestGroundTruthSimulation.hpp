@@ -31,6 +31,7 @@
    - Terminal state variables
    to separate files.
  */
+
 class TestGroundTruthSimulation : public CxxTest::TestSuite
 {
 public:

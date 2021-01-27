@@ -30,13 +30,10 @@ int LoadStatesFromFile(boost::shared_ptr<AbstractCvodeCell> p_model, std::string
   std::getline(file_in, line);
   std::getline(file_in, line);
 
-  boost::split(state_variables_str, line, boost::is_any_of(" \t"), boost::token_compress_on);
+  boost::split(state_variables_str, line, boost::is_any_of(" "), boost::token_compress_on);
   for(auto state_var : state_variables_str){
-    try{
+    if(state_var!="")
       state_variables.push_back(std::stod(state_var));
-    }
-    catch(std::exception e){
-    }
   }
 
   file_in.close();
@@ -129,7 +126,7 @@ double CalculateAPD(boost::shared_ptr<AbstractCvodeCell> p_model, double period,
 
   const std::vector<double> voltages = GetNthVariable(state_variables, voltage_index);
   CellProperties cell_props = CellProperties(voltages, times);
-  
+
   apd = cell_props.GetLastActionPotentialDuration(percentage);
 
   p_model->SetTolerances(rel_tol, abs_tol);
@@ -137,12 +134,12 @@ double CalculateAPD(boost::shared_ptr<AbstractCvodeCell> p_model, double period,
   return apd;
 }
 
-std::vector<std::vector<double>> GetPace(std::vector<double> initial_conditions, boost::shared_ptr<AbstractCvodeCell> p_model, double period, double duration){ 
+std::vector<std::vector<double>> GetPace(std::vector<double> initial_conditions, boost::shared_ptr<AbstractCvodeCell> p_model, double period, double duration){
   double sampling_timestep = 0.1;
   const std::vector<double> original_states = p_model->GetStdVecStateVariables();
   const double rel_tol = p_model->GetRelativeTolerance();
-  const double abs_tol = p_model->GetAbsoluteTolerance();  
-  
+  const double abs_tol = p_model->GetAbsoluteTolerance();
+
   p_model->SetMaxSteps(1e5);
   p_model->SetTolerances(1e-12, 1e-12);
   p_model->SetStateVariables(initial_conditions);
@@ -150,9 +147,9 @@ std::vector<std::vector<double>> GetPace(std::vector<double> initial_conditions,
   OdeSolution solution = p_model->Compute(0, duration, sampling_timestep);
   std::vector<std::vector<double>> state_variables = solution.rGetSolutions();
   solution = p_model->Compute(duration, period, sampling_timestep);
-  
+
   state_variables.insert(state_variables.end(), ++solution.rGetSolutions().begin(), solution.rGetSolutions().end());
-  
+
 
   p_model->SetTolerances(rel_tol, abs_tol);
   p_model->SetStateVariables(original_states);

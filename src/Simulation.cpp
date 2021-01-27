@@ -12,10 +12,10 @@ Simulation::Simulation(boost::shared_ptr<AbstractCvodeCell> _p_model, double _pe
   mpModel->SetMaxTimestep(500);
   mpModel->SetTolerances(mTolAbs, mTolRel);
   mNumberOfStateVariables = mpModel->GetSystemInformation()->rGetStateVariableNames().size();
-  mStateVariables = mpModel->GetStdVecStateVariables();
   if(input_path.length()>=1){
     LoadStatesFromFile(mpModel, input_path);
   }
+  mStateVariables = mpModel->GetStdVecStateVariables();
 }
 
 Simulation::~Simulation(){
@@ -76,6 +76,7 @@ void Simulation::WriteStatesToFile(boost::filesystem::path dir, std::string file
   std::vector<std::string> var_names = mpModel->GetSystemInformation()->rGetStateVariableNames();
 
   f_out << std::setprecision(20);
+
   for(std::string var_name : var_names){
     f_out << var_name << " ";
   }
