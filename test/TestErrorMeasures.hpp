@@ -36,9 +36,11 @@ public:
     boost::shared_ptr<RegularStimulus> p_stimulus;
     boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
 
+    boost::filesystem::path test_dir(getenv("CHASTE_TEST_OUTPUT"));
+
     std::vector<boost::shared_ptr<AbstractCvodeCell>> models;
 
-    const std::vector<std::string> models_with_redudant_voltage = { "ohara_rudy_2011_endo",
+    const std::vector<std::string> models_with_redundant_voltage = { "ohara_rudy_2011_endo",
                                                                     "decker_2009",
                                                                     "ten_tusscher_model_2004",
                                                                     "shannon_wang_puglisi_weber_epi"
@@ -54,77 +56,87 @@ public:
 
     std::string username = std::string(getenv("USER"));
 
-    const unsigned int paces  = 100;
+    const unsigned int paces  = 5000;
 
-    for(unsigned int i=0; i < models.size(); i++){
-      std::vector<double> periods = {500, 1000};
+    std::vector<double> periods = {1000, 500};
+    std::vector<double> IKrBlocks = {0, 0.5};
+
+    for(auto model : models){
       for(auto period : periods){
-        const std::string model_name = models[i]->GetSystemInformation()->GetSystemName();
-        boost::filesystem::create_directory("/home/" + username + "/testoutput/");
-        // Use the 1000ms period version unless we're at 1000ms
-        const double starting_period = period==1000?500:1000;
-        const std::string output_dirname = "/home/" + username + "/testoutput/TestErrorMeasure_" + model_name + "_" + std::to_string(int(starting_period)) + "ms/";
-        const std::string input_path = "/home/" + username + "/testoutput/TestErrorMeasure_" + model_name + "_" + std::to_string(int(period)) + "ms/final_pace.dat";
-        boost::filesystem::create_directory(output_dirname);
-        auto p_model = models[i];
-        std::cout << "Testing model: " + model_name + "\n";
+        for(double IKrBlock : IKrBlocks){
+          const std::string model_name = model->GetSystemInformation()->GetSystemName();
+          const double starting_period = period==1000?500:1000;
+          const double starting_block  = period==0?0.5:0;
 
-        Simulation simulation(models[i], period, input_path, 1e-12, 1e-12);
+          std::stringstream dirname;
+          dirname << "/" << model_name << "_" << std::to_string(int(period)) << "ms_" << int(100*IKrBlock)<<"_percent_block/";
 
-        std::vector<std::vector<double>> state_variables;
+          std::stringstream input_dirname_ss;
+          input_dirname_ss << model_name+"_" << std::to_string(int(starting_period)) << "ms_" << int(100*starting_block)<<"_percent_block/";
+          const std::string input_dirname = (test_dir / boost::filesystem::path(input_dirname_ss.str())).string();
+          std::cout << "Testing model: " << model_name << " with period " << period << "ms and IKrBlock " << IKrBlock << "\n";
 
-        const std::vector<std::string> state_variable_names = p_model->rGetStateVariableNames();
+          const std::string input_path = (test_dir / boost::filesystem::path(input_dirname_ss.str()) / boost::filesystem::path("final_states.dat")).string();
 
-        std::string errors_file_path = output_dirname + "error_measures.dat";
+          Simulation simulation(model, period, input_path, 1e-12, 1e-12);
 
-        std::ofstream errors_file(errors_file_path);
-        TS_ASSERT_EQUALS(errors_file.is_open(), true);
+          std::vector<std::vector<double>> state_variables;
 
-        errors_file.precision(18);
+          const std::vector<std::string> state_variable_names = model->rGetStateVariableNames();
 
-        errors_file << "APD 2-Norm MRMS Trace-2-Norm Trace-MRMS \n";
+          const std::string errors_file_path = (test_dir / boost::filesystem::path(input_dirname_ss.str()) / boost::filesystem::path("error_measures.dat")).string();
 
-        std::vector<std::string> names = p_model->GetSystemInformation()->rGetStateVariableNames();
+          std::cout << "outputting to " << errors_file_path << "\n";
 
-        std::vector<double> times;
-        std::vector<std::vector<double>> current_pace, previous_pace;
-        for(unsigned int j = 0; j < paces; j++){
-          OdeSolution current_solution = simulation.GetPace(true);
-          std::vector<std::vector<double>> current_pace = current_solution.rGetSolutions();
-          previous_pace = current_pace;
-          times = current_solution.rGetTimes();
+          std::ofstream errors_file(errors_file_path);
+          TS_ASSERT_EQUALS(errors_file.is_open(), true);
 
-          // Can't do error measures if this is the first pace!
-          if(j==0)
-            continue;
-          const std::vector<double> current_states = current_pace.back();
-          const std::vector<double> previous_states = previous_pace.back();
+          errors_file.precision(18);
 
-          if(j%1000==0){
-            std::cout << "pace " << j << std::endl;
-          }
-          if(i % 10==0){
-            unsigned int starting_index = 0;
-            if(models_with_redundant_voltage.find(model_name)!=models_with_redudant_voltage.end()){
-              start_index = 1;
+          errors_file << "APD 2-Norm MRMS Trace-2-Norm Trace-MRMS \n";
+
+          std::vector<std::string> names = model->GetSystemInformation()->rGetStateVariableNames();
+
+          std::vector<double> times;
+          std::vector<std::vector<double>> current_pace, previous_pace;
+          for(unsigned int j = 0; j < paces; j++){
+            OdeSolution current_solution = simulation.GetPace(true);
+            std::vector<std::vector<double>> current_pace = current_solution.rGetSolutions();
+            previous_pace = current_pace;
+            times = current_solution.rGetTimes();
+
+            // Can't do error measures if this is the first pace!
+            if(j==0)
+              continue;
+            const std::vector<double> current_states = current_pace.back();
+            const std::vector<double> previous_states = previous_pace.back();
+
+            if(j%1000==0){
+              std::cout << "pace " << j << std::endl;
             }
-            errors_file << simulation.GetApd(90, false, starting_index) << " ";
-            errors_file << TwoNorm(current_states, previous_states, starting_index) << " ";
-            errors_file << mrms(current_states,  previous_states, starting_index) << " ";
-            errors_file << TwoNormTrace(current_pace, previous_pace, starting_index) << " ";
-            errors_file << mrmsTrace(current_pace, previous_pace, starting_index) << " ";
+            if(j % 10==0){
+              unsigned int starting_index = 0;
+              if(find(models_with_redundant_voltage.begin(), models_with_redundant_voltage.end(), model_name)!=models_with_redundant_voltage.end()){
+                starting_index = 1;
+              }
+              errors_file << simulation.GetApd(90, false) << " ";
+              errors_file << TwoNorm(current_states, previous_states, starting_index) << " ";
+              errors_file << mrms(current_states,  previous_states, starting_index) << " ";
+              errors_file << TwoNormTrace(current_pace, previous_pace, starting_index) << " ";
+              errors_file << mrmsTrace(current_pace, previous_pace, starting_index) << " ";
+            //Print state variables
+            for(unsigned int k = 0; k < current_states.size(); k++){
+              errors_file << current_states[k] << " ";
+            }
+            errors_file << "\n";
+            }
           }
-          //Print state variables
-          for(unsigned int k = 0; k < current_states.size(); k++){
-            errors_file << current_states[k] << " ";
-          }
-          errors_file << "\n";
+          errors_file.close();
         }
-        errors_file.close();
       }
     }
 #else
-    std::cout << "Cvode is not enabled.\n";
+      std::cout << "Cvode is not enabled.\n";
 #endif
-  }
-};
+    }
+  };
