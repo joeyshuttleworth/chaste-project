@@ -39,7 +39,7 @@
 
 class TestAPD : public CxxTest::TestSuite
 {
-  const unsigned int paces=100;
+  const unsigned int paces=10;
 public:
   void TestRunAPDSimulation()
   {

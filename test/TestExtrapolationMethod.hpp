@@ -113,9 +113,19 @@ private:
     std::cout << "MRMS between solutions is " << mrms_difference << "\n";
 
     // Calculate difference in APD90s
-    // Currently broken
-    const double apd_difference = smart_simulation.GetApd(90) - simulation.GetApd(90);
+    const double smart_apd = smart_simulation.GetApd(90);
+    const double apd_difference = smart_apd - simulation.GetApd(90);
     std::cout << "Difference in APD90s " << apd_difference << "\n";
+
+    // Compare smart apd with reference version
+    std::stringstream apd_file;
+    const std::string CHASTE_TEST_OUTPUT = getenv("CHASTE_TEST_OUTPUT");
+    apd_file << model_name << "_" << std::to_string(int(period)) << "ms_" << int(100*IKrBlock)<<"_percent_block/apds_using_groundtruth.dat";
+    std::istream apd_file(apd_file.str());
+    std::string line;
+    std::getline(apd_file, line);
+    const double reference_apd = std::stod(line);
+    std::cout << "Difference between apd and reference apd " << smart_apd - reference_apd << "\n";
 
     std::string smart_filename = "smart_final_pace.dat";
     std::string brute_filename = "brute_final_pace.dat";
