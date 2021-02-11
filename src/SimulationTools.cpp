@@ -1,4 +1,6 @@
 #include "SimulationTools.hpp"
+#include <boost/filesystem.hpp>
+#include "Simulation.hpp"
 
 void RunSimulation(boost::shared_ptr<AbstractCvodeCell> p_model, unsigned int paces, unsigned int period, double tolerances){
   boost::shared_ptr<RegularStimulus> p_stimulus;
@@ -108,11 +110,8 @@ double CalculateAPD(boost::shared_ptr<AbstractCvodeCell> p_model, double period,
 
   double sampling_timestep = 0.1;
   const std::vector<double> initial_conditions = p_model->GetStdVecStateVariables();
-  const double rel_tol = p_model->GetRelativeTolerance();
-  const double abs_tol = p_model->GetAbsoluteTolerance();
 
   p_model->SetMaxSteps(1e5);
-  p_model->SetTolerances(1e-12, 1e-12);
 
   OdeSolution solution = p_model->Compute(0, duration, sampling_timestep);
   std::vector<std::vector<double>> state_variables = solution.rGetSolutions();
@@ -129,7 +128,6 @@ double CalculateAPD(boost::shared_ptr<AbstractCvodeCell> p_model, double period,
 
   apd = cell_props.GetLastActionPotentialDuration(percentage);
 
-  p_model->SetTolerances(rel_tol, abs_tol);
   p_model->SetStateVariables(initial_conditions);
   return apd;
 }
@@ -137,11 +135,8 @@ double CalculateAPD(boost::shared_ptr<AbstractCvodeCell> p_model, double period,
 std::vector<std::vector<double>> GetPace(std::vector<double> initial_conditions, boost::shared_ptr<AbstractCvodeCell> p_model, double period, double duration){
   double sampling_timestep = 0.1;
   const std::vector<double> original_states = p_model->GetStdVecStateVariables();
-  const double rel_tol = p_model->GetRelativeTolerance();
-  const double abs_tol = p_model->GetAbsoluteTolerance();
 
   p_model->SetMaxSteps(1e5);
-  p_model->SetTolerances(1e-12, 1e-12);
   p_model->SetStateVariables(initial_conditions);
 
   OdeSolution solution = p_model->Compute(0, duration, sampling_timestep);
@@ -150,9 +145,6 @@ std::vector<std::vector<double>> GetPace(std::vector<double> initial_conditions,
 
   state_variables.insert(state_variables.end(), ++solution.rGetSolutions().begin(), solution.rGetSolutions().end());
 
-
-  p_model->SetTolerances(rel_tol, abs_tol);
-  p_model->SetStateVariables(original_states);
   return state_variables;
 }
 
@@ -199,4 +191,88 @@ void WriteStatesToFile(std::vector<double> states, std::ofstream &f_out){
   }
   f_out << "\n";
   return;
+}
+
+void compare_error_measures(boost::shared_ptr<AbstractCvodeCell> model, double period, double IKrBlock, double tolerance, std::string filename_suffix){
+  const boost::filesystem::path test_dir(getenv("CHASTE_TEST_OUTPUT"));
+  const unsigned int paces  = 2500;
+
+  const double default_GKr = model->GetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance");
+  const std::string model_name = model->GetSystemInformation()->GetSystemName();
+  const unsigned int starting_index = 0;
+
+  std::cout << "For model " << model_name << " using starting_index " << starting_index << "\n";
+  model->SetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance", (1-IKrBlock)*default_GKr);
+
+  const double starting_period = period==1000?500:1000;
+  const double starting_block  = period==0?0.5:0;
+
+  std::stringstream dirname;
+  dirname << "/" << model_name << "_" << std::to_string(int(period)) << "ms_" << int(100*IKrBlock)<<"_percent_block/";
+
+  std::stringstream input_dirname_ss;
+  input_dirname_ss << model_name+"_" << std::to_string(int(starting_period)) << "ms_" << int(100*starting_block)<<"_percent_block/";
+  const std::string input_dirname = (test_dir / boost::filesystem::path(input_dirname_ss.str())).string();
+  std::cout << "Testing model: " << model_name << " with period " << period << "ms and IKrBlock " << IKrBlock << "\n";
+
+  const std::string input_path = (test_dir / boost::filesystem::path(input_dirname_ss.str()) / boost::filesystem::path("final_states.dat")).string();
+
+  Simulation simulation(model, period, input_path, tolerance, tolerance);
+  simulation.SetTerminateOnConvergence(false);
+
+  std::vector<std::vector<double>> state_variables;
+
+  const std::vector<std::string> state_variable_names = model->rGetStateVariableNames();
+
+  std::stringstream error_file_name;
+  error_file_name << filename_suffix << "_" << tolerance << ".dat";
+  const std::string errors_file_path = (test_dir / boost::filesystem::path(dirname.str()) / boost::filesystem::path(error_file_name.str())).string();
+
+  std::cout << "outputting to " << errors_file_path << "\n";
+
+  std::ofstream errors_file(errors_file_path);
+  if(!errors_file.is_open()){
+    EXCEPTION("Failed to open file " + errors_file_path);
+  }
+
+  errors_file.precision(18);
+
+  errors_file << "APD 2-Norm MRMS Trace-2-Norm Trace-MRMS ";
+
+  std::vector<std::string> names = model->GetSystemInformation()->rGetStateVariableNames();
+  for(std::string name : names){
+    errors_file << name << " ";
+  }
+  errors_file << "\n";
+
+  std::vector<double> times;
+  for(unsigned int j = 0; j < paces; j++){
+    // std::cout << "pace = " << j << "\n";
+    OdeSolution current_solution = simulation.GetPace(1, false);
+    const std::vector<std::vector<double>> previous_pace = current_solution.rGetSolutions();
+    simulation.RunPace();
+    current_solution = simulation.GetPace(1, false);
+    const std::vector<std::vector<double>> current_pace = current_solution.rGetSolutions();
+    times = current_solution.rGetTimes();
+
+    const std::vector<double> current_states = current_pace.back();
+    const std::vector<double> previous_states = previous_pace.back();
+
+    errors_file << simulation.GetApd(90, false) << " ";
+    errors_file << TwoNorm(current_states, previous_states, starting_index) << " ";
+    errors_file << mrms(current_states,  previous_states, starting_index) << " ";
+    errors_file << TwoNormTrace(current_pace, previous_pace, starting_index) << " ";
+    errors_file << mrmsTrace(current_pace, previous_pace, starting_index) << " ";
+    //Print state variables
+    for(unsigned int k = 0; k < current_states.size(); k++){
+      errors_file << current_states[k] << " ";
+    }
+    errors_file << "\n";
+
+    simulation.RunPaces(9);
+    j+=9;
+  }
+  errors_file.close();
+
+  model->SetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance", default_GKr);
 }

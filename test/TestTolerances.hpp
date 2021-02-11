@@ -13,90 +13,50 @@
 
 /* These header files are generated from the cellml files provided at github.com/chaste/cellml */
 
+#include "beeler_reuter_model_1977Cvode.hpp"
+#include "luo_rudy_1994Cvode.hpp"
 #include "ten_tusscher_model_2004_epiCvode.hpp"
 #include "ohara_rudy_2011_endoCvode.hpp"
 #include "shannon_wang_puglisi_weber_bers_2004Cvode.hpp"
 #include "decker_2009Cvode.hpp"
+#include "ohara_rudy_cipa_v1_2017Cvode.hpp"
+#include "ten_tusscher_model_2006_epiCvode.hpp"
+
+// The modified "analytic_voltage" models
+#include "ten_tusscher_model_2006_epi_analyticCvode.hpp"
+#include "ohara_rudy_cipa_v1_2017_analyticCvode.hpp"
+
 
 class TestGroundTruthSimulation : public CxxTest::TestSuite
 {
 public:
   std::string username;
-  void TestTolerances()
-  {
+  void TestTolerances(){
+    const std::vector<double> tolerances={1e-8, 1e-6, 1e-04};
+    const std::vector<double> periods={1000};
+    const std::vector<double> IKrBlocks={0};
+    const std::string filename_suffix = "test_tolerances";
+
     boost::shared_ptr<RegularStimulus> p_stimulus;
     boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
+
     std::vector<boost::shared_ptr<AbstractCvodeCell>> models;
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_2011_endoFromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Celldecker_2009FromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
-    username = std::string(getenv("USER"));
-    boost::filesystem::create_directory("/tmp/"+username);
-    std::vector<double> tolerances = {1e-6, 1e-8, 1e-9, 1e-10};
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellbeeler_reuter_model_1977FromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode(p_solver, p_stimulus)));
 
     for(auto tolerance : tolerances){
-      for(unsigned int j = 0; j < models.size(); j++){
-        unsigned int j = 0;
-        PrintErrors(models[j], tolerances[i], 500, 1000);
-        PrintErrors(models[j], tolerances[i], 1000, 500);
+      for(auto model : models){
+        for(auto period : periods){
+          for(auto IKrBlock : IKrBlocks){
+            compare_error_measures(model, period, IKrBlock, tolerance, filename_suffix);
+          }
+        }
       }
     }
-  }
-
-  void PrintErrors(boost::shared_ptr<AbstractCvodeCell> p_model, double tolerance, const double start_period, const double period){
-    const std::string model_path = "/home/" + username + "/testoutput/TestGroundTruth_" + model_name  + std::to_string(int(periods[j])) + "ms/final_pace.dat";
-    boost::shared_ptr<RegularStimulus> p_regular_stim  = p_model->UseCellMLDefaultStimulus();
-    p_regular_stim->SetPeriod(period);
-    p_model->SetTolerances(tolerance, tolerance);
-    p_model->SetMaxSteps(1e5);
-    p_model->SetMaxTimestep(1000);
-    p_regular_stim->SetStartTime(0);
-
-    const std::vector<std::string> state_variable_names = p_model->rGetStateVariableNames();
-    const std::string model_name = p_model->GetSystemInformation()->GetSystemName();
-    const unsigned int paces = 10000;
-    std::stringstream file_path;
-
-    if(period==500){
-      TS_ASSERT_EQUALS(LoadStatesFromFile(p_model, "/home/joey/code/chaste-project-data/"+model_name+"/GroundTruth1Hz/final_state_variables.dat"), 0);
-      boost::filesystem::create_directory("/tmp/"+username+"/"+model_name);
-      file_path << "/tmp/"+username+"/"+model_name+"/1Hz2Hz-st-" << std::scientific << tolerance << ".dat";
-    }
-    else{
-      TS_ASSERT_EQUALS(LoadStatesFromFile(p_model, "/home/joey/code/chaste-project-data/"+model_name+"/GroundTruth2Hz/final_state_variables.dat"), 0);
-      boost::filesystem::create_directory("/tmp/"+username+"/"+model_name);
-      file_path << "/tmp/"+username+"/"+model_name+"/2Hz1Hz-st-" << std::scientific << tolerance << ".dat";
-    }
-    std::ofstream errors_file;
-    errors_file.open(file_path.str());
-    TS_ASSERT_EQUALS(errors_file.is_open(), true);
-
-    errors_file.precision(18);
-
-    errors_file << "APD90 2-Norm MRMS 2-Norm-Trace MRMS-Trace";
-    errors_file << "\n";
-
-    //      unsigned int voltage_index = p_model->GetSystemInformation()->GetStateVariableIndex("membrane_voltage");
-    std::vector<double> times;
-    std::ifstream apd_file;
-    std::vector<double> current_state_variables, previous_state_variables;
-    current_state_variables = p_model->GetStdVecStateVariables();
-    double duration = p_regular_stim->GetDuration();
-    for(unsigned int i = 0; i < paces; i++){
-      previous_state_variables = current_state_variables;
-
-      p_model->SolveAndUpdateState(0, duration);
-      p_model->SolveAndUpdateState(duration, period);
-      current_state_variables = p_model->GetStdVecStateVariables();
-      if(i % 10 == 0){
-        errors_file << CalculateAPD(p_model, period, duration, 90.0) << " ";
-        errors_file << TwoNorm(current_state_variables, previous_state_variables) << " ";
-        errors_file << mrms(current_state_variables,  previous_state_variables) << " ";
-        errors_file << CalculatePace2Norm(p_model, previous_state_variables, current_state_variables, period, duration) << " ";
-        errors_file << CalculatePaceMrms(p_model, previous_state_variables, current_state_variables, period, duration)  << "\n";
-      }
-    }
-    errors_file.close();
   }
 };

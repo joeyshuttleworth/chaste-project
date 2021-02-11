@@ -9,13 +9,13 @@ Simulation::Simulation(boost::shared_ptr<AbstractCvodeCell> _p_model, double _pe
   //each pace
   mpStimulus->SetPeriod(2*mPeriod);
   mpModel->SetMaxSteps(1e5);
-  mpModel->SetMaxTimestep(500);
-  mpModel->SetTolerances(mTolAbs, mTolRel);
+  mpModel->SetMaxTimestep(mPeriod/2);
   mNumberOfStateVariables = mpModel->GetSystemInformation()->rGetStateVariableNames().size();
   if(input_path.length()>=1){
     LoadStatesFromFile(mpModel, input_path);
   }
   mStateVariables = mpModel->GetStdVecStateVariables();
+  SetTolerances(_tol_abs, _tol_rel);
 }
 
 Simulation::~Simulation(){

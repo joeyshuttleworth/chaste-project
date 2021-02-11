@@ -43,9 +43,11 @@ double CalculatePaceMrms(boost::shared_ptr<AbstractCvodeCell> p_model, std::vect
 
 void WriteStatesToFile(std::vector<double> states, std::ofstream &f_out);
 
-std::vector<std::vector<double>> GetPace(std::vector<double> initial_conditions, boost::shared_ptr<AbstractCvodeCell> p_model, double period, double duration); 
+std::vector<std::vector<double>> GetPace(std::vector<double> initial_conditions, boost::shared_ptr<AbstractCvodeCell> p_model, double period, double duration);
 
 double CalculatePMCC(std::vector<double>, std::vector<double>);
+
+void compare_error_measures(boost::shared_ptr<AbstractCvodeCell>, double period, double IKrBlock, double tolerance, std::string filename_suffix);
 
 template<typename Container>
 double CalculatePMCC(Container values){
