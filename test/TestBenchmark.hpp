@@ -54,6 +54,8 @@ public:
 
 
   unsigned int RunModels(unsigned int buffer_size, double extrapolation_constant){
+    boost::shared_ptr<RegularStimulus> p_stimulus;
+    boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
     std::vector<double> periods = {500, 750, 1000, 1250};
     std::vector<double> IKrBlocks = {0, 0.25, 0.5, 0.75};
     unsigned int score=0;
@@ -76,14 +78,13 @@ public:
     return score;
   }
 
-  unsigned int RunModel(boost::shared_ptr<AbstractCvodeCell> p_model, double period, double IKrBlock, unsigned int buffer_size, double extrapolation_constant, unsigned int index){
+  unsigned int RunModel(boost::shared_ptr<AbstractCvodeCell> model, double period, double IKrBlock, unsigned int buffer_size, double extrapolation_constant){
     const boost::filesystem::path test_dir(getenv("CHASTE_TEST_OUTPUT"));
     const double default_GKr = model->GetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance");
     model->SetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance", (1 - IKrBlock)*default_GKr);
     const std::string model_name = model->GetSystemInformation()->GetSystemName();
-    const unsigned int starting_index = 0;
 
-    std::cout << "For model " << model_name << " using starting_index " << starting_index << "\n";
+    std::cout << "For model " << model_name << "\n";
     model->SetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance", (1-IKrBlock)*default_GKr);
 
     const double starting_period = period==1000?500:1000;
@@ -99,7 +100,7 @@ public:
 
     const std::string input_path = (test_dir / boost::filesystem::path(input_dirname_ss.str()) / boost::filesystem::path("final_states.dat")).string();
 
-    SmartSimulation smart_simulation(model, period, input_path, tolerance, tolerance);
+    SmartSimulation smart_simulation(model, period, input_path, 1e-8, 1e-8);
 
     smart_simulation.RunPaces(max_paces);
 
@@ -110,4 +111,3 @@ public:
     return paces;
   }
 };
-400
