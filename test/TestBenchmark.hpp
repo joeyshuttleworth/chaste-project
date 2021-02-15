@@ -9,6 +9,7 @@
 #include "Simulation.hpp"
 #include <boost/filesystem.hpp>
 #include <fstream>
+#include "SmartSimulation.hpp"
 
 /* These header files are generated from the cellml files provided at github.com/chaste/cellml */
 
