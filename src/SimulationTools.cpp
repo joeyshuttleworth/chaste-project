@@ -198,6 +198,8 @@ void compare_error_measures(boost::shared_ptr<AbstractCvodeCell> model, double p
   const unsigned int paces  = 2500;
 
   const double default_GKr = model->GetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance");
+  model->SetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance", default_GKr*(1- IKrBlock));
+
   const std::string model_name = model->GetSystemInformation()->GetSystemName();
   const unsigned int starting_index = 0;
 
@@ -218,6 +220,7 @@ void compare_error_measures(boost::shared_ptr<AbstractCvodeCell> model, double p
   const std::string input_path = (test_dir / boost::filesystem::path(input_dirname_ss.str()) / boost::filesystem::path("final_states.dat")).string();
 
   Simulation simulation(model, period, input_path, tolerance, tolerance);
+  model->SetTolerances(tolerance, tolerance);
   simulation.SetTerminateOnConvergence(false);
 
   std::vector<std::vector<double>> state_variables;

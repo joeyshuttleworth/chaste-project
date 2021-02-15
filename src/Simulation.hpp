@@ -27,6 +27,7 @@ protected:
   double mThreshold = 1e-08;
   boost::shared_ptr<RegularStimulus> mpStimulus;
   bool mTerminateOnConvergence = true;
+  unsigned int mPaces = 0;
 public:
   Simulation(){
     return;
@@ -38,6 +39,8 @@ public:
 
   /* Run paces until max_paces is exceeded or the model reaches a steady state */
   bool RunPaces(int);
+
+  unsigned int GetPaces(){return mPaces;}
 
   void SetTolerances(double atol, double rtol){
     if(mpModel)

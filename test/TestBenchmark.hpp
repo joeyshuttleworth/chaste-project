@@ -32,98 +32,81 @@ private:
   std::ofstream output_file;
   std::string username;
 
-  const std::vector<unsigned int> buffer_sizes = {50}; //{25, 50, 100, 150, 200, 300 ,400};
-  const std::vector<double>       extrapolation_constants = {0.9};
+  const std::vector<unsigned int> buffer_sizes = {25, 50, 100, 150, 200, 300 ,400};
+  const std::vector<double> extrapolation_constants = {0.5, 0.75, 0.9, 1, 1.1};
+  const int max_paces = 10000;
 public:
-  unsigned int RunModel(boost::shared_ptr<AbstractCvodeCell> p_model, double period, double IKrBlock, unsigned int buffer_size, double extrapolation_constant, unsigned int index){
-    const std::string model_name = p_model->GetSystemInformation()->GetSystemName();
-    std::cout << "Testing " << model_name << " with period " << period << "\n";
-    const double duration = p_model->UseCellMLDefaultStimulus()->GetDuration();
-    std::string input_path;
 
-    //set Gkr parameter
-    double default_GKr = brute_model->GetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance");
-    brute_model->SetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance", default_GKr*IKrBlock);
+  void TestBenchmarkRun(){
+    const boost::filesystem::path test_dir(getenv("CHASTE_TEST_OUTPUT"));
+    std::ofstream output_file((boost::filesystem::path(test_dir) / boost::filesystem::path("TestBenchark/results.dat")).string());
+    output_file << "brute force method takes " << RunModels(0,0) << "\n";
 
-    if(period == 1000)
-      input_path = "/home/"+username+"/data/"+model_name+"/TestGroundTruth/" + model_name + "/500ms/final_pace.dat";
-
-    else
-      input_path = "/home/"+username+"/data/"+model_name+"/TestGroundTruth/" + model_name + "/1000ms/final_trace.dat";
-
-    unsigned int j;
-    /*Run the simulations*/
-    SmartSimulation simulation(p_model, period, input_path);
-    simulation.SetBufferSize(buffer_size);
-    simulation.SetExtrapolationConstant(extrapolation_constant);
-    for(j = 0; j < paces; j++){
-      if(simulation.RunPace())
-        std::cout << "Model " << model_name << " period " << period << " Extrapolation method finished after " << j << " paces \n";
-
-      if(simulation.is_finished()){
-        break;
+    for(auto buffer_size : buffer_sizes){
+      for(auto extrapolation_constant : extrapolation_constants){
+        const unsigned int score = RunModels(buffer_size, extrapolation_constant);
+        output_file << buffer_size << ", \t" << extrapolation_constant << " \t" << score << "\n";
       }
     }
-
-    /*Check that the methods have converged to the same place*/
-    std::vector<double> vec1 = simulation.GetStateVariables();
-    output_file << model_name << " " << period << " ";
-    WriteStatesToFile(vec1, output_file);
-    brute_model->SetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance", default_GKr);
-    return j;
+    output_file.close();
   }
 
-  void TestMain(){
-#ifdef CHASTE_CVODE
-    username = std::string(getenv("USER"));
-    boost::shared_ptr<RegularStimulus> p_stimulus;
-    boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
 
+  unsigned int RunModels(unsigned int buffer_size, double extrapolation_constant){
+    std::vector<double> periods = {500, 750, 1000, 1250};
+    std::vector<double> IKrBlocks = {0, 0.25, 0.5, 0.75};
+    unsigned int score=0;
     std::vector<boost::shared_ptr<AbstractCvodeCell>> models;
-
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_2011_endoFromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Celldecker_2009FromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellbeeler_reuter_model_1977FromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Celldecker_2009FromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode(p_solver, p_stimulus)));
 
-    boost::filesystem::create_directories("/home/"+username + "/TestBenchmark");
-    output_file.open("/tmp/"+username+"/BenchmarkStates.dat");
-    output_file.precision(18);
-    std::ofstream f_results;
-    f_results.open("/tmp/joey/BenchmarkResults.dat");
-
-    for(unsigned int i = 0; i < extrapolation_constants.size(); i++){
-      f_results << extrapolation_constants[i] << "\t";
-    }
-
-    f_results << "\n";
-
-    for(unsigned int j = 0; j < buffer_sizes.size(); j++){
-      f_results << buffer_sizes[j] << " ";
-      for(unsigned int k = 0; k < extrapolation_constants.size(); k++){
-        unsigned int benchmark = 0;
-        for(auto p_model : models){
-          for(double period : periods)
-            benchmark += RunModel(models[i], period, IKrBlock, buffer_sizes[j], extrapolation_constants[k]);
-          for(double IKrBlock : IKrBlocks){
-            benchmark += RunModel(models[i], period, IKrBlock, buffer_sizes[j], extrapolation_constants[k])
-          }
+    for(auto model : models){
+      for(auto period : periods){
+        for(auto IKrBlock : IKrBlocks){
+          score += RunModel(model, period, IKrBlock, buffer_size, extrapolation_constant);
         }
-        std::cout << "Score is: " << benchmark << "\n";
-        f_results << benchmark << "\t";
-        TS_ASSERT(output_file.is_open());
       }
-      f_results <<"\n";
     }
-    output_file << "\n";
-    output_file.close();
-    f_results.close();
-#else
-    std::cout << "Cvode is not enabled.\n";
-#endif
+    return score;
+  }
+
+  unsigned int RunModel(boost::shared_ptr<AbstractCvodeCell> p_model, double period, double IKrBlock, unsigned int buffer_size, double extrapolation_constant, unsigned int index){
+    const boost::filesystem::path test_dir(getenv("CHASTE_TEST_OUTPUT"));
+    const double default_GKr = model->GetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance");
+    model->SetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance", (1 - IKrBlock)*default_GKr);
+    const std::string model_name = model->GetSystemInformation()->GetSystemName();
+    const unsigned int starting_index = 0;
+
+    std::cout << "For model " << model_name << " using starting_index " << starting_index << "\n";
+    model->SetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance", (1-IKrBlock)*default_GKr);
+
+    const double starting_period = period==1000?500:1000;
+    const double starting_block  = period==0?0.5:0;
+
+    std::stringstream dirname;
+    dirname << "/" << model_name << "_" << std::to_string(int(period)) << "ms_" << int(100*IKrBlock)<<"_percent_block/";
+
+    std::stringstream input_dirname_ss;
+    input_dirname_ss << model_name+"_" << std::to_string(int(starting_period)) << "ms_" << int(100*starting_block)<<"_percent_block/";
+    const std::string input_dirname = (test_dir / boost::filesystem::path(input_dirname_ss.str())).string();
+    std::cout << "Testing model: " << model_name << " with period " << period << "ms and IKrBlock " << IKrBlock << "\n";
+
+    const std::string input_path = (test_dir / boost::filesystem::path(input_dirname_ss.str()) / boost::filesystem::path("final_states.dat")).string();
+
+    SmartSimulation smart_simulation(model, period, input_path, tolerance, tolerance);
+
+    smart_simulation.RunPaces(max_paces);
+
+    unsigned int paces = smart_simulation.GetPaces();
+    assert(paces<max_paces-10);
+
+    model->SetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance", default_GKr);
+    return paces;
   }
 };
+400

@@ -54,6 +54,7 @@ bool Simulation::RunPace(){
     mpModel->SolveAndUpdateState(mpStimulus->GetDuration(), mPeriod);
     mStateVariables = mpModel->GetStdVecStateVariables();
   }
+  mPaces++;
   return false;
 }
 

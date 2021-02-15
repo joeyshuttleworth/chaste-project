@@ -118,6 +118,7 @@ bool SmartSimulation::ExtrapolateState(unsigned int state_index){
 
 
 bool SmartSimulation::RunPace(){
+  mPaces++;
   bool extrapolated = false;
 
   extrapolated = ExtrapolateStates();
