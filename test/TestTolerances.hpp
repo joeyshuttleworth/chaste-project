@@ -10,6 +10,7 @@
 #include "SimulationTools.hpp"
 #include <boost/filesystem.hpp>
 #include <fstream>
+#include <thread>
 
 /* These header files are generated from the cellml files provided at github.com/chaste/cellml */
 
@@ -36,27 +37,38 @@ public:
     const std::vector<double> periods={1000};
     const std::vector<double> IKrBlocks={0};
     const std::string filename_suffix = "test_tolerances";
+    const int max_threads = 32;
+
+    std::list<std::shared_ptr<std::thread>> threads;
 
     boost::shared_ptr<RegularStimulus> p_stimulus;
     boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
 
     std::vector<boost::shared_ptr<AbstractCvodeCell>> models;
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_2011_endoFromCellMLCvode(p_solver, p_stimulus)));
-    // models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Celldecker_2009FromCellMLCvode(p_solver, p_stimulus)));
-    // models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
-    // models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
-    // models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellbeeler_reuter_model_1977FromCellMLCvode(p_solver, p_stimulus)));
-    // models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode(p_solver, p_stimulus)));
-    // models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Celldecker_2009FromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellbeeler_reuter_model_1977FromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode(p_solver, p_stimulus)));
 
     for(auto tolerance : tolerances){
       for(auto model : models){
         for(auto period : periods){
           for(auto IKrBlock : IKrBlocks){
-            compare_error_measures(model, period, IKrBlock, tolerance, filename_suffix);
+            // compare_error_measures(model, period, IKrBlock, tolerance, filename_suffix);
+            threads.push_back(std::make_shared<std::thread>(compare_error_measures, model, period, IKrBlock, tolerance, filename_suffix));
+            if(threads.size()>=max_threads)
+              joinAll(threads);
           }
         }
       }
     }
+    joinAll(threads);
+  }
+  void joinAll(std::list<std::shared_ptr<std::thread>> threads){
+    for(auto thread : threads)
+      thread->join();
   }
 };
