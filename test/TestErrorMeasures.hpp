@@ -27,11 +27,11 @@
 #include "ohara_rudy_cipa_v1_2017_analyticCvode.hpp"
 
 
-class TestGroundTruthSimulation : public CxxTest::TestSuite
+class TestErrorMeasures : public CxxTest::TestSuite
 {
 public:
   std::string username;
-  void TestTolerances(){
+  void TestErrors(){
     const std::vector<double> periods={500, 750, 1000, 1250};
     const std::vector<double> IKrBlocks={0, 0.25, 0.5};
     const std::string filename_suffix = "error_measures";

@@ -32,7 +32,7 @@ class TestGroundTruthSimulation : public CxxTest::TestSuite
 public:
   std::string username;
   void TestTolerances(){
-    const std::vector<double> tolerances={1e-8, 1e-6, 1e-04};
+    const std::vector<double> tolerances={1e-8, 1e-6, 1e-04, 1e-10, 1e-12};
     const std::vector<double> periods={1000};
     const std::vector<double> IKrBlocks={0};
     const std::string filename_suffix = "test_tolerances";
@@ -45,7 +45,6 @@ public:
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Celldecker_2009FromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellbeeler_reuter_model_1977FromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode(p_solver, p_stimulus)));
 
