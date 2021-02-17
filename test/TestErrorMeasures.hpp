@@ -35,7 +35,7 @@ public:
     const std::vector<double> periods={500, 750, 1000, 1250};
     const std::vector<double> IKrBlocks={0, 0.25, 0.5};
     const std::string filename_suffix = "error_measures";
-    const int tolerance = 1e-10;
+    const double tolerance = 1e-10;
 
     boost::shared_ptr<RegularStimulus> p_stimulus;
     boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
