@@ -24,13 +24,12 @@ class TestBenchmark : public CxxTest::TestSuite
 {
 private:
   const double threshold = 1.8e-07;
-  const unsigned int paces = 5000;
   std::ofstream output_file;
   std::string username;
 
   const std::vector<unsigned int> buffer_sizes = {25, 50, 100, 150, 200, 300 ,400};
   const std::vector<double> extrapolation_constants = {0.5, 0.75, 0.9, 1, 1.1};
-  const int max_paces = 10000;
+  const int max_paces = 20000;
 public:
 
   void TestBenchmarkRun(){
@@ -95,7 +94,8 @@ public:
     smart_simulation.RunPaces(max_paces);
 
     unsigned int paces = smart_simulation.GetPaces();
-    assert(paces<max_paces-10);
+    std::cout << "took " << "paces";
+    assert(paces<max_paces-2);
 
     model->SetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance", default_GKr);
     return paces;

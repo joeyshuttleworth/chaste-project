@@ -9,7 +9,7 @@ Simulation::Simulation(boost::shared_ptr<AbstractCvodeCell> _p_model, double _pe
   //each pace
   mpStimulus->SetPeriod(2*mPeriod);
   mpModel->SetMaxSteps(1e5);
-  mpModel->SetMaxTimestep(mPeriod/2);
+  mpModel->SetMaxTimestep(1000);
   mNumberOfStateVariables = mpModel->GetSystemInformation()->rGetStateVariableNames().size();
   if(input_path.length()>=1){
     LoadStatesFromFile(mpModel, input_path);
@@ -46,15 +46,17 @@ bool Simulation::RunPace(){
     mCurrentMrms = mrms(tmp_state_variables, mStateVariables);
     if(mCurrentMrms < mThreshold){
        mFinished = true;
+       mStateVariables = mpModel->GetStdVecStateVariables();
+       std::cout << "finished after " << mPaces << " paces \n";
       return true;
     }
   }
   else{
     mpModel->SolveAndUpdateState(0, mpStimulus->GetDuration());
     mpModel->SolveAndUpdateState(mpStimulus->GetDuration(), mPeriod);
-    mStateVariables = mpModel->GetStdVecStateVariables();
   }
   mPaces++;
+  mStateVariables = mpModel->GetStdVecStateVariables();
   return false;
 }
 
@@ -108,6 +110,7 @@ bool Simulation::IsFinished(){
 }
 
 OdeSolution Simulation::GetPace(double sampling_timestep, bool update_vars){
+  mStateVariables = mpModel->GetStdVecStateVariables();
   const OdeSolution solution = mpModel->Compute(0, mPeriod, sampling_timestep);
   if(update_vars)
     mStateVariables=mpModel->GetStdVecStateVariables();
@@ -139,6 +142,7 @@ double Simulation::GetApd(double percentage, bool update_vars){
   if(!mpModel)
     return DOUBLE_UNSET;
   mpModel->SetMinimalReset(false);
+  mStateVariables = mpModel->GetStdVecStateVariables();
   OdeSolution solution = mpModel->Compute(0, mPeriod, 0.01);
   mpStimulus->SetStartTime(0);
   solution.CalculateDerivedQuantitiesAndParameters(mpModel.get());

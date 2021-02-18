@@ -195,7 +195,7 @@ void WriteStatesToFile(std::vector<double> states, std::ofstream &f_out){
 
 void compare_error_measures(boost::shared_ptr<AbstractCvodeCell> model, double period, double IKrBlock, double tolerance, std::string filename_suffix){
   const boost::filesystem::path test_dir(getenv("CHASTE_TEST_OUTPUT"));
-  const unsigned int paces  = 2500;
+  const unsigned int paces  = 500;
 
   const double default_GKr = model->GetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance");
   model->SetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance", default_GKr*(1- IKrBlock));
@@ -215,38 +215,41 @@ void compare_error_measures(boost::shared_ptr<AbstractCvodeCell> model, double p
   std::stringstream input_dirname_ss;
   input_dirname_ss << model_name+"_" << std::to_string(int(starting_period)) << "ms_" << int(100*starting_block)<<"_percent_block/";
   const std::string input_dirname = (test_dir / boost::filesystem::path(input_dirname_ss.str())).string();
-  std::cout << "Testing model: " << model_name << " with period " << period << "ms and IKrBlock " << IKrBlock << "\n";
+  std::cout << "Testing model: " << model_name << " with period " << period << "ms and IKrBlock " << IKrBlock << "and tolerances " << tolerance << "\n";
 
   const std::string input_path = (test_dir / boost::filesystem::path(input_dirname_ss.str()) / boost::filesystem::path("final_states.dat")).string();
 
   Simulation simulation(model, period, input_path, tolerance, tolerance);
   model->SetTolerances(tolerance, tolerance);
+
+  std::cout << model->GetRelativeTolerance() << model->GetAbsoluteTolerance() << "\n";
+
   simulation.SetTerminateOnConvergence(false);
 
   std::vector<std::vector<double>> state_variables;
 
   const std::vector<std::string> state_variable_names = model->rGetStateVariableNames();
 
-  std::stringstream error_file_name;
-  error_file_name << filename_suffix << "_" << tolerance << ".dat";
-  const std::string errors_file_path = (test_dir / boost::filesystem::path(dirname.str()) / boost::filesystem::path(error_file_name.str())).string();
+  std::stringstream output_file_name;
+  output_file_name << filename_suffix << "_" << tolerance << ".dat";
+  const std::string output_file_path = (test_dir / boost::filesystem::path(dirname.str()) / boost::filesystem::path(output_file_name.str())).string();
 
-  std::cout << "outputting to " << errors_file_path << "\n";
+  std::cout << "outputting to " << output_file_path << "\n";
 
-  std::ofstream errors_file(errors_file_path);
-  if(!errors_file.is_open()){
-    EXCEPTION("Failed to open file " + errors_file_path);
+  std::ofstream output_file(output_file_path);
+  if(!output_file.is_open()){
+    EXCEPTION("Failed to open file " + output_file_path);
   }
 
-  errors_file.precision(18);
+  output_file.precision(18);
 
-  errors_file << "APD 2-Norm MRMS Trace-2-Norm Trace-MRMS ";
+  output_file << "APD 2-Norm MRMS Trace-2-Norm Trace-MRMS ";
 
   std::vector<std::string> names = model->GetSystemInformation()->rGetStateVariableNames();
   for(std::string name : names){
-    errors_file << name << " ";
+    output_file << name << " ";
   }
-  errors_file << "\n";
+  output_file << "\n";
 
   std::vector<double> times;
   for(unsigned int j = 0; j < paces; j++){
@@ -261,21 +264,21 @@ void compare_error_measures(boost::shared_ptr<AbstractCvodeCell> model, double p
     const std::vector<double> current_states = current_pace.back();
     const std::vector<double> previous_states = previous_pace.back();
 
-    errors_file << simulation.GetApd(90, false) << " ";
-    errors_file << TwoNorm(current_states, previous_states, starting_index) << " ";
-    errors_file << mrms(current_states,  previous_states, starting_index) << " ";
-    errors_file << TwoNormTrace(current_pace, previous_pace, starting_index) << " ";
-    errors_file << mrmsTrace(current_pace, previous_pace, starting_index) << " ";
+    output_file << simulation.GetApd(90, false) << " ";
+    output_file << TwoNorm(current_states, previous_states, starting_index) << " ";
+    output_file << mrms(current_states,  previous_states, starting_index) << " ";
+    output_file << TwoNormTrace(current_pace, previous_pace, starting_index) << " ";
+    output_file << mrmsTrace(current_pace, previous_pace, starting_index) << " ";
     //Print state variables
     for(unsigned int k = 0; k < current_states.size(); k++){
-      errors_file << current_states[k] << " ";
+      output_file << current_states[k] << " ";
     }
-    errors_file << "\n";
+    output_file << "\n";
 
     simulation.RunPaces(9);
     j+=9;
   }
-  errors_file.close();
+  output_file.close();
 
   model->SetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance", default_GKr);
 }
