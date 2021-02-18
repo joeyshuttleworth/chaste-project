@@ -21,6 +21,7 @@
 #include "decker_2009Cvode.hpp"
 #include "ohara_rudy_cipa_v1_2017Cvode.hpp"
 #include "ten_tusscher_model_2006_epiCvode.hpp"
+#include "hund_rudy_2004.hpp"
 
 // The modified "analytic_voltage" models
 #include "ten_tusscher_model_2006_epi_analyticCvode.hpp"
@@ -49,6 +50,7 @@ public:
       models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
       models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode(p_solver, p_stimulus)));
       models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode(p_solver, p_stimulus)));
+      models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellhund_rudy_2004FromCellMLCvode(p_solver, p_stimulus)));
       for(auto model : models){
         for(auto period : periods){
           for(auto IKrBlock : IKrBlocks){

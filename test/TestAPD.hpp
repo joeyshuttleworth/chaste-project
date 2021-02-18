@@ -20,6 +20,7 @@
 #include "decker_2009Cvode.hpp"
 #include "ohara_rudy_cipa_v1_2017Cvode.hpp"
 #include "ten_tusscher_model_2006_epiCvode.hpp"
+#include "hund_rudy_2004.hpp"
 
 // Modified models
 #include "ohara_rudy_cipa_v1_2017_analyticCvode.hpp"
@@ -55,6 +56,7 @@ public:
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellbeeler_reuter_model_1977FromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellhund_rudy_2004FromCellMLCvode(p_solver, p_stimulus)));
 
     std::vector<double> periods = {1000, 500, 750, 1250};
     std::vector<double> IKrBlocks = {0, 0.25, 0.5};

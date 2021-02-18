@@ -24,6 +24,7 @@
 #include "ohara_rudy_cipa_v1_2017_analyticCvode.hpp"
 #include "ten_tusscher_model_2006_epiCvode.hpp"
 #include "ten_tusscher_model_2006_epi_analyticCvode.hpp"
+#include "hund_rudy_2004.hpp"
 
 /* Run the models under different scenarios and output:
    - All variables over the final pace
@@ -35,7 +36,7 @@
 class TestGroundTruthSimulation : public CxxTest::TestSuite
 {
 public:
-  const int paces = 10000;
+  const int paces = 20000;
   void TestRunSimulation()
   {
 #ifdef CHASTE_CVODE
@@ -59,6 +60,7 @@ public:
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_cipa_v1_2017FromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2006_epiFromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellhund_rudy_2004FromCellMLCvode(p_solver, p_stimulus)));
 
     for(auto model : models){
       const N_Vector initial_states = model->GetStateVariables();
