@@ -24,7 +24,7 @@
 #include "ohara_rudy_cipa_v1_2017_analyticCvode.hpp"
 #include "ten_tusscher_model_2006_epiCvode.hpp"
 #include "ten_tusscher_model_2006_epi_analyticCvode.hpp"
-#include "hund_rudy_2004.hpp"
+#include "hund_rudy_2004Cvode.hpp"
 
 /* Run the models under different scenarios and output:
    - All variables over the final pace

@@ -21,7 +21,7 @@
 #include "decker_2009Cvode.hpp"
 #include "ohara_rudy_cipa_v1_2017Cvode.hpp"
 #include "ten_tusscher_model_2006_epiCvode.hpp"
-#include "hund_rudy_2004.hpp"
+#include "hund_rudy_2004Cvode.hpp"
 
 // The modified "analytic_voltage" models
 #include "ten_tusscher_model_2006_epi_analyticCvode.hpp"

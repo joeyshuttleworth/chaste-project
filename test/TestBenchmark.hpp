@@ -13,11 +13,6 @@
 
 /* These header files are generated from the cellml files provided at github.com/chaste/cellml */
 
-#include "beeler_reuter_model_1977Cvode.hpp"
-#include "ten_tusscher_model_2004_epiCvode.hpp"
-#include "ohara_rudy_2011_endoCvode.hpp"
-#include "shannon_wang_puglisi_weber_bers_2004Cvode.hpp"
-#include "decker_2009Cvode.hpp"
 #include "ohara_rudy_cipa_v1_2017Cvode.hpp"
 #include "ohara_rudy_cipa_v1_2017_analyticCvode.hpp"
 #include "ten_tusscher_model_2006_epiCvode.hpp"
@@ -60,11 +55,6 @@ public:
     std::vector<double> IKrBlocks = {0, 0.25, 0.5, 0.75};
     unsigned int score=0;
     std::vector<boost::shared_ptr<AbstractCvodeCell>> models;
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_2011_endoFromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Celldecker_2009FromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellbeeler_reuter_model_1977FromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode(p_solver, p_stimulus)));
 
