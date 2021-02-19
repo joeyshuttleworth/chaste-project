@@ -26,9 +26,13 @@ Simulation::~Simulation(){
 
 bool Simulation::RunPaces(int max_paces){
   RunPace();
+  mPaces++;
   mpModel->SetForceReset(false);
-  for(int i = 1; i <= max_paces; i++){
+  for(int i = 1; i < max_paces; i++){
+    mPaces++;
     if(RunPace())
+      return true;
+    if(mFinished)
       return true;
   }
   return false;

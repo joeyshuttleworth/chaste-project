@@ -29,7 +29,7 @@ private:
 
   const std::vector<unsigned int> buffer_sizes = {25, 50, 100, 150, 200, 300 ,400};
   const std::vector<double> extrapolation_constants = {0.5, 0.75, 0.9, 1, 1.1};
-  const int max_paces = 20000;
+  const unsigned int max_paces = 20000;
 public:
 
   void TestBenchmarkRun(){
@@ -95,7 +95,7 @@ public:
 
     unsigned int paces = smart_simulation.GetPaces();
     std::cout << "took " << "paces";
-    assert(paces<max_paces-2);
+    assert(paces+2<max_paces);
 
     model->SetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance", default_GKr);
     return paces;

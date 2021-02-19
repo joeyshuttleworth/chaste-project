@@ -103,8 +103,14 @@ public:
     default_GKr = model->GetParameter(GKrParameterName);
     model->SetParameter(GKrParameterName, default_GKr*(1-IKrBlock));
 
-    // Run the simulation for a large number of paces
-    simulation.RunPaces(paces);
+    try{
+      // Run the simulation for a large number of paces
+      simulation.RunPaces(paces);
+    }
+    catch(const Exception &ex){
+      std::cout << "caught an exception after " << simulation.GetPaces() << " paces\n";
+      throw(ex);
+    }
 
     // Output the final pace
     const std::string pace_filename = "final_pace";

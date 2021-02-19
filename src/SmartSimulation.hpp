@@ -69,7 +69,6 @@ private:
   unsigned int mJumps = 0;
   unsigned int mMaxJumps = 1;
   std::vector<double> mSafeStateVariables;
-  unsigned int pace = 0;
   std::ofstream errors;
 
   bool ExtrapolateState(unsigned int state_index);

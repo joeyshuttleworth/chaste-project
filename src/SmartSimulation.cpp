@@ -118,7 +118,6 @@ bool SmartSimulation::ExtrapolateState(unsigned int state_index){
 
 
 bool SmartSimulation::RunPace(){
-  mPaces++;
   bool extrapolated = false;
 
   extrapolated = ExtrapolateStates();
@@ -127,7 +126,6 @@ bool SmartSimulation::RunPace(){
     try{
       mpModel->SolveAndUpdateState(0, mpStimulus->GetDuration());
       mpModel->SolveAndUpdateState(mpStimulus->GetDuration(), mPeriod);
-      pace++;
     }
     catch(Exception &e){
       std::cout << "RunPace failed - returning to old mStateVariables\n";
