@@ -169,11 +169,11 @@ bool SmartSimulation::ExtrapolateStates(){
     boost::filesystem::create_directory(dir_name);
     if(mrms_pmcc < -0.985){
       mSafeStateVariables = mStateVariables;
-      std::cout << "Extrapolating - start of buffer is " << pace - mBufferSize + 1<< "\n";
+      std::cout << "Extrapolating - start of buffer is " << mPaces - mBufferSize + 1<< "\n";
 
       boost::filesystem::create_directory(dir_name + "/LastExtrapolationLog");
       mOutputFile.open(dir_name + "/" + std::to_string(int(mPeriod)) + "JumpParameters.dat");
-      mOutputFile << pace << " " << mBufferSize << " " << mExtrapolationConstant << "\n";
+      mOutputFile << mPaces << " " << mBufferSize << " " << mExtrapolationConstant << "\n";
 
       for(unsigned int i = 0; i < mStateVariables.size(); i++){
         if(ExtrapolateState(i)){
