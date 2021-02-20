@@ -54,7 +54,7 @@ public:
             models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode(p_solver, p_stimulus)));
             models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellhund_rudy_2004FromCellMLCvode(p_solver, p_stimulus)));
             for(auto model : models){
-            compare_error_measures(model, period, IKrBlock, tolerance, filename_suffix);
+              compare_error_measures(model, period, IKrBlock, tolerance, filename_suffix);
           }
         }
       }

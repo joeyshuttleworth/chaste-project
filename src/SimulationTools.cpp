@@ -256,7 +256,14 @@ void compare_error_measures(boost::shared_ptr<AbstractCvodeCell> model, double p
     // std::cout << "pace = " << j << "\n";
     OdeSolution current_solution = simulation.GetPace(1, false);
     const std::vector<std::vector<double>> previous_pace = current_solution.rGetSolutions();
-    simulation.RunPace();
+    bool failed = false;
+    try{
+      simulation.RunPace();
+    }
+    catch(const Exception &exc){
+      failed = true;
+    }
+
     current_solution = simulation.GetPace(1, false);
     const std::vector<std::vector<double>> current_pace = current_solution.rGetSolutions();
     times = current_solution.rGetTimes();
@@ -274,9 +281,18 @@ void compare_error_measures(boost::shared_ptr<AbstractCvodeCell> model, double p
       output_file << current_states[k] << " ";
     }
     output_file << "\n";
+    try{
+      simulation.RunPaces(9);
+    }
+    catch(const Exception &exc){
+      failed = true;
+    }
 
-    simulation.RunPaces(9);
     j+=9;
+    if(failed){
+      std::cout << "Terminated early after " << j  << " paces";
+      break;
+    }
   }
   output_file.close();
 
