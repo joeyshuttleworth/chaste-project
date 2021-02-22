@@ -28,6 +28,7 @@ private:
   const unsigned int paces = 2000;
 
   bool CompareMethodsPeriod(boost::shared_ptr<AbstractCvodeCell> brute_force_model, boost::shared_ptr<AbstractCvodeCell> smart_model){
+    const double IKrBlock = 0;
     std::string username = std::string(getenv("USER"));
     const std::string model_name = brute_force_model->GetSystemInformation()->GetSystemName();
     const std::string dirname  = "/home/"+username+"/testoutput/"+model_name+"/TestExtrapolationMethod";
@@ -118,10 +119,10 @@ private:
     std::cout << "Difference in APD90s " << apd_difference << "\n";
 
     // Compare smart apd with reference version
-    std::stringstream apd_file;
+    std::stringstream apd_file_ss;
     const std::string CHASTE_TEST_OUTPUT = getenv("CHASTE_TEST_OUTPUT");
-    apd_file << model_name << "_" << std::to_string(int(period)) << "ms_" << int(100*IKrBlock)<<"_percent_block/apds_using_groundtruth.dat";
-    std::istream apd_file(apd_file.str());
+    apd_file_ss << model_name << "_" << std::to_string(int(period)) << "ms_" << int(100*IKrBlock)<<"_percent_block/apds_using_groundtruth.dat";
+    std::ifstream apd_file(apd_file_ss.str());
     std::string line;
     std::getline(apd_file, line);
     const double reference_apd = std::stod(line);

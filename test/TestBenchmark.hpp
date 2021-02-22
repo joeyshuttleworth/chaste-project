@@ -34,7 +34,9 @@ public:
 
   void TestBenchmarkRun(){
     const boost::filesystem::path test_dir(getenv("CHASTE_TEST_OUTPUT"));
-    std::ofstream output_file((boost::filesystem::path(test_dir) / boost::filesystem::path("TestBenchark/results.dat")).string());
+    std::string filepath = (boost::filesystem::path(test_dir) / boost::filesystem::path("TestBenchmark/results.dat")).string();
+    boost::filesystem::create_directories(filepath);
+    std::ofstream output_file(filepath);
     output_file << "brute force method takes " << RunModels(0,0) << "\n";
 
     for(auto buffer_size : buffer_sizes){
@@ -94,7 +96,7 @@ public:
     smart_simulation.RunPaces(max_paces);
 
     unsigned int paces = smart_simulation.GetPaces();
-    std::cout << "took " << "paces";
+    std::cout << "took " << paces << " paces";
     assert(paces+2<max_paces);
 
     model->SetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance", default_GKr);
