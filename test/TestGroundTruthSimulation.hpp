@@ -21,10 +21,15 @@
 #include "shannon_wang_puglisi_weber_bers_2004Cvode.hpp"
 #include "decker_2009Cvode.hpp"
 #include "ohara_rudy_cipa_v1_2017Cvode.hpp"
-#include "ohara_rudy_cipa_v1_2017_analyticCvode.hpp"
 #include "ten_tusscher_model_2006_epiCvode.hpp"
-#include "ten_tusscher_model_2006_epi_analyticCvode.hpp"
 #include "hund_rudy_2004Cvode.hpp"
+#include "iyer_2004.hpp"
+#include "ToRORd_dynCl_endo.hpp"
+
+// Models modified to have analytic voltage: 
+#include "ten_tusscher_model_2006_epi_analyticCvode.hpp"
+#include "ohara_rudy_cipa_v1_2017_analyticCvode.hpp"
+
 
 /* Run the models under different scenarios and output:
    - All variables over the final pace
@@ -36,7 +41,7 @@
 class TestGroundTruthSimulation : public CxxTest::TestSuite
 {
 public:
-  const int paces = 20000;
+  const int paces = 10000;
   void TestRunSimulation()
   {
 #ifdef CHASTE_CVODE
