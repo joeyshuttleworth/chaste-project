@@ -12,6 +12,7 @@
 #include <fstream>
 
 /* These header files are generated from the cellml files provided at github.com/chaste/cellml */
+
 #include "beeler_reuter_model_1977Cvode.hpp"
 #include "ten_tusscher_model_2004_epiCvode.hpp"
 #include "ohara_rudy_2011_endoCvode.hpp"
@@ -20,13 +21,12 @@
 #include "ohara_rudy_cipa_v1_2017Cvode.hpp"
 #include "ten_tusscher_model_2006_epiCvode.hpp"
 #include "hund_rudy_2004Cvode.hpp"
+#include "iyer_2004.hpp"
+#include "ToRORd_dynCl_endo.hpp"
 
-// Modified models
-#include "ohara_rudy_cipa_v1_2017_analyticCvode.hpp"
+// Models modified to have analytic voltage:
 #include "ten_tusscher_model_2006_epi_analyticCvode.hpp"
-
-
-
+#include "ohara_rudy_cipa_v1_2017_analyticCvode.hpp"
 
 class TestGroundTruthSimulation : public CxxTest::TestSuite
 {
