@@ -29,7 +29,7 @@
 // Models modified to have analytic voltage:
 #include "ten_tusscher_model_2006_epi_analyticCvode.hpp"
 #include "ohara_rudy_cipa_v1_2017_analyticCvode.hpp"
-#include "ToRORd_dynCl_endo_analytic_voltageCvode.hpp"
+#include "ToRORd_dynCl_epi_analytic_voltageCvode.hpp"
 #include "iyer_2004_analytic_voltageCvode.hpp"
 
 
@@ -60,7 +60,7 @@ public:
 
     std::vector<boost::shared_ptr<AbstractCvodeCell>> models;
 
-    models.push_back(boost::make_shared<ToRORd_dynCl_endo_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
+    models.push_back(boost::make_shared<ToRORd_dynCl_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
     models.push_back(boost::make_shared<iyer_2004_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
 
     for(auto model : models){
