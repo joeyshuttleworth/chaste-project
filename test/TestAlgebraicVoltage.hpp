@@ -69,7 +69,7 @@ public:
         for(double IKrBlock : IKrBlocks){
           const double default_GKr = model->GetParameter(GKrParameterName);
           Simulation sim(model, period);
-          model->SetParameter(GKrParameterName, (1-IKrBlock));
+          sim.SetIKrBlock(IKrBlock);
           sim.RunPaces(500);
           model->SetStateVariables(initial_states);
         }
