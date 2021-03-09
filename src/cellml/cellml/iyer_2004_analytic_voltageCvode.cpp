@@ -237,6 +237,7 @@ double Celliyer_2004_analytic_voltageFromCellMLCvode::CalculateAnalyticVoltage(c
 
     void Celliyer_2004_analytic_voltageFromCellMLCvode::EvaluateYDerivatives(double var_chaste_interface__environment__time, const N_Vector rY, N_Vector rDY)
     {
+      CalculateAnalyticVoltage(rY);
         // Inputs:
         // Time units: millisecond
         double var_chaste_interface__COMPUTE_CONCENTRATION_AND_VOLTAGE_DERIVATIVES__Cai = NV_Ith_S(rY, 0);
