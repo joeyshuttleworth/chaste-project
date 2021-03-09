@@ -182,7 +182,7 @@ void Simulation::SetIKrBlock(double block){
 
   const std::vector<std::string> parameter_names = mpModel->rGetParameterNames();
 
-  if(std::count_if(parameter_names.begin(), parameter_names.end(), [&](std::string name) -> bool {return name==GKr_parameter_name}) > 0){
+  if(std::count_if(parameter_names.begin(), parameter_names.end(), [&](std::string name) -> bool {return name==GKr_parameter_name;}) > 0){
     // Parameter exists
     if(mDefaultGKr == DOUBLE_UNSET)
       mDefaultGKr = mpModel->GetParameter(GKr_parameter_name);
@@ -191,7 +191,7 @@ void Simulation::SetIKrBlock(double block){
   }
 
   const std::string GKr_scaling_factor_name = "membrane_rapid_delayed_rectifier_potassium_current_conductance_scaling_factor";
-  else if(std::count_if(parameter_names.begin(), parameter_names.end(), [&](std::string name) -> bool {return name==GKr_scaling_factor_name}) > 0){
+  if(std::count_if(parameter_names.begin(), parameter_names.end(), [&](std::string name) -> bool {return name==GKr_scaling_factor_name};) > 0){
     mpModel->SetParameter(GKr_scaling_factor_name, 1-block);
     return
   }
