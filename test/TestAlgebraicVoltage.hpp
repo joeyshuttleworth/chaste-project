@@ -43,7 +43,7 @@
 class TestGroundTruthSimulation : public CxxTest::TestSuite
 {
 
-  const std::string GKrParameterName = "membrane_rapid_delayed_rectifier_potassium_current_conductance";
+  const std::string GKrParameterName = "membrane_rapid_delayed_rectifier_potassium_current_conductance_scaling_factor";
 public:
   const int paces = 10000;
   void TestRunSimulation()
@@ -69,10 +69,9 @@ public:
         for(double IKrBlock : IKrBlocks){
           const double default_GKr = model->GetParameter(GKrParameterName);
           Simulation sim(model, period);
-          model->SetParameter(GKrParameterName, default_GKr*(1-IKrBlock));
+          model->SetParameter(GKrParameterName, (1-IKrBlock));
           sim.RunPaces(500);
           model->SetStateVariables(initial_states);
-          model->SetParameter(GKrParameterName, default_GKr);
         }
       }
     }
