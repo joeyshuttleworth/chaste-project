@@ -1,5 +1,6 @@
 #include "Simulation.hpp"
 #include <iomanip>
+#include <algorithm>
 
 Simulation::Simulation(boost::shared_ptr<AbstractCvodeCell> _p_model, double _period, std::string input_path, double _tol_abs, double _tol_rel) : mpModel(_p_model), mPeriod(_period), mTolAbs(_tol_abs), mTolRel(_tol_rel){
   mFinished = false;
@@ -170,4 +171,31 @@ std::vector<double> Simulation::GetVoltageTrace(double sampling_timestep, bool u
   if(!update_vars)
     mpModel->SetStateVariables(mStateVariables);
   return solution.GetAnyVariable("membrane_voltage");
+}
+
+void Simulation::SetIKrBlock(double block){
+  if(block > 1 || block < 0){
+    EXCEPTION("Tried setting GKrConductance to an invalid amount");
+  }
+
+  const std::string GKr_parameter_name = "membrane_rapid_delayed_rectifier_potassium_current_conductance";
+
+  const std::vector<std::string> parameter_names = mpModel->GetParameterNames();
+
+  if(std::count_if(parameter_names.begin(), parameter_names.end() [&](std::string name) -> bool {return name==GKrParameterName}) > 0){
+    // Parameter exists
+    if(mDefaultGKr == DOUBLE_UNSET)
+      mDefaultGKr = mpModel->GetParameter(GKrParameterName);
+    mpModel->SetParameter(GKr_parameter_name, mDefaultGKr*(1-block));
+    return;
+  }
+
+  const std::string Gkr_scaling_factor_name = "membrane_rapid_delayed_rectifier_potassium_current_conductance_scaling_factor";
+  else if(std::count_if(parameter_names.begin(), parameter_names.end() [&](std::string name) -> bool {return name==GKr_scaling_factor_name}) > 0){
+    mpModel->SetParameter(GKr_scaling_factor_name, 1-block);
+    return
+  }
+  else{
+    EXCEPTION("Couldn't find parameter to adjust GKr");
+  }
 }

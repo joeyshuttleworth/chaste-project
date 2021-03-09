@@ -28,6 +28,8 @@ protected:
   boost::shared_ptr<RegularStimulus> mpStimulus;
   bool mTerminateOnConvergence = true;
   unsigned int mPaces = 0;
+
+  double mDefaultGKr = DOUBLE_UNSET;
 public:
   Simulation(){
     return;
@@ -78,6 +80,8 @@ public:
   double GetMrms(bool update=false);
 
   boost::shared_ptr<AbstractCvodeCell> GetModel(){return mpModel;}
+
+  void SetIKrBlock(double block);
 
 };
 
