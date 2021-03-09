@@ -4,3 +4,4 @@ TestErrorMeasures.hpp
 TestAPD.hpp
 TestTolerances.hpp
 TestBenchmark.hpp
+TestAlgebraicVoltage.hpp
