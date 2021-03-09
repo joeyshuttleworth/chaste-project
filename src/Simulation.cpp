@@ -182,7 +182,7 @@ void Simulation::SetIKrBlock(double block){
 
   const std::vector<std::string> parameter_names = mpModel->rGetParameterNames();
 
-  if(std::count_if(parameter_names.begin(), parameter_names.end(), [&](std::string name) -> bool {retur name==GKr_parameter_name}) > 0){
+  if(std::count_if(parameter_names.begin(), parameter_names.end(), [&](std::string name) -> bool {return name==GKr_parameter_name}) > 0){
     // Parameter exists
     if(mDefaultGKr == DOUBLE_UNSET)
       mDefaultGKr = mpModel->GetParameter(GKr_parameter_name);
