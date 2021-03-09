@@ -67,6 +67,7 @@ public:
       const N_Vector initial_states = model->GetStateVariables();
       for(double period : periods){
         for(double IKrBlock : IKrBlocks){
+          const double default_GKr = model->GetParameter(GKrParameterName);
           Simulation sim(model, period);
           model->SetParameter(GKrParameterName, default_GKr*(1-IKrBlock));
           sim.RunPaces(500);
