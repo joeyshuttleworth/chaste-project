@@ -68,22 +68,23 @@ public:
     original_models.push_back(boost::make_shared<CellToRORd_dynCl_epiFromCellMLCvode>(p_solver, p_stimulus));
     original_models.push_back(boost::make_shared<Celliyer_2004FromCellMLCvode>(p_solver, p_stimulus));
 
-    for(unsigned i : indicies(algebraic_models)){
-      const N_Vector initial_states = model->GetStateVariables();
+    for(unsigned int i = 0; i < algebraic_models.size(); i++){
+      const N_Vector original_initial_states = original_models[i]->GetStateVariables();
+      const N_Vector algebraic_initial_states = algebraic_models[i]->GetStateVariables();
       for(double period : periods){
         for(double IKrBlock : IKrBlocks){
           Simulation sim(analytic_models[i], period);
           Simulation sim_o(original_models[i], period);
           sim.SetIKrBlock(IKrBlock);
           sim.RunPaces(100);
-          sim_0.RunPaces(100);
+          sim_o.RunPaces(100);
 
           std::vector<double> original_vars = original_models[i]->GetStdVecStateVariables();
-          original_vars.pop_front();
+          original_vars.erase(original_vars.begin());
 
           const double error = mrms(original_vars, algebraic_models[i]->GetStdVecStateVariables());
-          original_models[i]->SetStateVariables(initial_states);
-          algebraic_models[i]->SetStateVariables(initial_states);
+          original_models[i]->SetStateVariables(original_initial_states);
+          algebraic_models[i]->SetStateVariables(algebraic_initial_states);
         }
       }
     }
