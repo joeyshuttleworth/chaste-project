@@ -60,14 +60,13 @@ public:
 
     std::vector<boost::shared_ptr<AbstractCvodeCell>> models;
 
-    models.push_back(boost::make_shared<CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
+    // models.push_back(boost::make_shared<CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
     models.push_back(boost::make_shared<Celliyer_2004_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
 
     for(auto model : models){
       const N_Vector initial_states = model->GetStateVariables();
       for(double period : periods){
         for(double IKrBlock : IKrBlocks){
-          const double default_GKr = model->GetParameter(GKrParameterName);
           Simulation sim(model, period);
           sim.SetIKrBlock(IKrBlock);
           sim.RunPaces(100);
