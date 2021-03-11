@@ -32,20 +32,12 @@
 #include "ToRORd_dynCl_epi_analytic_voltageCvode.hpp"
 #include "iyer_2004_analytic_voltageCvode.hpp"
 
-
-/* Run the models under different scenarios and output:
-   - All variables over the final pace
-   - The APD90
-   - Terminal state variables
-   to separate files.
- */
-
 class TestGroundTruthSimulation : public CxxTest::TestSuite
 {
 
   const std::string GKrParameterName = "membrane_rapid_delayed_rectifier_potassium_current_conductance_scaling_factor";
 public:
-  const int paces = 1000;
+  const int paces = 100;
   void TestRunSimulation()
   {
 #ifdef CHASTE_CVODE
@@ -76,8 +68,8 @@ public:
           Simulation sim(algebraic_models[i], period);
           Simulation sim_o(original_models[i], period);
 
-          sim.SetTerminateOnConvergence(true);
-          sim_o.SetTerminateOnConvergence(true);
+          sim.SetTerminateOnConvergence(false);
+          sim_o.SetTerminateOnConvergence(false);
           sim.SetIKrBlock(IKrBlock);
           sim.RunPaces(paces);
           sim_o.RunPaces(paces);
