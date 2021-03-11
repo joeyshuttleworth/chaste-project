@@ -45,7 +45,7 @@ class TestGroundTruthSimulation : public CxxTest::TestSuite
 
   const std::string GKrParameterName = "membrane_rapid_delayed_rectifier_potassium_current_conductance_scaling_factor";
 public:
-  const int paces = 10000;
+  const int paces = 1000;
   void TestRunSimulation()
   {
 #ifdef CHASTE_CVODE
@@ -79,8 +79,8 @@ public:
           sim.SetTerminateOnConvergence(true);
           sim_o.SetTerminateOnConvergence(true);
           sim.SetIKrBlock(IKrBlock);
-          sim.RunPaces(100);
-          sim_o.RunPaces(100);
+          sim.RunPaces(paces);
+          sim_o.RunPaces(paces);
 
           std::vector<double> original_vars = original_models[i]->GetStdVecStateVariables();
           original_vars.erase(original_vars.begin());
