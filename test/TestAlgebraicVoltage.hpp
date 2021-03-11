@@ -83,6 +83,10 @@ public:
           original_vars.erase(original_vars.begin());
 
           const double error = mrms(original_vars, algebraic_models[i]->GetStdVecStateVariables());
+
+          assert(error<1e-05);
+          std::cout << "error is " << error << "\n";
+
           original_models[i]->SetStateVariables(original_initial_states);
           algebraic_models[i]->SetStateVariables(algebraic_initial_states);
         }
