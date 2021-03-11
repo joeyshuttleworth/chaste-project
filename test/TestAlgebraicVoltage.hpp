@@ -58,19 +58,32 @@ public:
     std::vector<double> periods = {1000, 500};
     std::vector<double> IKrBlocks = {0.25};
 
-    std::vector<boost::shared_ptr<AbstractCvodeCell>> models;
+    std::vector<boost::shared_ptr<AbstractCvodeCell>> algebraic_models;
+    std::vector<boost::shared_ptr<AbstractCvodeCell>> original_models;
 
-    models.push_back(boost::make_shared<CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
-    models.push_back(boost::make_shared<Celliyer_2004_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
+    algebraic_models.push_back(boost::make_shared<CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
+    algebraic_models.push_back(boost::make_shared<Celliyer_2004_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
 
-    for(auto model : models){
+
+    original_models.push_back(boost::make_shared<CellToRORd_dynCl_epiFromCellMLCvode>(p_solver, p_stimulus));
+    original_models.push_back(boost::make_shared<Celliyer_2004FromCellMLCvode>(p_solver, p_stimulus));
+
+    for(unsigned i : indicies(algebraic_models)){
       const N_Vector initial_states = model->GetStateVariables();
       for(double period : periods){
         for(double IKrBlock : IKrBlocks){
-          Simulation sim(model, period);
+          Simulation sim(analytic_models[i], period);
+          Simulation sim_o(original_models[i], period);
           sim.SetIKrBlock(IKrBlock);
           sim.RunPaces(100);
-          model->SetStateVariables(initial_states);
+          sim_0.RunPaces(100);
+
+          std::vector<double> original_vars = original_models[i]->GetStdVecStateVariables();
+          original_vars.pop_front();
+
+          const double error = mrms(original_vars, algebraic_models[i]->GetStdVecStateVariables());
+          original_models[i]->SetStateVariables(initial_states);
+          algebraic_models[i]->SetStateVariables(initial_states);
         }
       }
     }

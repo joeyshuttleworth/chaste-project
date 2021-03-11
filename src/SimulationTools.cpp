@@ -71,7 +71,7 @@ double TwoNorm(std::vector<double> A, std::vector<double> B, unsigned int starti
   return sqrt(norm);
 }
 
-double mrms(std::vector<double> A, std::vector<double> B, unsigned int starting_index){
+double mrms(std::vector<double> A, std::vector<double> B){
   double norm = 0;
   assert(A.size()==B.size());
   for(unsigned int i=starting_index; i < A.size(); i++){
