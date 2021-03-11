@@ -99,8 +99,8 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
     CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode(boost::shared_ptr<AbstractIvpOdeSolver> pOdeSolver /* unused; should be empty */, boost::shared_ptr<AbstractStimulusFunction> pIntracellularStimulus)
         : AbstractCvodeCell(
                 pOdeSolver,
-                45,
                 44,
+                40,
                 pIntracellularStimulus)
     {
         // Time units: millisecond
@@ -574,7 +574,7 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
         // Units: millimolar_per_millisecond; Initial value: 6.778827e-25
         double var_chaste_interface__ryr__Jrel_p = NV_Ith_S(rY, 43);
         // Units: millimolar_per_millisecond; Initial value: -1.581941e-23
-        double var_chaste_interface__membrane__v = (mSetVoltageDerivativeToZero ? this->mFixedVoltage : NV_Ith_S(rY, 44));
+        double var_chaste_interface__membrane__v = (mSetVoltageDerivativeToZero ? this->mFixedVoltage : CalculateAnaylticVoltage(rY));
         // Units: millivolt; Initial value: -90.74563
 
         // Mathematics
@@ -3082,7 +3082,7 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
         const double var_ryr__fJrelp = 1 / (1.0 + var_CaMK__KmCaMK / var_CaMK__CaMKa); // dimensionless
         const double var_ryr__Jrel = ((1.0 - var_ryr__fJrelp) * var_chaste_interface__ryr__Jrel_np + var_chaste_interface__ryr__Jrel_p * var_ryr__fJrelp) * NV_Ith_S(mParameters, 0); // millimolar_per_millisecond
 
-        N_Vector dqs = N_VNew_Serial(22);
+        N_Vector dqs = N_VNew_Serial(23);
         NV_Ith_S(dqs, 0) = var_ryr__Jrel;
         NV_Ith_S(dqs, 1) = var_SERCA__Jup;
         NV_Ith_S(dqs, 2) = var_reversal_potentials__ECl;
@@ -3105,6 +3105,7 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
         NV_Ith_S(dqs, 19) = var_reversal_potentials__EKs;
         NV_Ith_S(dqs, 20) = var_reversal_potentials__ENa;
         NV_Ith_S(dqs, 21) = var_chaste_interface__environment__time;
+        NV_Ith_S(dqs, 22) = var_chaste_interface__membrane__v;
         return dqs;
     }
 
@@ -3336,9 +3337,9 @@ void OdeSystemInformation<CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode>:
     this->mInitialConditions.push_back(-1.581941e-23);
 
     // NV_Ith_S(rY, 44):
-    this->mVariableNames.push_back("membrane_voltage");
-    this->mVariableUnits.push_back("millivolt");
-    this->mInitialConditions.push_back(-90.74563);
+    // this->mVariableNames.push_back("membrane_voltage");
+    // this->mVariableUnits.push_back("millivolt");
+    // this->mInitialConditions.push_back(-90.74563);
 
     // mParameters[0]:
     this->mParameterNames.push_back("SR_release_current_max");

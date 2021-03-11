@@ -89,8 +89,8 @@ double Celliyer_2004_analytic_voltageFromCellMLCvode::CalculateAnalyticVoltage(c
     Celliyer_2004_analytic_voltageFromCellMLCvode::Celliyer_2004_analytic_voltageFromCellMLCvode(boost::shared_ptr<AbstractIvpOdeSolver> pOdeSolver /* unused; should be empty */, boost::shared_ptr<AbstractStimulusFunction> pIntracellularStimulus)
         : AbstractCvodeCell(
                 pOdeSolver,
-                67,
                 66,
+                0,
                 pIntracellularStimulus)
     {
         // Time units: millisecond
@@ -102,7 +102,7 @@ double Celliyer_2004_analytic_voltageFromCellMLCvode::CalculateAnalyticVoltage(c
         this->mHasDefaultStimulusFromCellML = true;
         mUseAnalyticJacobian = false;
         mHasAnalyticJacobian = false;
-        
+
         NV_Ith_S(this->mParameters, 0) = 1.8; // (var_COMPUTE_INTRACELLULAR_CALCIUM_FLUXES__v1) [per_ms]
         NV_Ith_S(this->mParameters, 1) = 1.2; // (var_COMPUTE_INTRACELLULAR_CALCIUM_FLUXES__KSR) [mM]
         NV_Ith_S(this->mParameters, 2) = 1.0; // (var_COMPUTE_CONCENTRATION_AND_VOLTAGE_DERIVATIVES__conc_clamp) [dimensionless]
@@ -119,14 +119,15 @@ double Celliyer_2004_analytic_voltageFromCellMLCvode::CalculateAnalyticVoltage(c
         NV_Ith_S(this->mParameters, 13) = 0.44; // (var_COMPUTE_INaK_INaCa_ICab_IpCa__kNaCa) [uA_per_uF]
         NV_Ith_S(this->mParameters, 14) = 2.387; // (var_COMPUTE_INaK_INaCa_ICab_IpCa__INaKmax) [uA_per_uF]
 
-        C0 = CalculateAnalyticVoltage(mStateVariables) - NV_Ith_S(mStateVariables, 66);
+        const double initial_voltage = -90.65755929;
+        C0 = CalculateAnalyticVoltage(mStateVariables) - initial_voltage;
     }
 
     Celliyer_2004_analytic_voltageFromCellMLCvode::~Celliyer_2004_analytic_voltageFromCellMLCvode()
     {
     }
 
-    
+
     double Celliyer_2004_analytic_voltageFromCellMLCvode::GetIIonic(const std::vector<double>* pStateVariables)
     {
         // For state variable interpolation (SVI) we read in interpolated state variables,
@@ -168,7 +169,7 @@ double Celliyer_2004_analytic_voltageFromCellMLCvode::CalculateAnalyticVoltage(c
         // Units: dimensionless; Initial value: 1.298547822e-05
         double var_chaste_interface__COMPUTE_CONCENTRATION_AND_VOLTAGE_DERIVATIVES__V = (mSetVoltageDerivativeToZero ? this->mFixedVoltage : NV_Ith_S(rY, 66));
         // Units: mV; Initial value: -90.65755929
-        
+
         const double var_COMPUTE_CONCENTRATION_AND_VOLTAGE_DERIVATIVES__Faraday = 96.5; // coulomb_per_millimole
         const double var_COMPUTE_CONCENTRATION_AND_VOLTAGE_DERIVATIVES__Rgas = 8.3149999999999995; // joule_per_mole_kelvin
         const double var_COMPUTE_CONCENTRATION_AND_VOLTAGE_DERIVATIVES__Temp = 310.0; // kelvin
@@ -238,7 +239,6 @@ double Celliyer_2004_analytic_voltageFromCellMLCvode::CalculateAnalyticVoltage(c
 
     void Celliyer_2004_analytic_voltageFromCellMLCvode::EvaluateYDerivatives(double var_chaste_interface__environment__time, const N_Vector rY, N_Vector rDY)
     {
-      CalculateAnalyticVoltage(rY);
         // Inputs:
         // Time units: millisecond
         double var_chaste_interface__COMPUTE_CONCENTRATION_AND_VOLTAGE_DERIVATIVES__Cai = NV_Ith_S(rY, 0);
@@ -373,7 +373,7 @@ double Celliyer_2004_analytic_voltageFromCellMLCvode::CalculateAnalyticVoltage(c
         // Units: dimensionless; Initial value: 2.491710696e-07
         double var_chaste_interface__IKs__O2ks = NV_Ith_S(rY, 65);
         // Units: dimensionless; Initial value: 1.298547822e-05
-        double var_chaste_interface__COMPUTE_CONCENTRATION_AND_VOLTAGE_DERIVATIVES__V = (mSetVoltageDerivativeToZero ? this->mFixedVoltage : NV_Ith_S(rY, 66));
+        double var_chaste_interface__COMPUTE_CONCENTRATION_AND_VOLTAGE_DERIVATIVES__V = (mSetVoltageDerivativeToZero ? this->mFixedVoltage : CalculateAnalyticVoltage(rY);
         // Units: mV; Initial value: -90.65755929
 
         // Mathematics
@@ -846,7 +846,7 @@ double Celliyer_2004_analytic_voltageFromCellMLCvode::CalculateAnalyticVoltage(c
             const double var_COMPUTE_CONCENTRATION_AND_VOLTAGE_DERIVATIVES__i_tot = var_COMPUTE_ICa_ICaK__ICa + var_COMPUTE_ICa_ICaK__ICaK + var_COMPUTE_INaK_INaCa_ICab_IpCa__ICab + var_COMPUTE_INaK_INaCa_ICab_IpCa__INaCa + var_COMPUTE_INaK_INaCa_ICab_IpCa__INaK + var_COMPUTE_INaK_INaCa_ICab_IpCa__IpCa + var_COMPUTE_INa_IKr_IKs_Ito1_IK1_INab_IKp__IK1 + var_COMPUTE_INa_IKr_IKs_Ito1_IK1_INab_IKp__IKr + var_COMPUTE_INa_IKr_IKs_Ito1_IK1_INab_IKp__IKs + var_COMPUTE_INa_IKr_IKs_Ito1_IK1_INab_IKp__INa + var_COMPUTE_INa_IKr_IKs_Ito1_IK1_INab_IKp__INab + var_COMPUTE_INa_IKr_IKs_Ito1_IK1_INab_IKp__Ito1 + var_I_stimulus__i_Stim; // uA_per_uF
             d_dt_chaste_interface_var_COMPUTE_CONCENTRATION_AND_VOLTAGE_DERIVATIVES__V = -var_COMPUTE_CONCENTRATION_AND_VOLTAGE_DERIVATIVES__i_tot; // mV / ms
         }
-        
+
         NV_Ith_S(rDY,0) = d_dt_chaste_interface_var_COMPUTE_CONCENTRATION_AND_VOLTAGE_DERIVATIVES__Cai;
         NV_Ith_S(rDY,1) = d_dt_chaste_interface_var_COMPUTE_CONCENTRATION_AND_VOLTAGE_DERIVATIVES__Nai;
         NV_Ith_S(rDY,2) = d_dt_chaste_interface_var_COMPUTE_CONCENTRATION_AND_VOLTAGE_DERIVATIVES__Ki;
@@ -961,7 +961,7 @@ double Celliyer_2004_analytic_voltageFromCellMLCvode::CalculateAnalyticVoltage(c
         // Units: dimensionless; Initial value: 1.298547822e-05
         double var_chaste_interface__COMPUTE_CONCENTRATION_AND_VOLTAGE_DERIVATIVES__V = (mSetVoltageDerivativeToZero ? this->mFixedVoltage : NV_Ith_S(rY, 66));
         // Units: mV; Initial value: -90.65755929
-        
+
         // Mathematics
         const double var_COMPUTE_CONCENTRATION_AND_VOLTAGE_DERIVATIVES__Acap = 0.00015339999999999999; // cm2
         const double var_COMPUTE_CONCENTRATION_AND_VOLTAGE_DERIVATIVES__C = 0.001 * var_COMPUTE_CONCENTRATION_AND_VOLTAGE_DERIVATIVES__Acap; // mF
@@ -1035,6 +1035,7 @@ double Celliyer_2004_analytic_voltageFromCellMLCvode::CalculateAnalyticVoltage(c
         NV_Ith_S(dqs, 10) = var_I_stimulus__i_Stim_converted;
         NV_Ith_S(dqs, 11) = var_COMPUTE_INa_IKr_IKs_Ito1_IK1_INab_IKp__Ito1_converted;
         NV_Ith_S(dqs, 12) = var_chaste_interface__environment__time;
+        // Add voltage as dq
         NV_Ith_S(dqs, 13) = var_chaste_interface__COMPUTE_CONCENTRATION_AND_VOLTAGE_DERIVATIVES__V;
         return dqs;
     }
@@ -1377,9 +1378,9 @@ void OdeSystemInformation<Celliyer_2004_analytic_voltageFromCellMLCvode>::Initia
     this->mInitialConditions.push_back(1.298547822e-05);
 
     // NV_Ith_S(rY, 66):
-    this->mVariableNames.push_back("membrane_voltage");
-    this->mVariableUnits.push_back("mV");
-    this->mInitialConditions.push_back(-90.65755929);
+    // this->mVariableNames.push_back("membrane_voltage");
+    // this->mVariableUnits.push_back("mV");
+    // this->mInitialConditions.push_back(-90.65755929);
 
     // mParameters[0]:
     this->mParameterNames.push_back("SR_release_current_max");
