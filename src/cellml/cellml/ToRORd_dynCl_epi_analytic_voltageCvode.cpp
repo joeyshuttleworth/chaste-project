@@ -30,7 +30,7 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
   const double Acap = 0.0002533576;
 
 
-  const double vcell = 3.7994e-05;
+  const double vcell = 3.7994e-05/1e6;
   const double vmyo = 0.68*vcell;
   const double vss  = 0.02*vcell;
   const double vjsr = 0.0048*vcell;
