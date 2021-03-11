@@ -61,10 +61,10 @@ double Celliyer_2004_analytic_voltageFromCellMLCvode::CalculateAnalyticVoltage(c
   const double LTRPNtot = 70e-3;
   const double HTRPNtot = 140e-3;
 
-  const double Vmyo = 25.84e-06/1e6;
-  const double VJSR =  0.16e-6/1e6;
-  const double VNSR = 2.1e-6/1e6;
-  const double VSS = 1.2e-9/1e6;
+  const double Vmyo = 25.84e-06*1e3;
+  const double VJSR =  0.16e-6*1e3;
+  const double VNSR = 2.1e-6*1e3;
+  const double VSS = 1.2e-9*1e3;
 
   const double Cai = NV_Ith_S(rY, 0);
   const double LTRPNCa = NV_Ith_S(rY, 6);
