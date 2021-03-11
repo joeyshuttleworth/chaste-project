@@ -75,6 +75,9 @@ public:
         for(double IKrBlock : IKrBlocks){
           Simulation sim(algebraic_models[i], period);
           Simulation sim_o(original_models[i], period);
+
+          sim.SetTerminateOnConvergence(true);
+          sim_o.SetTerminateOnConvergence(true);
           sim.SetIKrBlock(IKrBlock);
           sim.RunPaces(100);
           sim_o.RunPaces(100);
