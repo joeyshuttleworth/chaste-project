@@ -44,9 +44,6 @@ public:
     boost::shared_ptr<RegularStimulus> p_stimulus;
     boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
 
-    const std::string username = std::string(getenv("USER"));
-    boost::filesystem::create_directories("/home/" + username + "/testoutput/");
-
     std::vector<double> periods = {1000, 500};
     std::vector<double> IKrBlocks = {0.25};
 
@@ -63,8 +60,18 @@ public:
     for(unsigned int i = 0; i < algebraic_models.size(); i++){
       const N_Vector original_initial_states = original_models[i]->GetStateVariables();
       const N_Vector algebraic_initial_states = algebraic_models[i]->GetStateVariables();
+
+      const std::string model_name = original_models[i]->GetSystemInformation()->GetSystemName();
+      std::cout << "Testing " << model_name << " with period " << int(period) <<" and IKrBlock "<< IKrBlock << "\n";
       for(double period : periods){
         for(double IKrBlock : IKrBlocks){
+          std::vector<double> original_vars = original_models[i]->GetStdVecStateVariables();
+          original_vars.erase(original_vars.begin());
+
+          const double error = mrms(original_vars, algebraic_models[i]->GetStdVecStateVariables());
+
+          std::cout << "initial error is " << error << "\n";
+
           Simulation sim(algebraic_models[i], period);
           Simulation sim_o(original_models[i], period);
 
