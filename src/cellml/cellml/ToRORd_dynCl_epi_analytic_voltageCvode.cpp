@@ -69,7 +69,7 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
 
   const double analytic_voltage = F*vmyo/(Acap*cm)*(-cli+ki+nai+2*cai_tot+(-clss+kss+nass+2*cass_tot)*vss/vmyo+2*cajsr_tot*vjsr/vmyo+2*cansr*vnsr/vmyo) - C0;
 
-  std::cout << analytic_voltage << " " << NV_Ith_S(rY,44) << "\n";
+  // std::cout << analytic_voltage << " " << NV_Ith_S(rY,44) << "\n";
   return analytic_voltage;
 }
 
@@ -574,7 +574,7 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
         // Units: millimolar_per_millisecond; Initial value: 6.778827e-25
         double var_chaste_interface__ryr__Jrel_p = NV_Ith_S(rY, 43);
         // Units: millimolar_per_millisecond; Initial value: -1.581941e-23
-        double var_chaste_interface__membrane__v = (mSetVoltageDerivativeToZero ? this->mFixedVoltage : CalculateAnaylticVoltage(rY));
+        double var_chaste_interface__membrane__v = (mSetVoltageDerivativeToZero ? this->mFixedVoltage : CalculateAnylticVoltage(rY));
         // Units: millivolt; Initial value: -90.74563
 
         // Mathematics
