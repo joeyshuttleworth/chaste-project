@@ -24,7 +24,7 @@
 #include "ten_tusscher_model_2006_epiCvode.hpp"
 #include "hund_rudy_2004Cvode.hpp"
 #include "iyer_2004.hpp"
-#include "ToRORd_dynCl_endo.hpp"
+#include "ToRORd_dynCl_epi.hpp"
 
 // Models modified to have analytic voltage:
 #include "ten_tusscher_model_2006_epi_analyticCvode.hpp"
@@ -73,7 +73,7 @@ public:
       const N_Vector algebraic_initial_states = algebraic_models[i]->GetStateVariables();
       for(double period : periods){
         for(double IKrBlock : IKrBlocks){
-          Simulation sim(analytic_models[i], period);
+          Simulation sim(algebraic_models[i], period);
           Simulation sim_o(original_models[i], period);
           sim.SetIKrBlock(IKrBlock);
           sim.RunPaces(100);
