@@ -373,7 +373,7 @@ double Celliyer_2004_analytic_voltageFromCellMLCvode::CalculateAnalyticVoltage(c
         // Units: dimensionless; Initial value: 2.491710696e-07
         double var_chaste_interface__IKs__O2ks = NV_Ith_S(rY, 65);
         // Units: dimensionless; Initial value: 1.298547822e-05
-        double var_chaste_interface__COMPUTE_CONCENTRATION_AND_VOLTAGE_DERIVATIVES__V = (mSetVoltageDerivativeToZero ? this->mFixedVoltage : CalculateAnalyticVoltage(rY);
+        double var_chaste_interface__COMPUTE_CONCENTRATION_AND_VOLTAGE_DERIVATIVES__V = (mSetVoltageDerivativeToZero ? this->mFixedVoltage : CalculateAnalyticVoltage(rY));
         // Units: mV; Initial value: -90.65755929
 
         // Mathematics
