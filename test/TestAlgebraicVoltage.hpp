@@ -23,8 +23,8 @@
 #include "ohara_rudy_cipa_v1_2017Cvode.hpp"
 #include "ten_tusscher_model_2006_epiCvode.hpp"
 #include "hund_rudy_2004Cvode.hpp"
-#include "iyer_2004.hpp"
-#include "ToRORd_dynCl_epi.hpp"
+#include "iyer_2004Cvode.hpp"
+#include "ToRORd_dynCl_epiCvode.hpp"
 
 // Models modified to have analytic voltage:
 #include "ten_tusscher_model_2006_epi_analyticCvode.hpp"
