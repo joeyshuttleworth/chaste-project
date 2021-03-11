@@ -55,8 +55,8 @@ public:
     const std::string username = std::string(getenv("USER"));
     boost::filesystem::create_directories("/home/" + username + "/testoutput/");
 
-    std::vector<double> periods = {1000, 500, 750, 1250};
-    std::vector<double> IKrBlocks = {0, 0.25, 0.5};
+    std::vector<double> periods = {1000, 500};
+    std::vector<double> IKrBlocks = {0.25};
 
     std::vector<boost::shared_ptr<AbstractCvodeCell>> models;
 
@@ -70,7 +70,7 @@ public:
           const double default_GKr = model->GetParameter(GKrParameterName);
           Simulation sim(model, period);
           sim.SetIKrBlock(IKrBlock);
-          sim.RunPaces(500);
+          sim.RunPaces(100);
           model->SetStateVariables(initial_states);
         }
       }
