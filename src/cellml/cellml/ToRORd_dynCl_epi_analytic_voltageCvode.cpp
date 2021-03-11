@@ -574,7 +574,7 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
         // Units: millimolar_per_millisecond; Initial value: 6.778827e-25
         double var_chaste_interface__ryr__Jrel_p = NV_Ith_S(rY, 43);
         // Units: millimolar_per_millisecond; Initial value: -1.581941e-23
-        double var_chaste_interface__membrane__v = (mSetVoltageDerivativeToZero ? this->mFixedVoltage : CalculateAnylticVoltage(rY));
+        double var_chaste_interface__membrane__v = (mSetVoltageDerivativeToZero ? this->mFixedVoltage : CalculateAnalyticVoltage(rY));
         // Units: millivolt; Initial value: -90.74563
 
         // Mathematics
