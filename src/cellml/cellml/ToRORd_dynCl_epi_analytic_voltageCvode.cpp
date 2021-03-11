@@ -67,7 +67,7 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
   const double cai_tot = cai*(1+cmdnmax/(cai+kmcmdn)+trpnmax/(cai+kmtrpn));
   const double cajsr_tot = cajsr*(1+csqnmax/(cajsr+kmcsqn));
 
-  const double analytic_voltage = F*vmyo/(Acap*cm)*(-cli+ki+nai+2*cai_tot+(-clss+kss+nass+2*cass_tot*vss/vmyo+2*cajsr_tot*vjsr/vmyo+2*cansr*vnsr/vmyo)) - C0;
+  const double analytic_voltage = F*vmyo/(Acap*cm)*(-cli+ki+nai+2*cai_tot+(-clss+kss+nass+2*cass_tot)*vss/vmyo+2*cajsr_tot*vjsr/vmyo+2*cansr*vnsr/vmyo) - C0;
 
   std::cout << analytic_voltage << " " << NV_Ith_S(rY,44) << "\n";
   return analytic_voltage;

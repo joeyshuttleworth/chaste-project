@@ -81,7 +81,7 @@ double Celliyer_2004_analytic_voltageFromCellMLCvode::CalculateAnalyticVoltage(c
   const double Cass_tot = CaSS*(1+CMDNtot/(KmCMDN+CaSS)+EGTAtot/(Cai+KmEGTA));
   const double analytic_voltage = F/(Acap*Cm)*(Vmyo*(Ki+Nai+2*Cai_tot)+2*Cass_tot*VSS+2*Cajsr_tot*VJSR+2*CaNSR*VNSR)-C0;
 
-  std::cout << analytic_voltage << " " << NV_Ith_S(rY, 66) << "\n";
+  // std::cout << analytic_voltage << " " << NV_Ith_S(rY, 66) << "\n";
   return analytic_voltage;
 
 }
