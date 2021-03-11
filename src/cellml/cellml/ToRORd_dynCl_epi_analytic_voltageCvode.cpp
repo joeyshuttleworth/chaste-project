@@ -50,7 +50,7 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
   const double clss= NV_Ith_S(rY, 10);
   const double nass= NV_Ith_S(rY, 3);
 
-  const double cmdnmax = 0.05*1.3; // Multiply by 1.3 if epi cell
+  const double cmdnmax = 0.05;//*1.3; // Multiply by 1.3 if epi cell
   const double kmcmdn = 0.00238;
   const double trpnmax = 0.07;
   const double kmtrpn = 0.0005;
