@@ -134,6 +134,7 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
         NV_Ith_S(this->mParameters, 18) = 310.0; // (var_physical_constants__T) [kelvin]
         const double initial_voltage = -90.74563;
         C0 = CalculateAnalyticVoltage(mStateVariables) - initial_voltage;
+        std::cout << "Set C0 to " << "\n";
     }
 
     CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::~CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode()
