@@ -101,6 +101,10 @@ public:
           std::cout << "error is " << error2 << "\n";
           assert(error1<1);
 
+          /* Print APD90s */
+          std::cout << "APD90s are " << sim.GetApd(90,false) << " " << sim_o.GetApd(90, false) << "\n";
+
+
           sim_o.SetStateVariables(original_initial_states);
           sim.SetStateVariables(algebraic_initial_states);
         }
