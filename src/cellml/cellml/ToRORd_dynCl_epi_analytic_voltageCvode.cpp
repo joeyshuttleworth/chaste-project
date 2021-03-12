@@ -229,7 +229,7 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
         double var_chaste_interface__IKs__xs2 = NV_Ith_S(rY, 41);
         // Units: dimensionless; Initial value: 0.0001418247
         double var_chaste_interface__membrane__v = (mSetVoltageDerivativeToZero ? this->mFixedVoltage : NV_Ith_S(rY, 44));
-        // Units: millivolt; Initial value: -90.74563
+        // Units: mV; Initial value: -90.74563
 
         const double var_CaMK__CaMKo = 0.050000000000000003; // dimensionless
         const double var_CaMK__KmCaM = 0.0015; // millimolar
@@ -272,7 +272,7 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
         const double var_INaK__Kxkur = 292.0; // millimolar
         const double var_INaK__MgADP = 0.050000000000000003; // millimolar
         const double var_INaK__MgATP = 9.8000000000000007; // millimolar
-        const double var_INaK__delta = -0.155; // millivolt
+        const double var_INaK__delta = -0.155; // mV
         const double var_INaK__eP = 4.2000000000000002; // dimensionless
         const double var_INaK__k1m = 182.40000000000001; // per_millisecond
         const double var_INaK__b1 = var_INaK__MgADP * var_INaK__k1m; // dimensionless
@@ -292,7 +292,7 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
         const double var_I_katp__gkatp = 4.3194999999999997; // milliS_per_microF
         const double var_IpCa__GpCa = 0.00050000000000000001; // milliS_per_microF
         const double var_IpCa__KmCap = 0.00050000000000000001; // millimolar
-        const double var_Ito__EKshift = 0; // millivolt
+        const double var_Ito__EKshift = 0; // mV
         const double var_environment__celltype = 1.0; // dimensionless
         const double var_ICaL__PCa = ((var_environment__celltype == 1.0) ? (1.2 * NV_Ith_S(mParameters, 8)) : ((var_environment__celltype == 2.0) ? (2.0 * NV_Ith_S(mParameters, 8)) : (NV_Ith_S(mParameters, 8)))); // dimensionless
         const double var_ICaL__PCaK = 0.00035740000000000001 * var_ICaL__PCa; // dimensionless
@@ -442,13 +442,13 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
         const double var_INaCa__INaCa_ss = (var_INaCa__JncxCa_ss * var_physical_constants__zca + var_INaCa__JncxNa_ss * var_physical_constants__zna) * var_INaCa__Gncx * var_INaCa__INaCa_fractionSS * var_INaCa__allo_ss; // microA_per_microF
         const double var_INaK__INaK = (var_INaK__JnakK * var_physical_constants__zk + var_INaK__JnakNa * var_physical_constants__zna) * var_INaK__Pnak; // microA_per_microF
         const double var_INaK__INaK_converted = HeartConfig::Instance()->GetCapacitance() * var_INaK__INaK; // uA_per_cm2
-        const double var_reversal_potentials__ECl = NV_Ith_S(mParameters, 7) * NV_Ith_S(mParameters, 18) * log(NV_Ith_S(mParameters, 3) / var_chaste_interface__intracellular_ions__cli) / (NV_Ith_S(mParameters, 6) * var_physical_constants__zcl); // millivolt
+        const double var_reversal_potentials__ECl = NV_Ith_S(mParameters, 7) * NV_Ith_S(mParameters, 18) * log(NV_Ith_S(mParameters, 3) / var_chaste_interface__intracellular_ions__cli) / (NV_Ith_S(mParameters, 6) * var_physical_constants__zcl); // mV
         const double var_ICl__IClCa_sl = (1.0 - var_ICl__Fjunc) * (-var_reversal_potentials__ECl + var_chaste_interface__membrane__v) * var_ICl__GClCa / (1.0 + var_ICl__KdClCa / var_chaste_interface__intracellular_ions__cai); // microA_per_microF
         const double var_ICl__IClb = (-var_reversal_potentials__ECl + var_chaste_interface__membrane__v) * var_ICl__GClb; // microA_per_microF
-        const double var_reversal_potentials__EClss = NV_Ith_S(mParameters, 7) * NV_Ith_S(mParameters, 18) * log(NV_Ith_S(mParameters, 3) / var_chaste_interface__intracellular_ions__clss) / (NV_Ith_S(mParameters, 6) * var_physical_constants__zcl); // millivolt
+        const double var_reversal_potentials__EClss = NV_Ith_S(mParameters, 7) * NV_Ith_S(mParameters, 18) * log(NV_Ith_S(mParameters, 3) / var_chaste_interface__intracellular_ions__clss) / (NV_Ith_S(mParameters, 6) * var_physical_constants__zcl); // mV
         const double var_ICl__IClCa_junc = (-var_reversal_potentials__EClss + var_chaste_interface__membrane__v) * var_ICl__Fjunc * var_ICl__GClCa / (1.0 + var_ICl__KdClCa / var_chaste_interface__intracellular_ions__cass); // microA_per_microF
         const double var_ICl__IClCa = var_ICl__IClCa_junc + var_ICl__IClCa_sl; // microA_per_microF
-        const double var_reversal_potentials__EK = NV_Ith_S(mParameters, 7) * NV_Ith_S(mParameters, 18) * log(NV_Ith_S(mParameters, 4) / var_chaste_interface__intracellular_ions__ki) / (NV_Ith_S(mParameters, 6) * var_physical_constants__zk); // millivolt
+        const double var_reversal_potentials__EK = NV_Ith_S(mParameters, 7) * NV_Ith_S(mParameters, 18) * log(NV_Ith_S(mParameters, 4) / var_chaste_interface__intracellular_ions__ki) / (NV_Ith_S(mParameters, 6) * var_physical_constants__zk); // mV
         const double var_IK1__aK1 = 4.0940000000000003 / (1.0 + exp(-6.0769678000000003 + 0.1217 * var_chaste_interface__membrane__v - 0.1217 * var_reversal_potentials__EK)); // dimensionless
         const double var_IK1__bK1 = (15.720000000000001 * exp(-0.21952180000000002 + 0.067400000000000002 * var_chaste_interface__membrane__v - 0.067400000000000002 * var_reversal_potentials__EK) + exp(-36.728358 + 0.061800000000000001 * var_chaste_interface__membrane__v - 0.061800000000000001 * var_reversal_potentials__EK)) / (1.0 + exp(-2.3143202999999999 + 0.16289999999999999 * var_reversal_potentials__EK - 0.16289999999999999 * var_chaste_interface__membrane__v)); // dimensionless
         const double var_IK1__K1ss = var_IK1__aK1 / (var_IK1__aK1 + var_IK1__bK1); // dimensionless
@@ -461,13 +461,13 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
         const double var_I_katp__I_katp_converted = HeartConfig::Instance()->GetCapacitance() * var_I_katp__I_katp; // uA_per_cm2
         const double var_Ito__Ito = (-var_reversal_potentials__EK + var_chaste_interface__membrane__v) * ((1.0 - var_Ito__fItop) * var_chaste_interface__Ito__a * var_Ito__i + var_chaste_interface__Ito__ap * var_Ito__fItop * var_Ito__ip) * var_Ito__Gto; // microA_per_microF
         const double var_Ito__Ito_converted = HeartConfig::Instance()->GetCapacitance() * var_Ito__Ito; // uA_per_cm2
-        const double var_reversal_potentials__ENa = NV_Ith_S(mParameters, 7) * NV_Ith_S(mParameters, 18) * log(NV_Ith_S(mParameters, 5) / var_chaste_interface__intracellular_ions__nai) / (NV_Ith_S(mParameters, 6) * var_physical_constants__zna); // millivolt
+        const double var_reversal_potentials__ENa = NV_Ith_S(mParameters, 7) * NV_Ith_S(mParameters, 18) * log(NV_Ith_S(mParameters, 5) / var_chaste_interface__intracellular_ions__nai) / (NV_Ith_S(mParameters, 6) * var_physical_constants__zna); // mV
         const double var_INa__INa = pow(var_chaste_interface__INa__m, 3) * (-var_reversal_potentials__ENa + var_chaste_interface__membrane__v) * ((1.0 - var_INa__fINap) * var_chaste_interface__INa__h * var_chaste_interface__INa__j + var_INa__fINap * var_chaste_interface__INa__hp * var_chaste_interface__INa__jp) * NV_Ith_S(mParameters, 10); // microA_per_microF
         const double var_INa__INa_converted = HeartConfig::Instance()->GetCapacitance() * var_INa__INa; // uA_per_cm2
         const double var_INaL__INaL = (-var_reversal_potentials__ENa + var_chaste_interface__membrane__v) * ((1.0 - var_INaL__fINaLp) * var_chaste_interface__INaL__hL + var_INaL__fINaLp * var_chaste_interface__INaL__hLp) * var_INaL__GNaL * var_chaste_interface__INaL__mL; // microA_per_microF
         const double var_INaL__INaL_converted = HeartConfig::Instance()->GetCapacitance() * var_INaL__INaL; // uA_per_cm2
         const double var_reversal_potentials__PKNa = 0.018329999999999999; // dimensionless
-        const double var_reversal_potentials__EKs = NV_Ith_S(mParameters, 7) * NV_Ith_S(mParameters, 18) * log((NV_Ith_S(mParameters, 5) * var_reversal_potentials__PKNa + NV_Ith_S(mParameters, 4)) / (var_chaste_interface__intracellular_ions__nai * var_reversal_potentials__PKNa + var_chaste_interface__intracellular_ions__ki)) / (NV_Ith_S(mParameters, 6) * var_physical_constants__zk); // millivolt
+        const double var_reversal_potentials__EKs = NV_Ith_S(mParameters, 7) * NV_Ith_S(mParameters, 18) * log((NV_Ith_S(mParameters, 5) * var_reversal_potentials__PKNa + NV_Ith_S(mParameters, 4)) / (var_chaste_interface__intracellular_ions__nai * var_reversal_potentials__PKNa + var_chaste_interface__intracellular_ions__ki)) / (NV_Ith_S(mParameters, 6) * var_physical_constants__zk); // mV
         const double var_IKs__IKs = (-var_reversal_potentials__EKs + var_chaste_interface__membrane__v) * var_IKs__GKs * var_IKs__KsCa * var_chaste_interface__IKs__xs1 * var_chaste_interface__IKs__xs2; // microA_per_microF
         const double var_IKs__IKs_converted = HeartConfig::Instance()->GetCapacitance() * var_IKs__IKs; // uA_per_cm2
         const double var_chaste_interface__i_ionic = HeartConfig::Instance()->GetCapacitance() * var_ICaL__ICaK + HeartConfig::Instance()->GetCapacitance() * var_ICaL__ICaNa + HeartConfig::Instance()->GetCapacitance() * var_ICab__ICab + HeartConfig::Instance()->GetCapacitance() * var_ICl__IClCa + HeartConfig::Instance()->GetCapacitance() * var_ICl__IClb + HeartConfig::Instance()->GetCapacitance() * var_IKb__IKb + HeartConfig::Instance()->GetCapacitance() * var_INaCa__INaCa_i + HeartConfig::Instance()->GetCapacitance() * var_INaCa__INaCa_ss + HeartConfig::Instance()->GetCapacitance() * var_INab__INab + var_ICaL__ICaL_converted + var_IK1__IK1_converted + var_IKr__IKr_converted + var_IKs__IKs_converted + var_INa__INa_converted + var_INaK__INaK_converted + var_INaL__INaL_converted + var_I_katp__I_katp_converted + var_IpCa__IpCa_converted + var_Ito__Ito_converted; // uA_per_cm2
@@ -575,7 +575,7 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
         double var_chaste_interface__ryr__Jrel_p = NV_Ith_S(rY, 43);
         // Units: millimolar_per_millisecond; Initial value: -1.581941e-23
         double var_chaste_interface__membrane__v = (mSetVoltageDerivativeToZero ? this->mFixedVoltage : CalculateAnalyticVoltage(rY));
-        // Units: millivolt; Initial value: -90.74563
+        // Units: mV; Initial value: -90.74563
 
         // Mathematics
         double d_dt_chaste_interface_var_membrane__v;
@@ -594,7 +594,7 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
         const double var_ICaL__km2n = var_chaste_interface__ICaL__jca; // per_millisecond
         const double var_ICaL__offset = 0; // millisecond
         const double var_ICaL__tjca = 72.5; // millisecond
-        const double var_ICaL__vShift = 0; // millivolt
+        const double var_ICaL__vShift = 0; // mV
         const double var_ICl__Fjunc = 1.0; // dimensionless
         const double var_ICl__GClCa = 0.2843; // milliS_per_microF
         const double var_ICl__GClb = 0.00198; // milliS_per_microF
@@ -630,7 +630,7 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
         const double var_INaK__Kxkur = 292.0; // millimolar
         const double var_INaK__MgADP = 0.050000000000000003; // millimolar
         const double var_INaK__MgATP = 9.8000000000000007; // millimolar
-        const double var_INaK__delta = -0.155; // millivolt
+        const double var_INaK__delta = -0.155; // mV
         const double var_INaK__eP = 4.2000000000000002; // dimensionless
         const double var_INaK__k1m = 182.40000000000001; // per_millisecond
         const double var_INaK__b1 = var_INaK__MgADP * var_INaK__k1m; // dimensionless
@@ -652,7 +652,7 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
         const double var_I_katp__gkatp = 4.3194999999999997; // milliS_per_microF
         const double var_IpCa__GpCa = 0.00050000000000000001; // milliS_per_microF
         const double var_IpCa__KmCap = 0.00050000000000000001; // millimolar
-        const double var_Ito__EKshift = 0; // millivolt
+        const double var_Ito__EKshift = 0; // mV
         const double var_cell_geometry__L = 0.01; // centimeter
         const double var_cell_geometry__rad = 0.0011000000000000001; // centimeter
         const double var_cell_geometry__Ageo = 6.2800000000000002 * pow(var_cell_geometry__rad, 2) + 6.2800000000000002 * var_cell_geometry__L * var_cell_geometry__rad; // centimeter_squared
@@ -923,14 +923,14 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
         const double var_INaCa__INaCa_ss = (var_INaCa__JncxCa_ss * var_physical_constants__zca + var_INaCa__JncxNa_ss * var_physical_constants__zna) * var_INaCa__Gncx * var_INaCa__INaCa_fractionSS * var_INaCa__allo_ss; // microA_per_microF
         const double d_dt_chaste_interface_var_intracellular_ions__nass = -var_diff__JdiffNa + (-var_ICaL__ICaNa_ss - 3.0 * var_INaCa__INaCa_ss) * var_cell_geometry__Acap / (var_cell_geometry__vss * NV_Ith_S(mParameters, 6)); // millimolar / millisecond
         const double var_INaK__INaK = (var_INaK__JnakK * var_physical_constants__zk + var_INaK__JnakNa * var_physical_constants__zna) * var_INaK__Pnak; // microA_per_microF
-        const double var_reversal_potentials__ECl = NV_Ith_S(mParameters, 7) * NV_Ith_S(mParameters, 18) * log(NV_Ith_S(mParameters, 3) / var_chaste_interface__intracellular_ions__cli) / (NV_Ith_S(mParameters, 6) * var_physical_constants__zcl); // millivolt
+        const double var_reversal_potentials__ECl = NV_Ith_S(mParameters, 7) * NV_Ith_S(mParameters, 18) * log(NV_Ith_S(mParameters, 3) / var_chaste_interface__intracellular_ions__cli) / (NV_Ith_S(mParameters, 6) * var_physical_constants__zcl); // mV
         const double var_ICl__IClCa_sl = (1.0 - var_ICl__Fjunc) * (-var_reversal_potentials__ECl + var_chaste_interface__membrane__v) * var_ICl__GClCa / (1.0 + var_ICl__KdClCa / var_chaste_interface__intracellular_ions__cai); // microA_per_microF
         const double var_ICl__IClb = (-var_reversal_potentials__ECl + var_chaste_interface__membrane__v) * var_ICl__GClb; // microA_per_microF
         const double d_dt_chaste_interface_var_intracellular_ions__cli = var_cell_geometry__vss * var_diff__JdiffCl / var_cell_geometry__vmyo + (var_ICl__IClCa_sl + var_ICl__IClb) * var_cell_geometry__Acap / (var_cell_geometry__vmyo * NV_Ith_S(mParameters, 6)); // millimolar / millisecond
-        const double var_reversal_potentials__EClss = NV_Ith_S(mParameters, 7) * NV_Ith_S(mParameters, 18) * log(NV_Ith_S(mParameters, 3) / var_chaste_interface__intracellular_ions__clss) / (NV_Ith_S(mParameters, 6) * var_physical_constants__zcl); // millivolt
+        const double var_reversal_potentials__EClss = NV_Ith_S(mParameters, 7) * NV_Ith_S(mParameters, 18) * log(NV_Ith_S(mParameters, 3) / var_chaste_interface__intracellular_ions__clss) / (NV_Ith_S(mParameters, 6) * var_physical_constants__zcl); // mV
         const double var_ICl__IClCa_junc = (-var_reversal_potentials__EClss + var_chaste_interface__membrane__v) * var_ICl__Fjunc * var_ICl__GClCa / (1.0 + var_ICl__KdClCa / var_chaste_interface__intracellular_ions__cass); // microA_per_microF
         const double d_dt_chaste_interface_var_intracellular_ions__clss = -var_diff__JdiffCl + var_ICl__IClCa_junc * var_cell_geometry__Acap / (var_cell_geometry__vss * NV_Ith_S(mParameters, 6)); // millimolar / millisecond
-        const double var_reversal_potentials__EK = NV_Ith_S(mParameters, 7) * NV_Ith_S(mParameters, 18) * log(NV_Ith_S(mParameters, 4) / var_chaste_interface__intracellular_ions__ki) / (NV_Ith_S(mParameters, 6) * var_physical_constants__zk); // millivolt
+        const double var_reversal_potentials__EK = NV_Ith_S(mParameters, 7) * NV_Ith_S(mParameters, 18) * log(NV_Ith_S(mParameters, 4) / var_chaste_interface__intracellular_ions__ki) / (NV_Ith_S(mParameters, 6) * var_physical_constants__zk); // mV
         const double var_IK1__aK1 = 4.0940000000000003 / (1.0 + exp(-6.0769678000000003 + 0.1217 * var_chaste_interface__membrane__v - 0.1217 * var_reversal_potentials__EK)); // dimensionless
         const double var_IK1__bK1 = (15.720000000000001 * exp(-0.21952180000000002 + 0.067400000000000002 * var_chaste_interface__membrane__v - 0.067400000000000002 * var_reversal_potentials__EK) + exp(-36.728358 + 0.061800000000000001 * var_chaste_interface__membrane__v - 0.061800000000000001 * var_reversal_potentials__EK)) / (1.0 + exp(-2.3143202999999999 + 0.16289999999999999 * var_reversal_potentials__EK - 0.16289999999999999 * var_chaste_interface__membrane__v)); // dimensionless
         const double var_IK1__K1ss = var_IK1__aK1 / (var_IK1__aK1 + var_IK1__bK1); // dimensionless
@@ -939,12 +939,12 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
         const double var_IKr__IKr = (-var_reversal_potentials__EK + var_chaste_interface__membrane__v) * var_IKr__GKrmax * var_chaste_interface__IKr__O; // microA_per_microF
         const double var_I_katp__I_katp = (-var_reversal_potentials__EK + var_chaste_interface__membrane__v) * var_I_katp__akik * var_I_katp__bkik * NV_Ith_S(mParameters, 9) * var_I_katp__gkatp; // microA_per_microF
         const double var_Ito__Ito = (-var_reversal_potentials__EK + var_chaste_interface__membrane__v) * ((1.0 - var_Ito__fItop) * var_chaste_interface__Ito__a * var_Ito__i + var_chaste_interface__Ito__ap * var_Ito__fItop * var_Ito__ip) * var_Ito__Gto; // microA_per_microF
-        const double var_reversal_potentials__ENa = NV_Ith_S(mParameters, 7) * NV_Ith_S(mParameters, 18) * log(NV_Ith_S(mParameters, 5) / var_chaste_interface__intracellular_ions__nai) / (NV_Ith_S(mParameters, 6) * var_physical_constants__zna); // millivolt
+        const double var_reversal_potentials__ENa = NV_Ith_S(mParameters, 7) * NV_Ith_S(mParameters, 18) * log(NV_Ith_S(mParameters, 5) / var_chaste_interface__intracellular_ions__nai) / (NV_Ith_S(mParameters, 6) * var_physical_constants__zna); // mV
         const double var_INa__INa = pow(var_chaste_interface__INa__m, 3) * (-var_reversal_potentials__ENa + var_chaste_interface__membrane__v) * ((1.0 - var_INa__fINap) * var_chaste_interface__INa__h * var_chaste_interface__INa__j + var_INa__fINap * var_chaste_interface__INa__hp * var_chaste_interface__INa__jp) * NV_Ith_S(mParameters, 10); // microA_per_microF
         const double var_INaL__INaL = (-var_reversal_potentials__ENa + var_chaste_interface__membrane__v) * ((1.0 - var_INaL__fINaLp) * var_chaste_interface__INaL__hL + var_INaL__fINaLp * var_chaste_interface__INaL__hLp) * var_INaL__GNaL * var_chaste_interface__INaL__mL; // microA_per_microF
         const double d_dt_chaste_interface_var_intracellular_ions__nai = var_cell_geometry__vss * var_diff__JdiffNa / var_cell_geometry__vmyo + (-var_ICaL__ICaNa_i - var_INa__INa - var_INaL__INaL - var_INab__INab - 3.0 * var_INaCa__INaCa_i - 3.0 * var_INaK__INaK) * var_cell_geometry__Acap / (var_cell_geometry__vmyo * NV_Ith_S(mParameters, 6)); // millimolar / millisecond
         const double var_reversal_potentials__PKNa = 0.018329999999999999; // dimensionless
-        const double var_reversal_potentials__EKs = NV_Ith_S(mParameters, 7) * NV_Ith_S(mParameters, 18) * log((NV_Ith_S(mParameters, 5) * var_reversal_potentials__PKNa + NV_Ith_S(mParameters, 4)) / (var_chaste_interface__intracellular_ions__nai * var_reversal_potentials__PKNa + var_chaste_interface__intracellular_ions__ki)) / (NV_Ith_S(mParameters, 6) * var_physical_constants__zk); // millivolt
+        const double var_reversal_potentials__EKs = NV_Ith_S(mParameters, 7) * NV_Ith_S(mParameters, 18) * log((NV_Ith_S(mParameters, 5) * var_reversal_potentials__PKNa + NV_Ith_S(mParameters, 4)) / (var_chaste_interface__intracellular_ions__nai * var_reversal_potentials__PKNa + var_chaste_interface__intracellular_ions__ki)) / (NV_Ith_S(mParameters, 6) * var_physical_constants__zk); // mV
         const double var_IKs__IKs = (-var_reversal_potentials__EKs + var_chaste_interface__membrane__v) * var_IKs__GKs * var_IKs__KsCa * var_chaste_interface__IKs__xs1 * var_chaste_interface__IKs__xs2; // microA_per_microF
         const double d_dt_chaste_interface_var_intracellular_ions__ki = var_cell_geometry__vss * var_diff__JdiffK / var_cell_geometry__vmyo + (-var_ICaL__ICaK_i - var_IK1__IK1 - var_IKb__IKb - var_IKr__IKr - var_IKs__IKs - var_I_katp__I_katp - var_Ito__Ito - var_membrane__Istim + 2.0 * var_INaK__INaK) * var_cell_geometry__Acap / (var_cell_geometry__vmyo * NV_Ith_S(mParameters, 6)); // millimolar / millisecond
         const double var_ryr__bt = 4.75; // millisecond
@@ -979,7 +979,7 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
             const double var_ICaL__ICaL = var_ICaL__ICaL_i + var_ICaL__ICaL_ss; // microA_per_microF
             const double var_ICaL__ICaNa = var_ICaL__ICaNa_i + var_ICaL__ICaNa_ss; // microA_per_microF
             const double var_ICl__IClCa = var_ICl__IClCa_junc + var_ICl__IClCa_sl; // microA_per_microF
-            d_dt_chaste_interface_var_membrane__v = -var_ICaL__ICaK - var_ICaL__ICaL - var_ICaL__ICaNa - var_ICab__ICab - var_ICl__IClCa - var_ICl__IClb - var_IK1__IK1 - var_IKb__IKb - var_IKr__IKr - var_IKs__IKs - var_INa__INa - var_INaCa__INaCa_i - var_INaCa__INaCa_ss - var_INaK__INaK - var_INaL__INaL - var_INab__INab - var_I_katp__I_katp - var_IpCa__IpCa - var_Ito__Ito - var_membrane__Istim; // millivolt / millisecond
+            d_dt_chaste_interface_var_membrane__v = -var_ICaL__ICaK - var_ICaL__ICaL - var_ICaL__ICaNa - var_ICab__ICab - var_ICl__IClCa - var_ICl__IClb - var_IK1__IK1 - var_IKb__IKb - var_IKr__IKr - var_IKs__IKs - var_INa__INa - var_INaCa__INaCa_i - var_INaCa__INaCa_ss - var_INaK__INaK - var_INaL__INaL - var_INab__INab - var_I_katp__I_katp - var_IpCa__IpCa - var_Ito__Ito - var_membrane__Istim; // mV / millisecond
         }
 
         NV_Ith_S(rDY,0) = d_dt_chaste_interface_var_intracellular_ions__cai;
@@ -1120,7 +1120,7 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
         double var_chaste_interface__ryr__Jrel_p = NV_Ith_S(rY, 43);
         // Units: millimolar_per_millisecond; Initial value: -1.581941e-23
         double var_chaste_interface__membrane__v = (mSetVoltageDerivativeToZero ? this->mFixedVoltage : NV_Ith_S(rY, 44));
-        // Units: millivolt; Initial value: -90.74563
+        // Units: mV; Initial value: -90.74563
         const double var_x0 = 1.0 - var_chaste_interface__CaMK__CaMKt;
         const double var_x1 = 1 / var_chaste_interface__intracellular_ions__cass;
         const double var_x2 = 1.0 + 0.0015 * var_x1;
@@ -2947,8 +2947,8 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
         // Units: millimolar_per_millisecond; Initial value: 6.778827e-25
         double var_chaste_interface__ryr__Jrel_p = NV_Ith_S(rY, 43);
         // Units: millimolar_per_millisecond; Initial value: -1.581941e-23
-        double var_chaste_interface__membrane__v = (mSetVoltageDerivativeToZero ? this->mFixedVoltage : NV_Ith_S(rY, 44));
-        // Units: millivolt; Initial value: -90.74563
+        double var_chaste_interface__membrane__v = (mSetVoltageDerivativeToZero ? this->mFixedVoltage : CalculateAnalyticVoltage(rY));
+        // Units: mV; Initial value: -90.74563
 
         // Mathematics
         const double var_CaMK__CaMKo = 0.050000000000000003; // dimensionless
@@ -2970,7 +2970,7 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
         const double var_INaK__Kxkur = 292.0; // millimolar
         const double var_INaK__MgADP = 0.050000000000000003; // millimolar
         const double var_INaK__MgATP = 9.8000000000000007; // millimolar
-        const double var_INaK__delta = -0.155; // millivolt
+        const double var_INaK__delta = -0.155; // mV
         const double var_INaK__eP = 4.2000000000000002; // dimensionless
         const double var_INaK__k1m = 182.40000000000001; // per_millisecond
         const double var_INaK__b1 = var_INaK__MgADP * var_INaK__k1m; // dimensionless
@@ -2990,7 +2990,7 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
         const double var_I_katp__gkatp = 4.3194999999999997; // milliS_per_microF
         const double var_IpCa__GpCa = 0.00050000000000000001; // milliS_per_microF
         const double var_IpCa__KmCap = 0.00050000000000000001; // millimolar
-        const double var_Ito__EKshift = 0; // millivolt
+        const double var_Ito__EKshift = 0; // mV
         const double var_environment__celltype = 1.0; // dimensionless
         const double var_ICaL__PCa = ((var_environment__celltype == 1.0) ? (1.2 * NV_Ith_S(mParameters, 8)) : ((var_environment__celltype == 2.0) ? (2.0 * NV_Ith_S(mParameters, 8)) : (NV_Ith_S(mParameters, 8)))); // dimensionless
         const double var_ICaL__PCap = 1.1000000000000001 * var_ICaL__PCa; // dimensionless
@@ -3057,8 +3057,8 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
         const double var_physical_constants__zna = 1.0; // dimensionless
         const double var_INaK__INaK = (var_INaK__JnakK * var_physical_constants__zk + var_INaK__JnakNa * var_physical_constants__zna) * var_INaK__Pnak; // microA_per_microF
         const double var_INaK__INaK_converted = HeartConfig::Instance()->GetCapacitance() * var_INaK__INaK; // uA_per_cm2
-        const double var_reversal_potentials__ECl = NV_Ith_S(mParameters, 7) * NV_Ith_S(mParameters, 18) * log(NV_Ith_S(mParameters, 3) / var_chaste_interface__intracellular_ions__cli) / (NV_Ith_S(mParameters, 6) * var_physical_constants__zcl); // millivolt
-        const double var_reversal_potentials__EK = NV_Ith_S(mParameters, 7) * NV_Ith_S(mParameters, 18) * log(NV_Ith_S(mParameters, 4) / var_chaste_interface__intracellular_ions__ki) / (NV_Ith_S(mParameters, 6) * var_physical_constants__zk); // millivolt
+        const double var_reversal_potentials__ECl = NV_Ith_S(mParameters, 7) * NV_Ith_S(mParameters, 18) * log(NV_Ith_S(mParameters, 3) / var_chaste_interface__intracellular_ions__cli) / (NV_Ith_S(mParameters, 6) * var_physical_constants__zcl); // mV
+        const double var_reversal_potentials__EK = NV_Ith_S(mParameters, 7) * NV_Ith_S(mParameters, 18) * log(NV_Ith_S(mParameters, 4) / var_chaste_interface__intracellular_ions__ki) / (NV_Ith_S(mParameters, 6) * var_physical_constants__zk); // mV
         const double var_IK1__aK1 = 4.0940000000000003 / (1.0 + exp(-6.0769678000000003 + 0.1217 * var_chaste_interface__membrane__v - 0.1217 * var_reversal_potentials__EK)); // dimensionless
         const double var_IK1__bK1 = (15.720000000000001 * exp(-0.21952180000000002 + 0.067400000000000002 * var_chaste_interface__membrane__v - 0.067400000000000002 * var_reversal_potentials__EK) + exp(-36.728358 + 0.061800000000000001 * var_chaste_interface__membrane__v - 0.061800000000000001 * var_reversal_potentials__EK)) / (1.0 + exp(-2.3143202999999999 + 0.16289999999999999 * var_reversal_potentials__EK - 0.16289999999999999 * var_chaste_interface__membrane__v)); // dimensionless
         const double var_IK1__K1ss = var_IK1__aK1 / (var_IK1__aK1 + var_IK1__bK1); // dimensionless
@@ -3070,13 +3070,13 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
         const double var_I_katp__I_katp_converted = HeartConfig::Instance()->GetCapacitance() * var_I_katp__I_katp; // uA_per_cm2
         const double var_Ito__Ito = (-var_reversal_potentials__EK + var_chaste_interface__membrane__v) * ((1.0 - var_Ito__fItop) * var_chaste_interface__Ito__a * var_Ito__i + var_chaste_interface__Ito__ap * var_Ito__fItop * var_Ito__ip) * var_Ito__Gto; // microA_per_microF
         const double var_Ito__Ito_converted = HeartConfig::Instance()->GetCapacitance() * var_Ito__Ito; // uA_per_cm2
-        const double var_reversal_potentials__ENa = NV_Ith_S(mParameters, 7) * NV_Ith_S(mParameters, 18) * log(NV_Ith_S(mParameters, 5) / var_chaste_interface__intracellular_ions__nai) / (NV_Ith_S(mParameters, 6) * var_physical_constants__zna); // millivolt
+        const double var_reversal_potentials__ENa = NV_Ith_S(mParameters, 7) * NV_Ith_S(mParameters, 18) * log(NV_Ith_S(mParameters, 5) / var_chaste_interface__intracellular_ions__nai) / (NV_Ith_S(mParameters, 6) * var_physical_constants__zna); // mV
         const double var_INa__INa = pow(var_chaste_interface__INa__m, 3) * (-var_reversal_potentials__ENa + var_chaste_interface__membrane__v) * ((1.0 - var_INa__fINap) * var_chaste_interface__INa__h * var_chaste_interface__INa__j + var_INa__fINap * var_chaste_interface__INa__hp * var_chaste_interface__INa__jp) * NV_Ith_S(mParameters, 10); // microA_per_microF
         const double var_INa__INa_converted = HeartConfig::Instance()->GetCapacitance() * var_INa__INa; // uA_per_cm2
         const double var_INaL__INaL = (-var_reversal_potentials__ENa + var_chaste_interface__membrane__v) * ((1.0 - var_INaL__fINaLp) * var_chaste_interface__INaL__hL + var_INaL__fINaLp * var_chaste_interface__INaL__hLp) * var_INaL__GNaL * var_chaste_interface__INaL__mL; // microA_per_microF
         const double var_INaL__INaL_converted = HeartConfig::Instance()->GetCapacitance() * var_INaL__INaL; // uA_per_cm2
         const double var_reversal_potentials__PKNa = 0.018329999999999999; // dimensionless
-        const double var_reversal_potentials__EKs = NV_Ith_S(mParameters, 7) * NV_Ith_S(mParameters, 18) * log((NV_Ith_S(mParameters, 5) * var_reversal_potentials__PKNa + NV_Ith_S(mParameters, 4)) / (var_chaste_interface__intracellular_ions__nai * var_reversal_potentials__PKNa + var_chaste_interface__intracellular_ions__ki)) / (NV_Ith_S(mParameters, 6) * var_physical_constants__zk); // millivolt
+        const double var_reversal_potentials__EKs = NV_Ith_S(mParameters, 7) * NV_Ith_S(mParameters, 18) * log((NV_Ith_S(mParameters, 5) * var_reversal_potentials__PKNa + NV_Ith_S(mParameters, 4)) / (var_chaste_interface__intracellular_ions__nai * var_reversal_potentials__PKNa + var_chaste_interface__intracellular_ions__ki)) / (NV_Ith_S(mParameters, 6) * var_physical_constants__zk); // mV
         const double var_IKs__IKs = (-var_reversal_potentials__EKs + var_chaste_interface__membrane__v) * var_IKs__GKs * var_IKs__KsCa * var_chaste_interface__IKs__xs1 * var_chaste_interface__IKs__xs2; // microA_per_microF
         const double var_IKs__IKs_converted = HeartConfig::Instance()->GetCapacitance() * var_IKs__IKs; // uA_per_cm2
         const double var_ryr__fJrelp = 1 / (1.0 + var_CaMK__KmCaMK / var_CaMK__CaMKa); // dimensionless
@@ -3338,7 +3338,7 @@ void OdeSystemInformation<CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode>:
 
     // NV_Ith_S(rY, 44):
     // this->mVariableNames.push_back("membrane_voltage");
-    // this->mVariableUnits.push_back("millivolt");
+    // this->mVariableUnits.push_back("mV");
     // this->mInitialConditions.push_back(-90.74563);
 
     // mParameters[0]:
@@ -3429,7 +3429,7 @@ void OdeSystemInformation<CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode>:
 
     // Derived Quantity index [2]:
     this->mDerivedQuantityNames.push_back("chloride_reversal_potential");
-    this->mDerivedQuantityUnits.push_back("millivolt");
+    this->mDerivedQuantityUnits.push_back("mV");
 
     // Derived Quantity index [3]:
     this->mDerivedQuantityNames.push_back("membrane_L_type_calcium_current");
@@ -3493,19 +3493,19 @@ void OdeSystemInformation<CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode>:
 
     // Derived Quantity index [18]:
     this->mDerivedQuantityNames.push_back("potassium_reversal_potential");
-    this->mDerivedQuantityUnits.push_back("millivolt");
+    this->mDerivedQuantityUnits.push_back("mV");
 
     // Derived Quantity index [19]:
     this->mDerivedQuantityNames.push_back("slow_delayed_rectifier_potassium_reversal_potential");
-    this->mDerivedQuantityUnits.push_back("millivolt");
+    this->mDerivedQuantityUnits.push_back("mV");
 
     // Derived Quantity index [20]:
     this->mDerivedQuantityNames.push_back("sodium_reversal_potential");
-    this->mDerivedQuantityUnits.push_back("millivolt");
+    this->mDerivedQuantityUnits.push_back("mV");
 
-    // Derived Quantity index [21]:
-    this->mDerivedQuantityNames.push_back("time");
-    this->mDerivedQuantityUnits.push_back("millisecond");
+    // Algebraic membrane voltage
+    this->mDerivedQuantityNames.push_back("membrane_voltage");
+    this->mDerivedQuantityUnits.push_back("mV");
 
     this->mInitialised = true;
 }
