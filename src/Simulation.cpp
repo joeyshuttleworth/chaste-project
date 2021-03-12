@@ -68,7 +68,8 @@ bool Simulation::RunPace(){
 void Simulation::WritePaceToFile(std::string dirname, std::string filename, double sampling_timestep, bool update_vars){
   mpModel->SetForceReset(true);
   OdeSolution solution = mpModel->Compute(0, mPeriod, 1);
-  solution.WriteToFile(dirname, filename, "ms", 1, false, 20);
+  solution.CalculateDerivedQuantitiesAndParameters(mpModel.get());
+  solution.WriteToFile(dirname, filename, "ms", 1, false, 20, true);
   if(!update_vars)
     mpModel->SetStateVariables(mStateVariables);
   else
