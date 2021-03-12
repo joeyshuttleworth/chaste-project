@@ -37,7 +37,7 @@ class CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode : public AbstractCvod
 
     double C0 = 0;
   double CalculateAnalyticVoltage(const N_Vector&);
-
+  double SetC0WithVoltage(double);
 public:
 
     boost::shared_ptr<RegularStimulus> UseCellMLDefaultStimulus();

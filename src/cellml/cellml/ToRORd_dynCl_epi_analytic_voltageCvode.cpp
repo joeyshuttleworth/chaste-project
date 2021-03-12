@@ -31,10 +31,10 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
 
 
   const double vcell = 3.7994e-05;
-  const double vmyo = 0.68*vcell;
-  const double vss  = 0.02*vcell;
-  const double vjsr = 0.0048*vcell;
-  const double vnsr = 0.0552*vcell;
+  const double vmyo = 2.583592e-05;
+  const double vss  = 7.5988e-07;
+  const double vjsr = 1.823712e-07;
+  const double vnsr = 2.0972688e-06;
 
   // Concentrations
   const double cai = NV_Ith_S(rY, 0);
@@ -67,7 +67,7 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
   const double cai_tot = cai*(1+cmdnmax/(cai+kmcmdn)+trpnmax/(cai+kmtrpn));
   const double cajsr_tot = cajsr*(1+csqnmax/(cajsr+kmcsqn));
 
-  const double analytic_voltage = F*vmyo/(Acap*cm)*(-cli+ki+nai+2*cai_tot+(-clss+kss+nass+2*cass_tot)*vss/vmyo+2*cajsr_tot*vjsr/vmyo+2*cansr*vnsr/vmyo) - C0;
+  const double analytic_voltage = F*vmyo/(Acap*cm)*(-cli+ki+nai+2*cai_tot+(-clss+kss+nass+2*cass_tot)*vss/vmyo+2*cajsr_tot*vjsr/vmyo+2*cansr*vnsr/vmyo - C0);
 
   // std::cout << analytic_voltage << " " << NV_Ith_S(rY,44) << "\n";
   return analytic_voltage;
@@ -100,7 +100,7 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
         : AbstractCvodeCell(
                 pOdeSolver,
                 44,
-                40,
+                0,
                 pIntracellularStimulus)
     {
         // Time units: millisecond
@@ -133,8 +133,59 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
         NV_Ith_S(this->mParameters, 17) = 0.16; // (var_Ito__Gto_b) [milliS_per_microF]
         NV_Ith_S(this->mParameters, 18) = 310.0; // (var_physical_constants__T) [kelvin]
         const double initial_voltage = -90.74563;
-        C0 = CalculateAnalyticVoltage(mStateVariables) - initial_voltage;
+        SetC0WithVoltage(initial_voltage);
+        std::cout << "Set C0 to " << C0 << "\n";
+        // C0 = CalculateAnalyticVoltage(mStateVariables) - initial_voltage;
     }
+
+double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::SetC0WithVoltage(double voltage){
+
+  const N_Vector& rY = mStateVariables;
+   //Constants
+  const double F = 96485;
+  const double cm = 1;
+  const double Acap = 0.0001533576;
+
+
+  const double vcell = 3.7994e-05;
+  const double vmyo = 2.583592e-05;
+  const double vss  = 7.5988e-07;
+  const double vjsr = 1.823712e-07;
+  const double vnsr = 2.0972688e-06;
+
+  // Concentrations
+  const double cai = NV_Ith_S(rY, 0);
+  const double cass= NV_Ith_S(rY, 6);
+  const double cajsr=NV_Ith_S(rY, 8);
+  const double cansr=NV_Ith_S(rY, 7);
+
+  const double ki = NV_Ith_S(rY, 4);
+  const double cli= NV_Ith_S(rY, 9);
+  const double nai= NV_Ith_S(rY, 2);
+
+  const double kss = NV_Ith_S(rY, 5);
+  const double clss= NV_Ith_S(rY, 10);
+  const double nass= NV_Ith_S(rY, 3);
+
+  const double cmdnmax = 0.05*1.3; // Multiply by 1.3 if epi cell
+  const double kmcmdn = 0.00238;
+  const double trpnmax = 0.07;
+  const double kmtrpn = 0.0005;
+
+  const double BSRmax = 0.047;
+  const double BSLmax = 1.124;
+  const double kmBSR = 0.00087;
+  const double kmBSL = 0.0087;
+
+  const double csqnmax = 10;
+  const double kmcsqn  = 0.8;
+
+  const double cass_tot = cass*(1+BSRmax/(cass+kmBSR)+BSLmax/(cass+kmBSL));
+  const double cai_tot = cai*(1+cmdnmax/(cai+kmcmdn)+trpnmax/(cai+kmtrpn));
+  const double cajsr_tot = cajsr*(1+csqnmax/(cajsr+kmcsqn));
+
+  C0 =  (-cli+ki+nai+2*cai_tot+(-clss+kss+nass+2*cass_tot)*vss/vmyo+2*cajsr_tot*vjsr/vmyo+2*cansr*vnsr/vmyo - C0) - voltage*Acap*cm/(F*vmyo);
+}
 
     CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::~CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode()
     {
@@ -3082,7 +3133,7 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
         const double var_ryr__fJrelp = 1 / (1.0 + var_CaMK__KmCaMK / var_CaMK__CaMKa); // dimensionless
         const double var_ryr__Jrel = ((1.0 - var_ryr__fJrelp) * var_chaste_interface__ryr__Jrel_np + var_chaste_interface__ryr__Jrel_p * var_ryr__fJrelp) * NV_Ith_S(mParameters, 0); // millimolar_per_millisecond
 
-        N_Vector dqs = N_VNew_Serial(23);
+        N_Vector dqs = N_VNew_Serial(22);
         NV_Ith_S(dqs, 0) = var_ryr__Jrel;
         NV_Ith_S(dqs, 1) = var_SERCA__Jup;
         NV_Ith_S(dqs, 2) = var_reversal_potentials__ECl;
@@ -3104,8 +3155,7 @@ double CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode::CalculateAnalyticVo
         NV_Ith_S(dqs, 18) = var_reversal_potentials__EK;
         NV_Ith_S(dqs, 19) = var_reversal_potentials__EKs;
         NV_Ith_S(dqs, 20) = var_reversal_potentials__ENa;
-        NV_Ith_S(dqs, 21) = var_chaste_interface__environment__time;
-        NV_Ith_S(dqs, 22) = var_chaste_interface__membrane__v;
+        NV_Ith_S(dqs, 21) = var_chaste_interface__membrane__v;
         return dqs;
     }
 
@@ -3417,8 +3467,6 @@ void OdeSystemInformation<CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode>:
     this->mParameterNames.push_back("temperature");
     this->mParameterUnits.push_back("kelvin");
 
-    this->mDerivedQuantityNames.push_back("membrane_voltage");
-    this->mDerivedQuantityUnits.push_back("mV");
     // Derived Quantity index [0]:
     this->mDerivedQuantityNames.push_back("SR_release_current");
     this->mDerivedQuantityUnits.push_back("millimolar_per_millisecond");
