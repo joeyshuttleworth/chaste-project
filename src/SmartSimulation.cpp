@@ -171,7 +171,7 @@ bool SmartSimulation::ExtrapolateStates(){
     std::string model_name = mpModel->GetSystemInformation()->GetSystemName();
     const std::string dir_name = mOutputDir + model_name;
     boost::filesystem::create_directory(dir_name);
-    if(mrms_pmcc < -0.985){
+    if(mrms_pmcc < -0.95){
       mSafeStateVariables = mStateVariables;
       std::cout << "Extrapolating - start of buffer is " << mPaces - mBufferSize + 1<< "\n";
 

@@ -26,6 +26,7 @@ private:
   const double threshold = 1.8e-07;
   std::ofstream output_file;
   std::string username;
+  int baseline_score = 0;
 
   const std::vector<unsigned int> buffer_sizes = {100};//{25, 50, 100, 150, 200, 300 ,400};
   const std::vector<double> extrapolation_constants ={1}; //{0.5, 0.75, 0.9, 1, 1.1};
@@ -43,6 +44,8 @@ public:
     boost::filesystem::create_directories(filepath);
     std::ofstream output_file(filepath);
     output_file << "brute force method: \n";
+
+    baseline_score = RunModels(models, 0, 0);
 
     for(auto buffer_size : buffer_sizes){
       for(auto extrapolation_constant : extrapolation_constants){
@@ -69,9 +72,9 @@ public:
       std::cout << model->GetSystemInformation()->GetSystemName() << " got a score of " << model_score << "\n";
       score += model_score;
     }
-    std::cout << "total core for buffer_size=" << buffer_size << "and extrapolation_constant="<<extrapolation_constant<<" across all models is " << score << "\n";
+    std::cout << "total score for buffer_size=" << buffer_size << " and extrapolation_constant="<<extrapolation_constant<<" across all models is " << score << "\n";
 
-    return score;
+    return baseline_score - score;
   }
 
   unsigned int RunModel(boost::shared_ptr<AbstractCvodeCell> model, double period, double IKrBlock, unsigned int buffer_size, double extrapolation_constant){
@@ -92,7 +95,6 @@ public:
     std::stringstream input_dirname_ss;
     input_dirname_ss << model_name+"_" << std::to_string(int(starting_period)) << "ms_" << int(100*starting_block)<<"_percent_block/";
     const std::string input_dirname = (test_dir / boost::filesystem::path(input_dirname_ss.str())).string();
-    std::cout << "Testing model: " << model_name << " with period " << period << "ms and IKrBlock " << IKrBlock << "\n";
 
     const std::string input_path = (test_dir / boost::filesystem::path(input_dirname_ss.str()) / boost::filesystem::path("final_states.dat")).string();
 
@@ -101,7 +103,7 @@ public:
     smart_simulation.RunPaces(max_paces);
 
     unsigned int paces = smart_simulation.GetPaces();
-    std::cout << "took " << paces << " paces";
+    std::cout << "took " << paces << " paces\n";
     // TS_ASSERT(paces+2<max_paces);
 
     model->SetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance", default_GKr);
