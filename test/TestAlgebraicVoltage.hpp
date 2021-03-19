@@ -30,7 +30,6 @@
 // Models modified to have analytic voltage:
 #include "ten_tusscher_model_2006_epi_analyticCvode.hpp"
 #include "ohara_rudy_cipa_v1_2017_analyticCvode.hpp"
-// #include "ToRORd_dynCl_epi_analytic_voltageCvode.hpp"
 #include "ToRORd_dyn_chloride_epi_analytic_voltageCvode.hpp"
 #include "iyer_2004_analytic_voltageCvode.hpp"
 #include "hund_rudy_2004_analytic_voltageCvode.hpp"

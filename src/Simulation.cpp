@@ -27,19 +27,16 @@ Simulation::~Simulation(){
 
 bool Simulation::RunPaces(int max_paces){
   RunPace();
-  mPaces++;
   mpModel->SetForceReset(false);
   for(int i = 1; i < max_paces; i++){
-    mPaces++;
-    if(RunPace())
-      return true;
-    if(mFinished)
+    if(RunPace() || mFinished)
       return true;
   }
   return false;
 }
 
 bool Simulation::RunPace(){
+  mPaces++;
   if(mFinished)
     return false;
   if(mTerminateOnConvergence){
@@ -60,7 +57,6 @@ bool Simulation::RunPace(){
     mpModel->SolveAndUpdateState(0, mpStimulus->GetDuration());
     mpModel->SolveAndUpdateState(mpStimulus->GetDuration(), mPeriod);
   }
-  mPaces++;
   mStateVariables = mpModel->GetStdVecStateVariables();
   return false;
 }

@@ -27,9 +27,9 @@ private:
   std::ofstream output_file;
   std::string username;
 
-  const std::vector<unsigned int> buffer_sizes = {25, 50, 100, 150, 200, 300 ,400};
-  const std::vector<double> extrapolation_constants = {0.5, 0.75, 0.9, 1, 1.1};
-  const unsigned int max_paces = 20000;
+  const std::vector<unsigned int> buffer_sizes = {100};//{25, 50, 100, 150, 200, 300 ,400};
+  const std::vector<double> extrapolation_constants ={1}; //{0.5, 0.75, 0.9, 1, 1.1};
+  const unsigned int max_paces = 2000;
 public:
 
   void TestBenchmarkRun(){
@@ -97,6 +97,7 @@ public:
     const std::string input_path = (test_dir / boost::filesystem::path(input_dirname_ss.str()) / boost::filesystem::path("final_states.dat")).string();
 
     SmartSimulation smart_simulation(model, period, input_path, 1e-8, 1e-8);
+    smart_simulation.SetThreshold(threshold);
     smart_simulation.RunPaces(max_paces);
 
     unsigned int paces = smart_simulation.GetPaces();

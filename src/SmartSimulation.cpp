@@ -118,6 +118,7 @@ bool SmartSimulation::ExtrapolateState(unsigned int state_index){
 
 
 bool SmartSimulation::RunPace(){
+  mPaces++;
   bool extrapolated = false;
 
   if(mFinished)
@@ -149,7 +150,7 @@ bool SmartSimulation::RunPace(){
     mCurrentMrms = mrms(new_state_variables, mStateVariables);
     mMrmsBuffer.push_back(mCurrentMrms);
     mStateVariables = new_state_variables;
-    if(mCurrentMrms < mThreshold){
+    if(mCurrentMrms < mThreshold && mTerminateOnConvergence){
       mFinished = true;
       return true;
     }
