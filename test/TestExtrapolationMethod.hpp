@@ -18,6 +18,8 @@
 #include "ohara_rudy_cipa_v1_2017_analyticCvode.hpp"
 #include "ten_tusscher_model_2006_epiCvode.hpp"
 #include "ten_tusscher_model_2006_epi_analyticCvode.hpp"
+#include "iyer_2004_analytic_voltageCvode.hpp"
+#include "iyer_2004Cvode.hpp"
 
 
 class TestExtrapolationMethod : public CxxTest::TestSuite
@@ -210,14 +212,20 @@ public:
     // ohara_rudy_cipa_v1_2017 model
     boost::shared_ptr<AbstractCvodeCell> p_model1(new Cellohara_rudy_cipa_v1_2017FromCellMLCvode(p_solver, p_stimulus));
     boost::shared_ptr<AbstractCvodeCell> p_model2(new Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode(p_solver, p_stimulus));
-    CompareMethodsPeriod(p_model1, p_model2);
-    CompareMethodsKrBlock(p_model1, p_model2);
+    // CompareMethodsPeriod(p_model1, p_model2);
+    // CompareMethodsKrBlock(p_model1, p_model2);
 
     // ten_tusscher_model_2006_epiFromCellMLCvode
     boost::shared_ptr<AbstractCvodeCell> p_model3(new Cellten_tusscher_model_2006_epiFromCellMLCvode(p_solver, p_stimulus));
     boost::shared_ptr<AbstractCvodeCell> p_model4(new Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode(p_solver, p_stimulus));
-    CompareMethodsPeriod(p_model3, p_model4);
-    CompareMethodsKrBlock(p_model3, p_model4);
+    // CompareMethodsPeriod(p_model3, p_model4);
+    // CompareMethodsKrBlock(p_model3, p_model4);
+
+    boost::shared_ptr<AbstractCvodeCell> p_model5= boost::make_shared<Celliyer_2004FromCellMLCvode>(p_solver, p_stimulus);
+    boost::shared_ptr<AbstractCvodeCell> p_model6= boost::make_shared<Celliyer_2004_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus);
+
+    CompareMethodsPeriod(p_model5, p_model6);
+    CompareMethodsKrBlock(p_model5, p_model6);
 
 #else
     std::cout << "Cvode is not enabled.\n";

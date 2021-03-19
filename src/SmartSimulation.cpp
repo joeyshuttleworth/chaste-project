@@ -120,6 +120,9 @@ bool SmartSimulation::ExtrapolateState(unsigned int state_index){
 bool SmartSimulation::RunPace(){
   bool extrapolated = false;
 
+  if(mFinished)
+    return true;
+
   extrapolated = ExtrapolateStates();
   if(!extrapolated){
     /*Solve in two parts*/

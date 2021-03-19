@@ -10,6 +10,7 @@
 #include <boost/filesystem.hpp>
 #include <fstream>
 #include <algorithm>
+#include "CommandLineArguments.hpp"
 
 #include "Simulation.hpp"
 
@@ -57,17 +58,34 @@ public:
 
     std::vector<boost::shared_ptr<AbstractCvodeCell>> models;
 
-    // models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_2011_endoFromCellMLCvode(p_solver, p_stimulus)));
-    // models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Celldecker_2009FromCellMLCvode(p_solver, p_stimulus)));
-    // models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
-    // models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
-    // models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellbeeler_reuter_model_1977FromCellMLCvode(p_solver, p_stimulus)));
-    // models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode(p_solver, p_stimulus)));
-    // models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode(p_solver, p_stimulus)));
-    // models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_cipa_v1_2017FromCellMLCvode(p_solver, p_stimulus)));
-    // models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2006_epiFromCellMLCvode(p_solver, p_stimulus)));
-    // models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellhund_rudy_2004FromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_2011_endoFromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Celldecker_2009FromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellbeeler_reuter_model_1977FromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_cipa_v1_2017FromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2006_epiFromCellMLCvode(p_solver, p_stimulus)));
+    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellhund_rudy_2004FromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::make_shared<ToRORd_dynCl_endo_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
+
+    /* If "--models" option is provided, use only those models that are specified */
+    if(CommandLineArguments::Instance()->OptionExists("-models")){
+      std::vector<std::string> model_names;
+      model_names = CommandLineArguments::Instance()->GetStringsCorrespondingToOption("-models");
+        TS_ASSERT(model_names.size()>0);
+    }
+    std::vector<boost::shared_ptr<AbstractCvodeCell>> new_models;
+      for(auto name : model_names){
+        /* Find all models with the name that has been provided */
+        std::list<boost::shared_ptr<AbstractCvodeCell>>> found_models = std::find_if(models.begin(), models.end(), [&](boost::shared_ptr<AbstractCvodeCell>m)->{return m->GetSystemInformation()->GetSystemName()==name;});
+        TS_ASSERT(found_models.size()==1);
+        new_models.push_back(found_models.front());
+      }
+      /* new_models contains all of the models which have been specified - use this instead of models */
+      models = new_models;
+  }
 
     for(auto model : models){
       const N_Vector initial_states = model->GetStateVariables();

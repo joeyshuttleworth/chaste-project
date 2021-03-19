@@ -25,14 +25,17 @@
 #include "hund_rudy_2004Cvode.hpp"
 #include "iyer_2004Cvode.hpp"
 #include "ToRORd_dynCl_epiCvode.hpp"
+#include "hund_rudy_2004Cvode.hpp"
 
 // Models modified to have analytic voltage:
 #include "ten_tusscher_model_2006_epi_analyticCvode.hpp"
 #include "ohara_rudy_cipa_v1_2017_analyticCvode.hpp"
-#include "ToRORd_dynCl_epi_analytic_voltageCvode.hpp"
+// #include "ToRORd_dynCl_epi_analytic_voltageCvode.hpp"
+#include "ToRORd_dyn_chloride_epi_analytic_voltageCvode.hpp"
 #include "iyer_2004_analytic_voltageCvode.hpp"
+#include "hund_rudy_2004_analytic_voltageCvode.hpp"
 
-class TestGroundTruthSimulation : public CxxTest::TestSuite
+class TestAlgebraicVoltage : public CxxTest::TestSuite
 {
 
   const std::string GKrParameterName = "membrane_rapid_delayed_rectifier_potassium_current_conductance_scaling_factor";
@@ -44,22 +47,26 @@ public:
     boost::shared_ptr<RegularStimulus> p_stimulus;
     boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
 
-    std::vector<double> periods = {1000, 1000};
-    std::vector<double> IKrBlocks = {0.25};
+    std::vector<double> periods = {1000};
+    std::vector<double> IKrBlocks = {0, 0.25};
 
     std::vector<boost::shared_ptr<AbstractCvodeCell>> algebraic_models;
     std::vector<boost::shared_ptr<AbstractCvodeCell>> original_models;
 
-    algebraic_models.push_back(boost::make_shared<CellToRORd_dynCl_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
+    algebraic_models.push_back(boost::make_shared<CellToRORd_dyn_chloride_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
     algebraic_models.push_back(boost::make_shared<Celliyer_2004_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
+    algebraic_models.push_back(boost::make_shared<Cellhund_rudy_2004_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
 
 
     original_models.push_back(boost::make_shared<CellToRORd_dynCl_epiFromCellMLCvode>(p_solver, p_stimulus));
     original_models.push_back(boost::make_shared<Celliyer_2004FromCellMLCvode>(p_solver, p_stimulus));
+    original_models.push_back(boost::make_shared<Cellhund_rudy_2004FromCellMLCvode>(p_solver, p_stimulus));
 
     for(unsigned int i = 0; i < algebraic_models.size(); i++){
       std::vector<double> original_initial_states = original_models[i]->GetStdVecStateVariables();
       std::vector<double> algebraic_initial_states = algebraic_models[i]->GetStdVecStateVariables();
+
+      std::cout << "sizes " << original_initial_states.size() << " " << algebraic_initial_states.size() << "\n";
       for(double period : periods){
         for(double IKrBlock : IKrBlocks){
           const std::string model_name = original_models[i]->GetSystemInformation()->GetSystemName();
@@ -67,7 +74,9 @@ public:
 
           std::vector<double> original_vars = original_initial_states;
           original_vars.erase(original_vars.begin());
-          // algebraic_models[i]->SetStateVariables(algebraic_initial_states);
+          algebraic_models[i]->SetStateVariables(algebraic_initial_states);
+          original_models[i]->SetStateVariables(original_initial_states);
+
           const double error1 = mrms(original_vars, algebraic_models[i]->GetStdVecStateVariables());
           std::cout << "initial error is " << error1 << "\n";
 
@@ -77,7 +86,8 @@ public:
 
           sim.SetTerminateOnConvergence(false);
           sim_o.SetTerminateOnConvergence(false);
-          sim.SetIKrBlock(IKrBlock);
+          // sim.SetIKrBlock(IKrBlock);
+          // sim_o.SetIKrBlock(IKrBlock);
 
           std::stringstream filename_base;
           filename_base << model_name+"_" << std::to_string(int(period)) << "ms_" << int(100*IKrBlock)<<"_percent_block";
@@ -103,7 +113,6 @@ public:
 
           /* Print APD90s */
           std::cout << "APD90s are " << sim.GetApd(90,false) << " " << sim_o.GetApd(90, false) << "\n";
-
 
           sim_o.SetStateVariables(original_initial_states);
           sim.SetStateVariables(algebraic_initial_states);
