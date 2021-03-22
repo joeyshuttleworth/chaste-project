@@ -86,9 +86,6 @@ public:
           /* Find all models with the name that has been provided */
           auto found_model = std::find_if(models.begin(), models.end(), [&](boost::shared_ptr<AbstractCvodeCell>m)->bool {return m->GetSystemInformation()->GetSystemName()==name;});
           new_models.push_back(*found_model);
-
-          int count_models_same_name = std::count_if(models.begin(), models.end(), [&](boost::shared_ptr<AbstractCvodeCell>m)->bool {return m->GetSystemInformation()->GetSystemName()==name;});
-          TS_ASSERT(count_models_same_name==1);
         }
         /* new_models contains all of the models which have been specified - use this instead of models */
         models = new_models;

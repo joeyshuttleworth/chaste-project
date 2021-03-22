@@ -33,6 +33,7 @@
 #include "ToRORd_dyn_chloride_epi_analytic_voltageCvode.hpp"
 #include "iyer_2004_analytic_voltageCvode.hpp"
 #include "hund_rudy_2004_analytic_voltageCvode.hpp"
+#include "decker_2009_analytic_voltageCvode.hpp"
 
 class TestAlgebraicVoltage : public CxxTest::TestSuite
 {
@@ -55,11 +56,13 @@ public:
     algebraic_models.push_back(boost::make_shared<CellToRORd_dyn_chloride_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
     algebraic_models.push_back(boost::make_shared<Celliyer_2004_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
     algebraic_models.push_back(boost::make_shared<Cellhund_rudy_2004_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
+    algebraic_models.push_back(boost::make_shared<Celldecker_2009_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
 
 
     original_models.push_back(boost::make_shared<CellToRORd_dynCl_epiFromCellMLCvode>(p_solver, p_stimulus));
     original_models.push_back(boost::make_shared<Celliyer_2004FromCellMLCvode>(p_solver, p_stimulus));
     original_models.push_back(boost::make_shared<Cellhund_rudy_2004FromCellMLCvode>(p_solver, p_stimulus));
+    original_models.push_back(boost::make_shared<Celldecker_2009FromCellMLCvode>(p_solver, p_stimulus));
 
     for(unsigned int i = 0; i < algebraic_models.size(); i++){
       std::vector<double> original_initial_states = original_models[i]->GetStdVecStateVariables();
