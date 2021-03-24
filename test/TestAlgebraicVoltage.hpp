@@ -27,13 +27,14 @@
 #include "ToRORd_dynCl_epiCvode.hpp"
 #include "hund_rudy_2004Cvode.hpp"
 
-// Models modified to have analytic voltage:
-#include "ten_tusscher_model_2006_epi_analyticCvode.hpp"
-#include "ohara_rudy_cipa_v1_2017_analyticCvode.hpp"
-#include "ToRORd_dyn_chloride_epi_analytic_voltageCvode.hpp"
-#include "iyer_2004_analytic_voltageCvode.hpp"
-#include "hund_rudy_2004_analytic_voltageCvode.hpp"
 #include "decker_2009_analytic_voltageCvode.hpp"
+#include "hund_rudy_2004_analytic_voltageCvode.hpp"
+#include "iyer_mazhari_winslow_2004_analytic_voltageCvode.hpp"
+#include "ohara_rudy_2011_epi_analytic_voltageCvode.hpp"
+#include "ohara_rudy_cipa_2017_epi_analytic_voltageCvode.hpp"
+#include "ten_tusscher_2006_epi_analytical_voltageCvode.hpp"
+#include "tentusscher_noble_noble_panfilov_2004_b_analytic_voltageCvode.hpp"
+#include "ToRORd_dyn_chloride_epi_analytic_voltageCvode.hpp"
 
 class TestAlgebraicVoltage : public CxxTest::TestSuite
 {
@@ -53,16 +54,23 @@ public:
     std::vector<boost::shared_ptr<AbstractCvodeCell>> algebraic_models;
     std::vector<boost::shared_ptr<AbstractCvodeCell>> original_models;
 
-    algebraic_models.push_back(boost::make_shared<CellToRORd_dyn_chloride_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
-    algebraic_models.push_back(boost::make_shared<Celliyer_2004_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
-    algebraic_models.push_back(boost::make_shared<Cellhund_rudy_2004_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
-    algebraic_models.push_back(boost::make_shared<Celldecker_2009_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
-
-
-    original_models.push_back(boost::make_shared<CellToRORd_dynCl_epiFromCellMLCvode>(p_solver, p_stimulus));
+    original_models.push_back(boost::make_shared<CellToRORd_dyn_chloride_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
     original_models.push_back(boost::make_shared<Celliyer_2004FromCellMLCvode>(p_solver, p_stimulus));
     original_models.push_back(boost::make_shared<Cellhund_rudy_2004FromCellMLCvode>(p_solver, p_stimulus));
     original_models.push_back(boost::make_shared<Celldecker_2009FromCellMLCvode>(p_solver, p_stimulus));
+    original_models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
+    // original_models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2006_epiFromCellMLCvode(p_solver, p_stimulus)));
+    original_models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_cipa_v1_2017FromCellMLCvode(p_solver, p_stimulus)));
+    original_models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_2011_endoFromCellMLCvode(p_solver, p_stimulus)));
+
+    algebraic_models.push_back(boost::make_shared<CellToRORd_dyn_chloride_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
+    algebraic_models.push_back(boost::make_shared<Celliyer_mazhari_winslow_2004_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
+    algebraic_models.push_back(boost::make_shared<Cellhund_rudy_2004_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
+    algebraic_models.push_back(boost::make_shared<Celldecker_2009_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
+    algebraic_models.push_back(boost::make_shared<Celltentusscher_noble_noble_panfilov_2004_b_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
+    // algebraic_models.push_back(boost::make_shared<Cellten_tusscher_2006_epi_analytical_voltageCvodeFromCellMLCvode>(p_solver, p_stimulus));
+    algebraic_models.push_back(boost::make_shared<Cellohara_rudy_2011_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
+    algebraic_models.push_back(boost::make_shared<Cellohara_rudy_cipa_2017_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
 
     for(unsigned int i = 0; i < algebraic_models.size(); i++){
       std::vector<double> original_initial_states = original_models[i]->GetStdVecStateVariables();

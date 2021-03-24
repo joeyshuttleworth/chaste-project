@@ -66,7 +66,15 @@ static double CalculateAnalyticVoltage(const N_Vector& rY, const N_Vector& mPara
         const double var_cell__vmyo = 0.68000000000000005 * var_cell__vcell; // uL
         const double var_cell__vnsr = 0.055199999999999999 * var_cell__vcell; // uL
         const double var_cell__vss = 0.02 * var_cell__vcell; // uL
-        const double var_cell__V2 = -NV_Ith_S(mParameters, 0) + (-var_chaste_interface__Cl__Cl_i + 2.0 * var_cell__Ca_i_tot + 2.0 * var_chaste_interface__Ca__Ca_nsr * var_cell__vnsr / var_cell__vmyo + 2.0 * var_cell__Ca_jsr_tot * var_cell__vjsr / var_cell__vmyo + 2.0 * var_cell__Ca_ss_tot * var_cell__vss / var_cell__vmyo + var_chaste_interface__K__K_i + var_chaste_interface__Na__Na_i) * var_Environment__F * var_cell__vmyo / (var_cell__Acap * var_cell__Cm); // mV
+
+
+        const double var_Environment__sum_ext_charges = -NV_Ith_S(mParameters, 7) + 2.0 * NV_Ith_S(mParameters, 6) + NV_Ith_S(mParameters, 8) + NV_Ith_S(mParameters, 9); // mM
+        const double var_cell__C0 = var_Environment__sum_ext_charges + NV_Ith_S(mParameters, 0); // mM
+
+        const double var_cell__potential = (-var_chaste_interface__Cl__Cl_i + 2.0 * var_cell__Ca_i_tot + 2.0 * var_chaste_interface__Ca__Ca_nsr * var_cell__vnsr / var_cell__vmyo + 2.0 * var_cell__Ca_jsr_tot * var_cell__vjsr / var_cell__vmyo + 2.0 * var_cell__Ca_ss_tot * var_cell__vss / var_cell__vmyo + var_chaste_interface__K__K_i + var_chaste_interface__Na__Na_i) * var_Environment__F * var_cell__vmyo / (var_cell__Acap * var_cell__Cm); // mV
+        const double var_cell__V2 = -var_Environment__F * var_cell__C0 * var_cell__vmyo / (var_cell__Acap * var_cell__Cm) + var_cell__potential; // mV
+
+
         return var_cell__V2;
 }
 
@@ -107,8 +115,8 @@ static double CalculateAnalyticVoltage(const N_Vector& rY, const N_Vector& mPara
 
         // We have a default stimulus specified in the CellML file metadata
         this->mHasDefaultStimulusFromCellML = true;
-
-        NV_Ith_S(this->mParameters, 0) = 2166873.159; // (var_cell__C0) [mV]
+        
+        NV_Ith_S(this->mParameters, 0) = 84.307646463200001; // (var_cell__Gamma0) [mM]
         NV_Ith_S(this->mParameters, 1) = 1.0; // (var_Iup_Ileak__leak_factor) [dimensionless]
         NV_Ith_S(this->mParameters, 2) = 3000.0; // (var_Irel__Grel_max) [per_ms]
         NV_Ith_S(this->mParameters, 3) = 0.0028; // (var_Irel__K_m_Ca) [mM]
@@ -332,7 +340,6 @@ static double CalculateAnalyticVoltage(const N_Vector& rY, const N_Vector& mPara
         // Units: mV; Initial value: -85.781844107117
 
         // Mathematics
-        double d_dt_chaste_interface_var_cell__V;
         const double var_Ca__BSLmax = 1.1240000000000001; // mM
         const double var_Ca__BSRmax = 0.047; // mM
         const double var_Ca__KmBSL = 0.0086999999999999994; // mM
@@ -509,16 +516,6 @@ static double CalculateAnalyticVoltage(const N_Vector& rY, const N_Vector& mPara
         const double var_cell__kiont = 0.5 * var_cell__i_Stim - 2.0 * var_INaK__INaK + var_IK1__IK1 + var_IKp__IKp + var_IKr__IKr + var_IKs__IKs + var_Ito__Ito; // uA_per_uF
         const double d_dt_chaste_interface_var_K__K_i = (-var_cell__AF * var_cell__kiont / var_cell__vmyo + var_K__CTKCl) * NV_Ith_S(mParameters, 5); // mM / ms
 
-        if (mSetVoltageDerivativeToZero)
-        {
-            d_dt_chaste_interface_var_cell__V = 0.0;
-        }
-        else
-        {
-            const double var_cell__caiont = -2.0 * var_INaCa__INaCa + var_ICaL__ICaL + var_ICab__ICab + var_IpCa__IpCa; // uA_per_uF
-            d_dt_chaste_interface_var_cell__V = -var_cell__caiont - var_cell__clont - var_cell__kiont - var_cell__naiont; // mV / ms
-        }
-
         NV_Ith_S(rDY,0) = d_dt_chaste_interface_var_Ca__Ca_i;
         NV_Ith_S(rDY,1) = d_dt_chaste_interface_var_INa__H;
         NV_Ith_S(rDY,2) = d_dt_chaste_interface_var_INa__m;
@@ -638,6 +635,8 @@ static double CalculateAnalyticVoltage(const N_Vector& rY, const N_Vector& mPara
         const double var_cell__BSLmax = 1.1240000000000001; // mM
         const double var_cell__BSRmax = 0.047; // mM
         const double var_cell__Cm = 1.0; // uF
+        const double var_Environment__sum_ext_charges = -NV_Ith_S(mParameters, 7) + 2.0 * NV_Ith_S(mParameters, 6) + NV_Ith_S(mParameters, 8) + NV_Ith_S(mParameters, 9); // mM
+        const double var_cell__C0 = var_Environment__sum_ext_charges + NV_Ith_S(mParameters, 0); // mM
         const double var_cell__K_mcmdn = 0.0023800000000000002; // mM
         const double var_cell__K_mcsqn = 0.80000000000000004; // mM
         const double var_cell__K_mtrpn = 0.00050000000000000001; // mM
@@ -680,7 +679,8 @@ static double CalculateAnalyticVoltage(const N_Vector& rY, const N_Vector& mPara
         const double var_cell__vmyo = 0.68000000000000005 * var_cell__vcell; // uL
         const double var_cell__vnsr = 0.055199999999999999 * var_cell__vcell; // uL
         const double var_cell__vss = 0.02 * var_cell__vcell; // uL
-        const double var_cell__V2 = -NV_Ith_S(mParameters, 0) + (-var_chaste_interface__Cl__Cl_i + 2.0 * var_cell__Ca_i_tot + 2.0 * var_chaste_interface__Ca__Ca_nsr * var_cell__vnsr / var_cell__vmyo + 2.0 * var_cell__Ca_jsr_tot * var_cell__vjsr / var_cell__vmyo + 2.0 * var_cell__Ca_ss_tot * var_cell__vss / var_cell__vmyo + var_chaste_interface__K__K_i + var_chaste_interface__Na__Na_i) * var_Environment__F * var_cell__vmyo / (var_cell__Acap * var_cell__Cm); // mV
+        const double var_cell__potential = (-var_chaste_interface__Cl__Cl_i + 2.0 * var_cell__Ca_i_tot + 2.0 * var_chaste_interface__Ca__Ca_nsr * var_cell__vnsr / var_cell__vmyo + 2.0 * var_cell__Ca_jsr_tot * var_cell__vjsr / var_cell__vmyo + 2.0 * var_cell__Ca_ss_tot * var_cell__vss / var_cell__vmyo + var_chaste_interface__K__K_i + var_chaste_interface__Na__Na_i) * var_Environment__F * var_cell__vmyo / (var_cell__Acap * var_cell__Cm); // mV
+        const double var_cell__V2 = -var_Environment__F * var_cell__C0 * var_cell__vmyo / (var_cell__Acap * var_cell__Cm) + var_cell__potential; // mV
         const double var_reversal_potentials__EK = log(NV_Ith_S(mParameters, 8) / var_chaste_interface__K__K_i) / var_Environment__FonRT; // mV
         const double var_IK1__ak1 = 1.02 / (1.0 + exp(-14.1227775 + 0.23849999999999999 * var_chaste_interface__cell__V - 0.23849999999999999 * var_reversal_potentials__EK)); // per_ms
         const double var_IK1__bk1 = (exp(-36.698642499999998 + 0.061749999999999999 * var_chaste_interface__cell__V - 0.061749999999999999 * var_reversal_potentials__EK) + 0.49124000000000001 * exp(0.43983232 + 0.080320000000000003 * var_chaste_interface__cell__V - 0.080320000000000003 * var_reversal_potentials__EK)) / (1.0 + exp(-2.4444678999999998 + 0.51429999999999998 * var_reversal_potentials__EK - 0.51429999999999998 * var_chaste_interface__cell__V)); // per_ms
@@ -700,29 +700,30 @@ static double CalculateAnalyticVoltage(const N_Vector& rY, const N_Vector& mPara
         const double var_IKs__IKs = (-var_reversal_potentials__EKs + var_chaste_interface__cell__V) * var_IKs__gks * var_chaste_interface__IKs__xs1 * var_chaste_interface__IKs__xs2; // uA_per_uF
         const double var_IKs__IKs_converted = HeartConfig::Instance()->GetCapacitance() * var_IKs__IKs; // uA_per_cm2
 
-        N_Vector dqs = N_VNew_Serial(22);
-        NV_Ith_S(dqs, 0) = var_Irel__irelcicr;
-        NV_Ith_S(dqs, 1) = var_cell__V2;
-        NV_Ith_S(dqs, 2) = var_ICaL__ICaL_converted;
-        NV_Ith_S(dqs, 3) = var_ICaL__tauf2;
-        NV_Ith_S(dqs, 4) = var_ICaL__taufca2;
-        NV_Ith_S(dqs, 5) = var_ICaL__taufca;
-        NV_Ith_S(dqs, 6) = var_ICaL__tauf;
-        NV_Ith_S(dqs, 7) = var_INa__INa_converted;
-        NV_Ith_S(dqs, 8) = var_INa__GNa;
-        NV_Ith_S(dqs, 9) = var_INa__tau_h;
-        NV_Ith_S(dqs, 10) = var_INa__tau_j;
-        NV_Ith_S(dqs, 11) = var_IK1__IK1_converted;
-        NV_Ith_S(dqs, 12) = var_IK1__g_K1_calc;
-        NV_Ith_S(dqs, 13) = var_INal__INal_converted;
-        NV_Ith_S(dqs, 14) = var_IKr__IKr_converted;
-        NV_Ith_S(dqs, 15) = var_IKr__gkr;
-        NV_Ith_S(dqs, 16) = var_IKs__IKs_converted;
-        NV_Ith_S(dqs, 17) = var_IKs__gks;
-        NV_Ith_S(dqs, 18) = var_INaCa__INaCa_converted;
-        NV_Ith_S(dqs, 19) = var_cell__i_Stim_converted;
-        NV_Ith_S(dqs, 20) = var_Ito__Ito_converted;
-        NV_Ith_S(dqs, 21) = var_chaste_interface__Environment__time;
+        N_Vector dqs = N_VNew_Serial(23);
+        NV_Ith_S(dqs, 0) = var_cell__C0;
+        NV_Ith_S(dqs, 1) = var_Irel__irelcicr;
+        NV_Ith_S(dqs, 2) = var_cell__V2;
+        NV_Ith_S(dqs, 3) = var_ICaL__ICaL_converted;
+        NV_Ith_S(dqs, 4) = var_ICaL__tauf2;
+        NV_Ith_S(dqs, 5) = var_ICaL__taufca2;
+        NV_Ith_S(dqs, 6) = var_ICaL__taufca;
+        NV_Ith_S(dqs, 7) = var_ICaL__tauf;
+        NV_Ith_S(dqs, 8) = var_INa__INa_converted;
+        NV_Ith_S(dqs, 9) = var_INa__GNa;
+        NV_Ith_S(dqs, 10) = var_INa__tau_h;
+        NV_Ith_S(dqs, 11) = var_INa__tau_j;
+        NV_Ith_S(dqs, 12) = var_IK1__IK1_converted;
+        NV_Ith_S(dqs, 13) = var_IK1__g_K1_calc;
+        NV_Ith_S(dqs, 14) = var_INal__INal_converted;
+        NV_Ith_S(dqs, 15) = var_IKr__IKr_converted;
+        NV_Ith_S(dqs, 16) = var_IKr__gkr;
+        NV_Ith_S(dqs, 17) = var_IKs__IKs_converted;
+        NV_Ith_S(dqs, 18) = var_IKs__gks;
+        NV_Ith_S(dqs, 19) = var_INaCa__INaCa_converted;
+        NV_Ith_S(dqs, 20) = var_cell__i_Stim_converted;
+        NV_Ith_S(dqs, 21) = var_Ito__Ito_converted;
+        NV_Ith_S(dqs, 22) = var_chaste_interface__Environment__time;
         return dqs;
     }
 
@@ -874,8 +875,8 @@ void OdeSystemInformation<Cellhund_rudy_2004_analytic_voltageFromCellMLCvode>::I
     this->mInitialConditions.push_back(0.00012271265);
 
     // mParameters[0]:
-    this->mParameterNames.push_back("C0");
-    this->mParameterUnits.push_back("mV");
+    this->mParameterNames.push_back("Gamma0");
+    this->mParameterUnits.push_back("mM");
 
     // mParameters[1]:
     this->mParameterNames.push_back("SR_leak_current_max");
@@ -954,90 +955,94 @@ void OdeSystemInformation<Cellhund_rudy_2004_analytic_voltageFromCellMLCvode>::I
     this->mParameterUnits.push_back("mS_per_uF");
 
     // Derived Quantity index [0]:
+    this->mDerivedQuantityNames.push_back("C0");
+    this->mDerivedQuantityUnits.push_back("mM");
+
+    // Derived Quantity index [1]:
     this->mDerivedQuantityNames.push_back("SR_release_current");
     this->mDerivedQuantityUnits.push_back("mM_per_ms");
 
-    // Derived Quantity index [1]:
+    // Derived Quantity index [2]:
     this->mDerivedQuantityNames.push_back("membrane_voltage");
     this->mDerivedQuantityUnits.push_back("mV");
 
-    // Derived Quantity index [2]:
+    // Derived Quantity index [3]:
     this->mDerivedQuantityNames.push_back("membrane_L_type_calcium_current");
     this->mDerivedQuantityUnits.push_back("uA_per_cm2");
 
-    // Derived Quantity index [3]:
+    // Derived Quantity index [4]:
     this->mDerivedQuantityNames.push_back("membrane_L_type_calcium_current_f2_gate_tau");
     this->mDerivedQuantityUnits.push_back("ms");
 
-    // Derived Quantity index [4]:
+    // Derived Quantity index [5]:
     this->mDerivedQuantityNames.push_back("membrane_L_type_calcium_current_fCa2_gate_tau");
     this->mDerivedQuantityUnits.push_back("ms");
 
-    // Derived Quantity index [5]:
+    // Derived Quantity index [6]:
     this->mDerivedQuantityNames.push_back("membrane_L_type_calcium_current_fCa_gate_tau");
     this->mDerivedQuantityUnits.push_back("ms");
 
-    // Derived Quantity index [6]:
+    // Derived Quantity index [7]:
     this->mDerivedQuantityNames.push_back("membrane_L_type_calcium_current_f_gate_tau");
     this->mDerivedQuantityUnits.push_back("ms");
 
-    // Derived Quantity index [7]:
+    // Derived Quantity index [8]:
     this->mDerivedQuantityNames.push_back("membrane_fast_sodium_current");
     this->mDerivedQuantityUnits.push_back("uA_per_cm2");
 
-    // Derived Quantity index [8]:
+    // Derived Quantity index [9]:
     this->mDerivedQuantityNames.push_back("membrane_fast_sodium_current_conductance");
     this->mDerivedQuantityUnits.push_back("mS_per_uF");
 
-    // Derived Quantity index [9]:
+    // Derived Quantity index [10]:
     this->mDerivedQuantityNames.push_back("membrane_fast_sodium_current_h_gate_tau");
     this->mDerivedQuantityUnits.push_back("ms");
 
-    // Derived Quantity index [10]:
+    // Derived Quantity index [11]:
     this->mDerivedQuantityNames.push_back("membrane_fast_sodium_current_j_gate_tau");
     this->mDerivedQuantityUnits.push_back("ms");
 
-    // Derived Quantity index [11]:
+    // Derived Quantity index [12]:
     this->mDerivedQuantityNames.push_back("membrane_inward_rectifier_potassium_current");
     this->mDerivedQuantityUnits.push_back("uA_per_cm2");
 
-    // Derived Quantity index [12]:
+    // Derived Quantity index [13]:
     this->mDerivedQuantityNames.push_back("membrane_inward_rectifier_potassium_current_conductance");
     this->mDerivedQuantityUnits.push_back("mS_per_uF");
 
-    // Derived Quantity index [13]:
+    // Derived Quantity index [14]:
     this->mDerivedQuantityNames.push_back("membrane_persistent_sodium_current");
     this->mDerivedQuantityUnits.push_back("uA_per_cm2");
 
-    // Derived Quantity index [14]:
+    // Derived Quantity index [15]:
     this->mDerivedQuantityNames.push_back("membrane_rapid_delayed_rectifier_potassium_current");
     this->mDerivedQuantityUnits.push_back("uA_per_cm2");
 
-    // Derived Quantity index [15]:
+    // Derived Quantity index [16]:
     this->mDerivedQuantityNames.push_back("membrane_rapid_delayed_rectifier_potassium_current_conductance");
     this->mDerivedQuantityUnits.push_back("mS_per_uF");
 
-    // Derived Quantity index [16]:
+    // Derived Quantity index [17]:
     this->mDerivedQuantityNames.push_back("membrane_slow_delayed_rectifier_potassium_current");
     this->mDerivedQuantityUnits.push_back("uA_per_cm2");
 
-    // Derived Quantity index [17]:
+    // Derived Quantity index [18]:
     this->mDerivedQuantityNames.push_back("membrane_slow_delayed_rectifier_potassium_current_conductance");
     this->mDerivedQuantityUnits.push_back("mS_per_uF");
 
-    // Derived Quantity index [18]:
+    // Derived Quantity index [19]:
     this->mDerivedQuantityNames.push_back("membrane_sodium_calcium_exchanger_current");
     this->mDerivedQuantityUnits.push_back("uA_per_cm2");
 
-    // Derived Quantity index [19]:
+    // Derived Quantity index [20]:
     this->mDerivedQuantityNames.push_back("membrane_stimulus_current");
     this->mDerivedQuantityUnits.push_back("uA_per_cm2");
 
-    // Derived Quantity index [20]:
+    // Derived Quantity index [21]:
     this->mDerivedQuantityNames.push_back("membrane_transient_outward_current");
     this->mDerivedQuantityUnits.push_back("uA_per_cm2");
 
-    // Derived Quantity index [21]:
+    // Derived Quantity index [22]:
     this->mDerivedQuantityNames.push_back("time");
     this->mDerivedQuantityUnits.push_back("ms");
 

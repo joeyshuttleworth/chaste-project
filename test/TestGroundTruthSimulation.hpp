@@ -31,7 +31,7 @@
 #include "ten_tusscher_model_2006_epi_analyticCvode.hpp"
 #include "ohara_rudy_cipa_v1_2017_analyticCvode.hpp"
 #include "ToRORd_dyn_chloride_epi_analytic_voltageCvode.hpp"
-#include "iyer_2004_analytic_voltageCvode.hpp"
+#include "iyer_mazhari_winslow_2004_analytic_voltageCvode.hpp"
 #include "hund_rudy_2004_analytic_voltageCvode.hpp"
 
 
@@ -67,12 +67,10 @@ public:
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellbeeler_reuter_model_1977FromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_cipa_v1_2017FromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2006_epiFromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellhund_rudy_2004FromCellMLCvode(p_solver, p_stimulus)));
     models.push_back(boost::make_shared<CellToRORd_dyn_chloride_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
-    models.push_back(boost::make_shared<Celliyer_2004_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
+    models.push_back(boost::make_shared<Celliyer_mazhari_winslow_2004_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
     models.push_back(boost::make_shared<Cellhund_rudy_2004_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
 
 

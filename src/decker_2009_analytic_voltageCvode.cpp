@@ -77,9 +77,13 @@ static double CalculateAnalyticVoltage(const N_Vector& rY, const N_Vector& mPara
         const double var_membrane__sum_ext_charge = -var_model_parameters__Cl_o + 2.0 * NV_Ith_S(mParameters, 4) + NV_Ith_S(mParameters, 5) + NV_Ith_S(mParameters, 6); // mM
         const double var_membrane__C0 = NV_Ith_S(mParameters, 0) + var_membrane__sum_ext_charge; // mM
         const double var_membrane__V0 = var_cell_geometry__Vmyo * var_membrane__C0 * var_model_parameters__F / (var_cell_geometry__Acap * NV_Ith_S(mParameters, 12)); // mV
-        const double var_membrane__V2 = -var_membrane__V0 + (-var_chaste_interface__Cl__Cl_i + 2.0 * var_Ca__Ca_tot + var_chaste_interface__Na__Na_ss_sr * var_cell_geometry__Vss_sr / var_cell_geometry__Vmyo - var_chaste_interface__Cl__Cl_ss * var_cell_geometry__Vss_sr / var_cell_geometry__Vmyo + var_chaste_interface__K__K_i + var_chaste_interface__Na__Na_i) * var_cell_geometry__Vmyo * var_model_parameters__F / (var_cell_geometry__Acap * NV_Ith_S(mParameters, 12)); // mV
+
+        const double var_membrane__potential = (-var_chaste_interface__Cl__Cl_i + 2.0 * var_Ca__Ca_tot + var_chaste_interface__Na__Na_ss_sr * var_cell_geometry__Vss_sr / var_cell_geometry__Vmyo - var_chaste_interface__Cl__Cl_ss * var_cell_geometry__Vss_sr / var_cell_geometry__Vmyo + var_chaste_interface__K__K_i + var_chaste_interface__Na__Na_i) * var_cell_geometry__Vmyo * var_model_parameters__F / (var_cell_geometry__Acap * NV_Ith_S(mParameters, 12)); // mV
+
+        const double var_membrane__V2 = -var_membrane__V0 + var_membrane__potential; // mV
+
         return var_membrane__V2;
-   }
+}
 
 
     boost::shared_ptr<RegularStimulus> Celldecker_2009_analytic_voltageFromCellMLCvode::UseCellMLDefaultStimulus()
@@ -118,8 +122,8 @@ static double CalculateAnalyticVoltage(const N_Vector& rY, const N_Vector& mPara
 
         // We have a default stimulus specified in the CellML file metadata
         this->mHasDefaultStimulusFromCellML = true;
-
-        NV_Ith_S(this->mParameters, 0) = 83.163832868552305; // (var_membrane__Gamma0) [mM]
+        
+        NV_Ith_S(this->mParameters, 0) = 83.163832898135198; // (var_membrane__Gamma0) [mM]
         NV_Ith_S(this->mParameters, 1) = 0.0043750000000000004; // (var_Ileak__Ileak_max) [mM_per_ms]
         NV_Ith_S(this->mParameters, 2) = 0.1125; // (var_Irel__kappa) [mM_per_uA_per_uF_per_ms_per_ms]
         NV_Ith_S(this->mParameters, 3) = 0.0043750000000000004; // (var_Iup__iupbar) [mM_per_ms]
@@ -347,7 +351,7 @@ static double CalculateAnalyticVoltage(const N_Vector& rY, const N_Vector& mPara
 
     void Celldecker_2009_analytic_voltageFromCellMLCvode::EvaluateYDerivatives(double var_chaste_interface__environment__time, const N_Vector rY, N_Vector rDY)
     {
-      // Inputs:
+        // Inputs:
         // Time units: millisecond
         double var_chaste_interface__Ca__Ca_i = NV_Ith_S(rY, 0);
         // Units: mM; Initial value: 8.38749860095482e-05
@@ -940,6 +944,7 @@ static double CalculateAnalyticVoltage(const N_Vector& rY, const N_Vector& mPara
         const double var_INaCa__denom_ss_3 = pow(var_INaCa__KmNao, 3) * var_chaste_interface__Ca__Ca_ss_sr + pow(var_chaste_interface__Na__Na_ss_sr, 3) * var_INaCa__KmCao + pow(var_INaCa__KmNai, 3) * (1.0 + var_chaste_interface__Ca__Ca_ss_sr / var_INaCa__KmCai) * NV_Ith_S(mParameters, 4); // mM4
         const double var_model_parameters__Cl_o = 100.0; // mM
         const double var_model_parameters__F = 96485.0; // C_per_mole
+        const double var_membrane__potential = (-var_chaste_interface__Cl__Cl_i + 2.0 * var_Ca__Ca_tot + var_chaste_interface__Na__Na_ss_sr * var_cell_geometry__Vss_sr / var_cell_geometry__Vmyo - var_chaste_interface__Cl__Cl_ss * var_cell_geometry__Vss_sr / var_cell_geometry__Vmyo + var_chaste_interface__K__K_i + var_chaste_interface__Na__Na_i) * var_cell_geometry__Vmyo * var_model_parameters__F / (var_cell_geometry__Acap * NV_Ith_S(mParameters, 12)); // mV
         const double var_IK1__gK1 = 0.43033148291193518 * sqrt(NV_Ith_S(mParameters, 5)) * NV_Ith_S(mParameters, 14); // mS_per_uF
         const double var_IKr__gKr = 0.43033148291193518 * sqrt(NV_Ith_S(mParameters, 5)) * NV_Ith_S(mParameters, 17); // mS_per_uF
         const double var_INaK__PK = NV_Ith_S(mParameters, 5) / (var_INaK__kmko + NV_Ith_S(mParameters, 5)); // dimensionless
@@ -948,7 +953,7 @@ static double CalculateAnalyticVoltage(const N_Vector& rY, const N_Vector& mPara
         const double var_membrane__sum_ext_charge = -var_model_parameters__Cl_o + 2.0 * NV_Ith_S(mParameters, 4) + NV_Ith_S(mParameters, 5) + NV_Ith_S(mParameters, 6); // mM
         const double var_membrane__C0 = NV_Ith_S(mParameters, 0) + var_membrane__sum_ext_charge; // mM
         const double var_membrane__V0 = var_cell_geometry__Vmyo * var_membrane__C0 * var_model_parameters__F / (var_cell_geometry__Acap * NV_Ith_S(mParameters, 12)); // mV
-        const double var_membrane__V2 = -var_membrane__V0 + (-var_chaste_interface__Cl__Cl_i + 2.0 * var_Ca__Ca_tot + var_chaste_interface__Na__Na_ss_sr * var_cell_geometry__Vss_sr / var_cell_geometry__Vmyo - var_chaste_interface__Cl__Cl_ss * var_cell_geometry__Vss_sr / var_cell_geometry__Vmyo + var_chaste_interface__K__K_i + var_chaste_interface__Na__Na_i) * var_cell_geometry__Vmyo * var_model_parameters__F / (var_cell_geometry__Acap * NV_Ith_S(mParameters, 12)); // mV
+        const double var_membrane__V2 = -var_membrane__V0 + var_membrane__potential; // mV
         const double var_model_parameters__R = 8314.0; // J_per_kmole_K
         const double var_model_parameters__T = 310.0; // kelvin
         const double var_ICaL__B = 2.0 * var_model_parameters__F / (var_model_parameters__R * var_model_parameters__T); // per_mV
@@ -1036,6 +1041,7 @@ static double CalculateAnalyticVoltage(const N_Vector& rY, const N_Vector& mPara
         NV_Ith_S(dqs, 21) = var_chaste_interface__environment__time;
         return dqs;
     }
+
 template<>
 void OdeSystemInformation<Celldecker_2009_analytic_voltageFromCellMLCvode>::Initialise(void)
 {
