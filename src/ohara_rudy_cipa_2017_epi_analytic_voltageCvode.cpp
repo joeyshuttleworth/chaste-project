@@ -101,7 +101,7 @@ static double CalculateAnalyticVoltage(const N_Vector& rY, const N_Vector& mPara
     Cellohara_rudy_cipa_2017_epi_analytic_voltageFromCellMLCvode::Cellohara_rudy_cipa_2017_epi_analytic_voltageFromCellMLCvode(boost::shared_ptr<AbstractIvpOdeSolver> pOdeSolver /* unused; should be empty */, boost::shared_ptr<AbstractStimulusFunction> pIntracellularStimulus)
         : AbstractCvodeCell(
                 pOdeSolver,
-                49,
+                48,
                 99999,
                 pIntracellularStimulus)
     {
@@ -1657,7 +1657,7 @@ void OdeSystemInformation<Cellohara_rudy_cipa_2017_epi_analytic_voltageFromCellM
     this->mVariableUnits.push_back("dimensionless");
     this->mInitialConditions.push_back(0.0);
 
-    // NV_Ith_S(rY, 42):
+    // NV_Ith_S(rY, 42): This is missing in the build file!!
     this->mVariableNames.push_back("IKr__D");
     this->mVariableUnits.push_back("dimensionless");
     this->mInitialConditions.push_back(0.0);

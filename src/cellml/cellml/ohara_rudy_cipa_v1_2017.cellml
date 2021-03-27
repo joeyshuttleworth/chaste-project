@@ -1,4 +1,4 @@
-<?xml version='1.0'?>
+<?xml version='1.0' encoding='UTF-8'?>
 <model cmeta:id="ohara_rudy_cipa_v1_2017" name="ohara_rudy_cipa_v1_2017" xmlns="http://www.cellml.org/cellml/1.0#" xmlns:cellml="http://www.cellml.org/cellml/1.0#" xmlns:cmeta="http://www.cellml.org/metadata/1.0#">
     <units name="millisecond">
         <unit prefix="milli" units="second"/>
@@ -1668,8 +1668,8 @@
         <variable initial_value="0.2693065357" name="hLp" units="dimensionless"/>
         <!-- 0.0075/3.971290e-01 = 0.01888555104260832
  0.0075/0.375798571965427 = 0.019957499999999975-->
-        <variable cmeta:id="membrane_persistent_sodium_current_conductance" initial_value="0.019957499999999975" name="GNaL_b" units="milliS_per_microF"/>
-        <variable name="GNaL" units="milliS_per_microF"/>
+        <variable cmeta:id="membrane_persistent_sodium_current_conductance_scaling_factor" initial_value="0.019957499999999975" name="GNaL_b" units="milliS_per_microF"/>
+        <variable cmeta:id="membrane_persistent_sodium_current_conductance" name="GNaL" units="milliS_per_microF"/>
         <variable name="fINaLp" units="dimensionless"/>
         <variable name="KmCaMK" public_interface="in" units="millimolar"/>
         <variable name="CaMKa" public_interface="in" units="millimolar"/>
@@ -1898,7 +1898,7 @@
     <component name="Ito">
         <!-- 0.02/1.706770e+00 = 0.011718040509266042
  0.02/1.0 = 0.02-->
-        <variable cmeta:id="membrane_transient_outward_current_conductance" initial_value="0.02" name="Gto_b" units="milliS_per_microF"/>
+        <variable cmeta:id="membrane_transient_outward_current_conductance_scaling_factor" initial_value="0.02" name="Gto_b" units="milliS_per_microF"/>
         <variable name="ass" units="dimensionless"/>
         <variable name="ta" units="millisecond"/>
         <variable initial_value="0.001001097687" name="a" units="dimensionless"/>
@@ -1925,7 +1925,7 @@
         <variable initial_value="0.9995541823" name="iFp" units="dimensionless"/>
         <variable initial_value="0.6393399482" name="iSp" units="dimensionless"/>
         <variable name="ip" units="dimensionless"/>
-        <variable name="Gto" units="milliS_per_microF"/>
+        <variable cmeta:id="membrane_transient_outward_current_conductance" name="Gto" units="milliS_per_microF"/>
         <variable name="fItop" units="dimensionless"/>
         <variable cmeta:id="membrane_transient_outward_current" name="Ito" public_interface="out" units="microA_per_microF"/>
         <variable name="celltype" public_interface="in" units="dimensionless"/>
@@ -2586,7 +2586,7 @@
         <variable initial_value="1000" name="k2n" units="per_millisecond"/>
         <!-- 0.0001/1.020773e+00 = 9.796497360333787e-05
  0.0001/0.99304865938431 = 0.0001007-->
-        <variable cmeta:id="membrane_L_type_calcium_current_conductance" initial_value="0.0001007" name="PCa_b" units="dimensionless"/>
+        <variable cmeta:id="membrane_L_type_calcium_current_conductance_scaling_factor" initial_value="0.0001007" name="PCa_b" units="dimensionless"/>
         <variable name="dss" units="dimensionless"/>
         <variable initial_value="2.34e-9" name="d" units="dimensionless"/>
         <variable name="fss" units="dimensionless"/>
@@ -3906,7 +3906,8 @@ PhiCaK = 1{dimensionless}*vffrt*(0.75{dimensionless}*kss*exp(1{dimensionless}*vf
         <!-- Conductance
  0.046/9.874327e-01 = 0.04658545336811309
  0.046/0.987432675044883 = 0.04658545454545456-->
-        <variable cmeta:id="membrane_rapid_delayed_rectifier_potassium_current_conductance" initial_value="0.04658545454545456" name="GKr_b" units="milliS_per_microF"/>
+        <variable cmeta:id="membrane_rapid_delayed_rectifier_potassium_current_conductance_scaling_factor" initial_value="0.04658545454545456" name="GKr_b" units="milliS_per_microF"/>
+        <variable cmeta:id="membrane_rapid_delayed_rectifier_potassium_current_conductance" name="GKr_calc" units="milliS_per_microF"/>
         <!-- New state variables (ODEs)-->
         <variable initial_value="0.999637" name="IC1" units="dimensionless"/>
         <!-- y[39]-->
@@ -5508,7 +5509,7 @@ PhiCaK = 1{dimensionless}*vffrt*(0.75{dimensionless}*kss*exp(1{dimensionless}*vf
             <!-- The current-->
             <apply>
                 <eq/>
-                <ci>IKr</ci>
+                <ci>GKr_calc</ci>
                 <apply>
                     <times/>
                     <ci>GKr</ci>
@@ -5520,6 +5521,14 @@ PhiCaK = 1{dimensionless}*vffrt*(0.75{dimensionless}*kss*exp(1{dimensionless}*vf
                             <cn cellml:units="millimolar">5.4</cn>
                         </apply>
                     </apply>
+                </apply>
+            </apply>
+            <apply>
+                <eq/>
+                <ci>IKr</ci>
+                <apply>
+                    <times/>
+                    <ci>GKr_calc</ci>
                     <ci>O</ci>
                     <apply>
                         <minus/>
@@ -5533,7 +5542,8 @@ PhiCaK = 1{dimensionless}*vffrt*(0.75{dimensionless}*kss*exp(1{dimensionless}*vf
     <component name="IKs">
         <!-- 0.0034/5.347594e-01 = 0.006357999504076038
  0.0034/0.53475935828877 = 0.006358000000000001-->
-        <variable cmeta:id="membrane_slow_delayed_rectifier_potassium_current_conductance" initial_value="0.006358000000000001" name="GKs_b" units="milliS_per_microF"/>
+        <variable cmeta:id="membrane_slow_delayed_rectifier_potassium_current_conductance_scaling_factor" initial_value="0.006358000000000001" name="GKs_b" units="milliS_per_microF"/>
+        <variable cmeta:id="membrane_slow_delayed_rectifier_potassium_current_conductance" name="GKs_calc" units="milliS_per_microF"/>
         <variable name="GKs" units="milliS_per_microF"/>
         <variable name="xs1ss" units="dimensionless"/>
         <variable name="xs2ss" units="dimensionless"/>
@@ -5764,11 +5774,19 @@ PhiCaK = 1{dimensionless}*vffrt*(0.75{dimensionless}*kss*exp(1{dimensionless}*vf
             </apply>
             <apply>
                 <eq/>
-                <ci>IKs</ci>
+                <ci>GKs_calc</ci>
                 <apply>
                     <times/>
                     <ci>GKs</ci>
                     <ci>KsCa</ci>
+                </apply>
+            </apply>
+            <apply>
+                <eq/>
+                <ci>IKs</ci>
+                <apply>
+                    <times/>
+                    <ci>GKs_calc</ci>
                     <ci>xs1</ci>
                     <ci>xs2</ci>
                     <apply>
@@ -5784,7 +5802,8 @@ PhiCaK = 1{dimensionless}*vffrt*(0.75{dimensionless}*kss*exp(1{dimensionless}*vf
         <variable name="GK1" units="milliS_per_microF"/>
         <!-- 0.1908/6.296422e-01 = 0.3030292442279123
  0.1908/0.588928150765607 = 0.3239783999999998-->
-        <variable cmeta:id="membrane_inward_rectifier_potassium_current_conductance" initial_value="0.3239783999999998" name="GK1_b" units="milliS_per_microF"/>
+        <variable cmeta:id="membrane_inward_rectifier_potassium_current_conductance_scaling_factor" initial_value="0.3239783999999998" name="GK1_b" units="milliS_per_microF"/>
+        <variable cmeta:id="membrane_inward_rectifier_potassium_current_conductance" name="GK1_calc" units="milliS_per_microF"/>
         <variable name="xk1ss" units="dimensionless"/>
         <variable name="txk1" units="millisecond"/>
         <variable initial_value="0.9967597594" name="xk1" units="dimensionless"/>
@@ -5960,7 +5979,7 @@ PhiCaK = 1{dimensionless}*vffrt*(0.75{dimensionless}*kss*exp(1{dimensionless}*vf
             </apply>
             <apply>
                 <eq/>
-                <ci>IK1</ci>
+                <ci>GK1_calc</ci>
                 <apply>
                     <times/>
                     <ci>GK1</ci>
@@ -5968,6 +5987,14 @@ PhiCaK = 1{dimensionless}*vffrt*(0.75{dimensionless}*kss*exp(1{dimensionless}*vf
                         <root/>
                         <ci>ko</ci>
                     </apply>
+                </apply>
+            </apply>
+            <apply>
+                <eq/>
+                <ci>IK1</ci>
+                <apply>
+                    <times/>
+                    <ci>GK1_calc</ci>
                     <ci>rk1</ci>
                     <ci>xk1</ci>
                     <apply>
@@ -9286,11 +9313,17 @@ PhiCaK = 1{dimensionless}*vffrt*(0.75{dimensionless}*kss*exp(1{dimensionless}*vf
         <rdf:Description xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="#membrane_rapid_delayed_rectifier_potassium_current_conductance">
             <_4:is xmlns:_4="http://biomodels.net/biology-qualifiers/" rdf:resource="https://chaste.comlab.ox.ac.uk/cellml/ns/oxford-metadata#membrane_rapid_delayed_rectifier_potassium_current_conductance" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
         </rdf:Description>
+        <rdf:Description xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="#membrane_rapid_delayed_rectifier_potassium_current_conductance_scaling_factor">
+            <_4:is xmlns:_4="http://biomodels.net/biology-qualifiers/" rdf:resource="https://chaste.comlab.ox.ac.uk/cellml/ns/oxford-metadata#membrane_rapid_delayed_rectifier_potassium_current_conductance_scaling_factor" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
+        </rdf:Description>
         <rdf:Description xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="#SR_release_current_max">
             <_4:is xmlns:_4="http://biomodels.net/biology-qualifiers/" rdf:resource="https://chaste.comlab.ox.ac.uk/cellml/ns/oxford-metadata#SR_release_current_max" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
         </rdf:Description>
         <rdf:Description xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="#membrane_inward_rectifier_potassium_current_conductance">
             <_4:is xmlns:_4="http://biomodels.net/biology-qualifiers/" rdf:resource="https://chaste.comlab.ox.ac.uk/cellml/ns/oxford-metadata#membrane_inward_rectifier_potassium_current_conductance" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
+        </rdf:Description>
+        <rdf:Description xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="#membrane_inward_rectifier_potassium_current_conductance_scaling_factor">
+            <_4:is xmlns:_4="http://biomodels.net/biology-qualifiers/" rdf:resource="https://chaste.comlab.ox.ac.uk/cellml/ns/oxford-metadata#membrane_inward_rectifier_potassium_current_conductance_scaling_factor" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
         </rdf:Description>
         <rdf:Description xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="#cytosolic_calcium_concentration">
             <_4:is xmlns:_4="http://biomodels.net/biology-qualifiers/" rdf:resource="https://chaste.comlab.ox.ac.uk/cellml/ns/oxford-metadata#cytosolic_calcium_concentration" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
@@ -9352,6 +9385,9 @@ PhiCaK = 1{dimensionless}*vffrt*(0.75{dimensionless}*kss*exp(1{dimensionless}*vf
         <rdf:Description xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="#membrane_background_potassium_current">
             <_4:is xmlns:_4="http://biomodels.net/biology-qualifiers/" rdf:resource="https://chaste.comlab.ox.ac.uk/cellml/ns/oxford-metadata#membrane_background_potassium_current" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
         </rdf:Description>
+        <rdf:Description xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="#membrane_transient_outward_current_conductance_scaling_factor">
+            <_4:is xmlns:_4="http://biomodels.net/biology-qualifiers/" rdf:resource="https://chaste.comlab.ox.ac.uk/cellml/ns/oxford-metadata#membrane_transient_outward_current_conductance_scaling_factor" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
+        </rdf:Description>
         <rdf:Description xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="#membrane_transient_outward_current_conductance">
             <_4:is xmlns:_4="http://biomodels.net/biology-qualifiers/" rdf:resource="https://chaste.comlab.ox.ac.uk/cellml/ns/oxford-metadata#membrane_transient_outward_current_conductance" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
         </rdf:Description>
@@ -9394,18 +9430,24 @@ PhiCaK = 1{dimensionless}*vffrt*(0.75{dimensionless}*kss*exp(1{dimensionless}*vf
         <rdf:Description xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="#membrane_sodium_potassium_pump_current">
             <_4:is xmlns:_4="http://biomodels.net/biology-qualifiers/" rdf:resource="https://chaste.comlab.ox.ac.uk/cellml/ns/oxford-metadata#membrane_sodium_potassium_pump_current" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
         </rdf:Description>
-        <rdf:Description xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="#membrane_L_type_calcium_current_conductance">
+        <rdf:Description xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="#membrane_L_type_calcium_current_conductance_scaling_factor">
             <_3:modifiable-parameter xmlns:_3="https://chaste.comlab.ox.ac.uk/cellml/ns/pycml#">yes</_3:modifiable-parameter>
-            <_4:is xmlns:_4="http://biomodels.net/biology-qualifiers/" rdf:resource="https://chaste.comlab.ox.ac.uk/cellml/ns/oxford-metadata#membrane_L_type_calcium_current_conductance" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
+            <_4:is xmlns:_4="http://biomodels.net/biology-qualifiers/" rdf:resource="https://chaste.comlab.ox.ac.uk/cellml/ns/oxford-metadata#membrane_L_type_calcium_current_conductance_scaling_factor" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
         </rdf:Description>
         <rdf:Description xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="#membrane_slow_delayed_rectifier_potassium_current_conductance">
             <_4:is xmlns:_4="http://biomodels.net/biology-qualifiers/" rdf:resource="https://chaste.comlab.ox.ac.uk/cellml/ns/oxford-metadata#membrane_slow_delayed_rectifier_potassium_current_conductance" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
+        </rdf:Description>
+        <rdf:Description xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="#membrane_slow_delayed_rectifier_potassium_current_conductance_scaling_factor">
+            <_4:is xmlns:_4="http://biomodels.net/biology-qualifiers/" rdf:resource="https://chaste.comlab.ox.ac.uk/cellml/ns/oxford-metadata#membrane_slow_delayed_rectifier_potassium_current_conductance_scaling_factor" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
         </rdf:Description>
         <rdf:Description xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="#membrane_background_potassium_current_conductance">
             <_4:is xmlns:_4="http://biomodels.net/biology-qualifiers/" rdf:resource="https://chaste.comlab.ox.ac.uk/cellml/ns/oxford-metadata#membrane_background_potassium_current_conductance" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
         </rdf:Description>
         <rdf:Description xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="#membrane_persistent_sodium_current_conductance">
             <_4:is xmlns:_4="http://biomodels.net/biology-qualifiers/" rdf:resource="https://chaste.comlab.ox.ac.uk/cellml/ns/oxford-metadata#membrane_persistent_sodium_current_conductance" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
+        </rdf:Description>
+        <rdf:Description xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="#membrane_persistent_sodium_current_conductance_scaling_factor">
+            <_4:is xmlns:_4="http://biomodels.net/biology-qualifiers/" rdf:resource="https://chaste.comlab.ox.ac.uk/cellml/ns/oxford-metadata#membrane_persistent_sodium_current_conductance_scaling_factor" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
         </rdf:Description>
         <rdf:Description xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="#membrane_stimulus_current_offset">
             <_4:is xmlns:_4="http://biomodels.net/biology-qualifiers/" rdf:resource="https://chaste.comlab.ox.ac.uk/cellml/ns/oxford-metadata#membrane_stimulus_current_offset" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
@@ -9437,6 +9479,5 @@ PhiCaK = 1{dimensionless}*vffrt*(0.75{dimensionless}*kss*exp(1{dimensionless}*vf
         <rdf:Description xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" rdf:about="#Dynamic_hERG_D">
             <_4:is xmlns:_4="http://biomodels.net/biology-qualifiers/" rdf:resource="https://chaste.comlab.ox.ac.uk/cellml/ns/oxford-metadata#Dynamic_hERG_D" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"/>
         </rdf:Description>
-        
     </rdf:RDF>
 </model>

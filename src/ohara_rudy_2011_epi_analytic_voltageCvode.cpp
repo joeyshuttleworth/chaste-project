@@ -53,7 +53,7 @@ static double CalculateAnalyticVoltage(const N_Vector& rY, const N_Vector& mPara
         const double var_cell_geometry__vss = 0.02 * var_cell_geometry__vcell; // microliter
         const double var_environment__celltype = 1.0; // dimensionless
 
-        const double var_extracellular__sum_of_ext_charges = NV_Ith_S(mParameters, 3) + NV_Ith_S(mParameters, 4) + NV_Ith_S(mParameters, 5); // millimolar
+        const double var_extracellular__sum_of_ext_charges =2*NV_Ith_S(mParameters, 3) + NV_Ith_S(mParameters, 4) + NV_Ith_S(mParameters, 5); // millimolar
         const double var_intracellular_ions__BSLmax = 1.1240000000000001; // millimolar
         const double var_intracellular_ions__BSRmax = 0.047; // millimolar
         const double var_intracellular_ions__Cm = 1.0; // microF
@@ -115,7 +115,7 @@ static double CalculateAnalyticVoltage(const N_Vector& rY, const N_Vector& mPara
         // We have a default stimulus specified in the CellML file metadata
         this->mHasDefaultStimulusFromCellML = true;
 
-        NV_Ith_S(this->mParameters, 0) = 9.60222863745369; // (var_intracellular_ions__Gamma0) [millimolar]
+        NV_Ith_S(this->mParameters, 0) = 7.80222863745371; // (var_intracellular_ions__Gamma0) [millimolar]
         NV_Ith_S(this->mParameters, 1) = 1.0; // (var_ryr__Jrel_scaling_factor) [dimensionless]
         NV_Ith_S(this->mParameters, 2) = 1.0; // (var_SERCA__Jup_b) [dimensionless]
         NV_Ith_S(this->mParameters, 3) = 1.8; // (var_extracellular__cao) [millimolar]
@@ -1115,7 +1115,7 @@ static double CalculateAnalyticVoltage(const N_Vector& rY, const N_Vector& mPara
         const double var_INaCa_i__h12_ss = 1 / var_INaCa_i__h10_ss; // dimensionless
         const double var_INaCa_i__k1_i = var_INaCa_i__h12_i * var_INaCa_i__kcaon * NV_Ith_S(mParameters, 3); // dimensionless
         const double var_INaCa_i__k1_ss = var_INaCa_i__h12_ss * var_INaCa_i__kcaon * NV_Ith_S(mParameters, 3); // dimensionless
-        const double var_extracellular__sum_of_ext_charges = NV_Ith_S(mParameters, 3) + NV_Ith_S(mParameters, 4) + NV_Ith_S(mParameters, 5); // millimolar
+        const double var_extracellular__sum_of_ext_charges = 2*NV_Ith_S(mParameters, 3) + NV_Ith_S(mParameters, 4) + NV_Ith_S(mParameters, 5); // millimolar
         const double var_intracellular_ions__BSLmax = 1.1240000000000001; // millimolar
         const double var_intracellular_ions__BSRmax = 0.047; // millimolar
         const double var_intracellular_ions__Cm = 1.0; // microF
