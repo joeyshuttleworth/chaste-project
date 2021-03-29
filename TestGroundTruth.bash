@@ -6,6 +6,8 @@ declare -a models=("shannon_wang_puglisi_weber_bers_2004_model_updated" "beeler_
 periods=(1000 500 750 1250)
 IKrBlocks=(0 0.25 0.5);
 
+TestGroundTruth_bin=$1
+
 mkdir log
 mkdir log/TestGroundTruth
 
