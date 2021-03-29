@@ -13,8 +13,8 @@ mkdir log/TestGroundTruth
 
 for IKrBlock in ${IKrBlocks[@]}; do
     for period in ${periods[@]}; do
-        for model in ${models[@]}; do
-            ~/build/projects/chaste-project/test/TestGroundTruthSimulation --models $model --periods $period --IKrBlocks $IKrBlocks & >> log/TestGroundTruth/${model}_${period}_${IKrBlock}.log;
+        for model in ${models[@]};
+                     ${TestGroundTruth_bin}/chaste-project/test/TestGroundTruthSimulation --models $model --periods $period --IKrBlocks $IKrBlocks & >> log/TestGroundTruth/${model}_${period}_${IKrBlock}.log;
         done;
     done;
 done;
