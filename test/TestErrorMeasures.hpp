@@ -24,7 +24,7 @@
 #include "iyer_2004.hpp"
 #include "ToRORd_dynCl_endo.hpp"
 
-// Models modified to have analytic voltage: 
+// Models modified to have analytic voltage:
 #include "ten_tusscher_model_2006_epi_analyticCvode.hpp"
 #include "ohara_rudy_cipa_v1_2017_analyticCvode.hpp"
 
