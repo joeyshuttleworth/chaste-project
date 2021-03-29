@@ -1316,7 +1316,7 @@ static double CalculateAnalyticVoltage(const N_Vector& rY, const N_Vector& mPara
 template<>
 void OdeSystemInformation<Cellohara_rudy_2011_epi_analytic_voltageFromCellMLCvode>::Initialise(void)
 {
-    this->mSystemName = "ohara_rudy_2011_epi";
+    this->mSystemName = "ohara_rudy_2011_epi_analytic_voltage";
     this->mFreeVariableName = "time";
     this->mFreeVariableUnits = "millisecond";
 

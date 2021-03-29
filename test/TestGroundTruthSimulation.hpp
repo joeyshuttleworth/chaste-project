@@ -25,7 +25,7 @@
 class TestGroundTruthSimulation : public CxxTest::TestSuite
 {
 public:
-  const int paces = 10000;
+  const int paces = 25000;
   void TestRunSimulation()
   {
 #ifdef CHASTE_CVODE
@@ -33,6 +33,13 @@ public:
     boost::filesystem::create_directories("/home/" + username + "/testoutput/");
 
     auto models = get_models();
+
+    // List the names of the models we're testing
+
+    std::cout << "Testing models:\n";
+    for(auto model : models){
+      std::cout << model->GetSystemInformation()->GetSystemName() << "\n";
+    }
 
     std::vector<double> periods = {1000, 500, 750, 1250};
     std::vector<double> IKrBlocks = {0, 0.25, 0.5};
@@ -93,7 +100,6 @@ public:
     std::cout << "final mrms is " << simulation.GetMrms(false) << "\n";
 
     simulation.WriteStatesToFile(dir, "final_states.dat");
-    model->SetParameter(GKrParameterName, default_GKr);
   }
 #endif
 };

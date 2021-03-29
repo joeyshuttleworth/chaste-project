@@ -1045,7 +1045,7 @@ static double CalculateAnalyticVoltage(const N_Vector& rY, const N_Vector& mPara
 template<>
 void OdeSystemInformation<Celldecker_2009_analytic_voltageFromCellMLCvode>::Initialise(void)
 {
-    this->mSystemName = "decker_2009";
+    this->mSystemName = "decker_2009_analytic_voltage";
     this->mFreeVariableName = "time";
     this->mFreeVariableUnits = "ms";
 
