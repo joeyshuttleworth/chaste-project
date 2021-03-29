@@ -373,3 +373,31 @@ std::vector<boost::shared_ptr<AbstractCvodeCell>> get_models(){
   return models;
 }
 
+std::vector<boost::shared_ptr<AbstractCvodeCell>> get_IKr_blocks(){
+  const std::string option = "--IKrBlocks";
+  /* Get IKrBlocks using specified command line argument. If no argument is given use all models */
+  std::vector<double> IKrBlocks = {0, 0.25, 0.5};
+
+  /* If "--IKrBlocks" option is provided, use only those IKrBlocks that are specified */
+  if(CommandLineArguments::Instance()->OptionExists(option)){
+    IKrBlocks = CommandLineArguments::Instance()->GetDoublesCorrespondingToOption(option);
+  }
+
+  return IKrBlocks;
+}
+
+std::vector<boost::shared_ptr<AbstractCvodeCell>> get_periods(){
+  const std::string option = "--periods";
+  /* Get periods using specified command line argument. If no argument is given use all models */
+  std::vector<double> periods={1000, 500, 750, 1250}
+
+  /* If "--periods" option is provided, use only those IKrBlocks that are specified */
+  if(CommandLineArguments::Instance()->OptionExists(option)){
+    periods = CommandLineArguments::Instance()->GetDoublesCorrespondingToOption(option);
+  }
+
+  return periods;
+}
+
+
+

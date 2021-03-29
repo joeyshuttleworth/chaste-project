@@ -52,13 +52,6 @@ void compare_error_measures(boost::shared_ptr<AbstractCvodeCell>, double period,
 template<typename Container>
 double CalculatePMCC(Container values){
   const unsigned int N = values.size();
-  // const double sum_x = N*(N-1)/2;
-  //const double sum_x2 = (N-1)*N*(2*N-1)/6;
-
-  // if(values.size()<=2){
-  //   assert
-  //   return -NAN;
-  // }
   assert(values.size()>2);
   double sum_x = 0, sum_x2 = 0, sum_y = 0, sum_y2 = 0, sum_xy = 0;
 
@@ -76,5 +69,9 @@ double CalculatePMCC(Container values){
 
 
 std::vector<boost::shared_ptr<AbstractCvodeCell>> get_models();
+
+std::vector<boost::shared_ptr<AbstractCvodeCell>> get_periods();
+
+std::vector<boost::shared_ptr<AbstractCvodeCell>> get_IKrBlocks();
 
 #endif

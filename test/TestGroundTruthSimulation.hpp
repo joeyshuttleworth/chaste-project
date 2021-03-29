@@ -41,8 +41,9 @@ public:
       std::cout << model->GetSystemInformation()->GetSystemName() << "\n";
     }
 
-    std::vector<double> periods = {1000, 500, 750, 1250};
-    std::vector<double> IKrBlocks = {0, 0.25, 0.5};
+    auto IKrBlocks = get_IKr_blocks();
+    auto periods = get_periods();
+
     for(auto model : models){
       const N_Vector initial_states = model->GetStateVariables();
       for(double period : periods){
