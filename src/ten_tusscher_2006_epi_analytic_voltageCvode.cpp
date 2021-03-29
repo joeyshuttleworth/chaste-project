@@ -94,7 +94,7 @@ static double CalculateAnalyticVoltage(const N_Vector& rY, const N_Vector& mPara
 
         // We have a default stimulus specified in the CellML file metadata
         this->mHasDefaultStimulusFromCellML = true;
-        
+
         NV_Ith_S(this->mParameters, 0) = -2.1316775712277001; // (var_membrane__Gamma0) [millimolar]
         NV_Ith_S(this->mParameters, 1) = 0.00036000000000000002; // (var_calcium_dynamics__V_leak) [per_millisecond]
         NV_Ith_S(this->mParameters, 2) = 0.10199999999999999; // (var_calcium_dynamics__V_rel) [per_millisecond]

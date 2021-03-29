@@ -14,27 +14,6 @@
 
 #include "Simulation.hpp"
 
-/* These header files are generated from the cellml files provided at github.com/chaste/cellml */
-
-#include "beeler_reuter_model_1977Cvode.hpp"
-#include "ten_tusscher_model_2004_epiCvode.hpp"
-#include "ohara_rudy_2011_endoCvode.hpp"
-#include "shannon_wang_puglisi_weber_bers_2004Cvode.hpp"
-#include "decker_2009Cvode.hpp"
-#include "ohara_rudy_cipa_v1_2017Cvode.hpp"
-#include "ten_tusscher_model_2006_epiCvode.hpp"
-#include "hund_rudy_2004Cvode.hpp"
-#include "iyer_2004.hpp"
-#include "ToRORd_dynCl_endo.hpp"
-
-// Models modified to have analytic voltage:
-#include "ten_tusscher_model_2006_epi_analyticCvode.hpp"
-#include "ohara_rudy_cipa_v1_2017_analyticCvode.hpp"
-#include "ToRORd_dyn_chloride_epi_analytic_voltageCvode.hpp"
-#include "iyer_mazhari_winslow_2004_analytic_voltageCvode.hpp"
-#include "hund_rudy_2004_analytic_voltageCvode.hpp"
-
-
 
 /* Run the models under different scenarios and output:
    - All variables over the final pace
@@ -50,45 +29,13 @@ public:
   void TestRunSimulation()
   {
 #ifdef CHASTE_CVODE
-    boost::shared_ptr<RegularStimulus> p_stimulus;
-    boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
-
     const std::string username = std::string(getenv("USER"));
     boost::filesystem::create_directories("/home/" + username + "/testoutput/");
 
+    auto models = get_models();
+
     std::vector<double> periods = {1000, 500, 750, 1250};
     std::vector<double> IKrBlocks = {0, 0.25, 0.5};
-
-    std::vector<boost::shared_ptr<AbstractCvodeCell>> models;
-
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_2011_endoFromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Celldecker_2009FromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellbeeler_reuter_model_1977FromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2006_epiFromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellhund_rudy_2004FromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::make_shared<CellToRORd_dyn_chloride_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
-    models.push_back(boost::make_shared<Celliyer_mazhari_winslow_2004_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
-    models.push_back(boost::make_shared<Cellhund_rudy_2004_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
-
-
-    /* If "--models" option is provided, use only those models that are specified */
-    if(CommandLineArguments::Instance()->OptionExists("--models")){
-      std::vector<std::string> model_names;
-      model_names = CommandLineArguments::Instance()->GetStringsCorrespondingToOption("--models");
-        TS_ASSERT(model_names.size()>0);
-        std::vector<boost::shared_ptr<AbstractCvodeCell>> new_models;
-        for(auto name : model_names){
-          /* Find all models with the name that has been provided */
-          auto found_model = std::find_if(models.begin(), models.end(), [&](boost::shared_ptr<AbstractCvodeCell>m)->bool {return m->GetSystemInformation()->GetSystemName()==name;});
-          new_models.push_back(*found_model);
-        }
-        /* new_models contains all of the models which have been specified - use this instead of models */
-        models = new_models;
-    }
-
     for(auto model : models){
       const N_Vector initial_states = model->GetStateVariables();
       for(double period : periods){
@@ -117,18 +64,10 @@ public:
 
     // Initialise simulation with fine tolerances
     Simulation simulation(model, period, "", 1e-12, 1e-12);
+    simulation.SetIKrBlock(IKrBlock);
 
     // Turn off convergence criteria
     simulation.SetTerminateOnConvergence(false);
-
-    // Set Gkr if it exists
-    std::vector<std::string> param_names = model->GetSystemInformation()->rGetParameterNames();
-    double default_GKr = DOUBLE_UNSET;
-    bool set_GKr = false;
-
-    const std::string GKrParameterName = "membrane_rapid_delayed_rectifier_potassium_current_conductance";
-    default_GKr = model->GetParameter(GKrParameterName);
-    model->SetParameter(GKrParameterName, default_GKr*(1-IKrBlock));
 
     try{
       // Run the simulation for a large number of paces

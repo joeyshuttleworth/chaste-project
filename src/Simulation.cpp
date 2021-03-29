@@ -2,6 +2,29 @@
 #include <iomanip>
 #include <algorithm>
 
+// These header files are generated from the cellml files provided at github.com/chaste/cellml
+#include "beeler_reuter_model_1977Cvode.hpp"
+#include "ten_tusscher_model_2004_epiCvode.hpp"
+#include "ohara_rudy_2011_epiCvode.hpp"
+#include "shannon_wang_puglisi_weber_bers_2004Cvode.hpp"
+#include "decker_2009Cvode.hpp"
+#include "ohara_rudy_cipa_v1_2017Cvode.hpp"
+#include "ten_tusscher_model_2006_epiCvode.hpp"
+#include "hund_rudy_2004Cvode.hpp"
+#include "iyer_2004Cvode.hpp"
+#include "ToRORd_dynCl_epiCvode.hpp"
+#include "hund_rudy_2004Cvode.hpp"
+
+// Analytic models
+#include "decker_2009_analytic_voltageCvode.hpp"
+#include "hund_rudy_2004_analytic_voltageCvode.hpp"
+#include "iyer_2004_analytic_voltageCvode.hpp"
+#include "ohara_rudy_2011_epi_analytic_voltageCvode.hpp"
+#include "ohara_rudy_cipa_2017_epi_analytic_voltageCvode.hpp"
+#include "ten_tusscher_2006_epi_analytic_voltageCvode.hpp"
+#include "ten_tusscher_2004_epi_analytic_voltageCvode.hpp"
+#include "ToRORd_dyn_chloride_epi_analytic_voltageCvode.hpp"
+
 Simulation::Simulation(boost::shared_ptr<AbstractCvodeCell> _p_model, double _period, std::string input_path, double _tol_abs, double _tol_rel) : mpModel(_p_model), mPeriod(_period), mTolAbs(_tol_abs), mTolRel(_tol_rel){
   mFinished = false;
   mpStimulus = mpModel->UseCellMLDefaultStimulus();
@@ -198,3 +221,5 @@ void Simulation::SetIKrBlock(double block){
     EXCEPTION("Couldn't find parameter to adjust GKr");
   }
 }
+
+

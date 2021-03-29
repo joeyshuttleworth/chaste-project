@@ -12,6 +12,7 @@
 #include <iostream>
 #include "SimulationTools.hpp"
 
+
 class Simulation
 {
 protected:
@@ -82,7 +83,7 @@ public:
   boost::shared_ptr<AbstractCvodeCell> GetModel(){return mpModel;}
 
   void SetIKrBlock(double block);
-
 };
+
 
 #endif
