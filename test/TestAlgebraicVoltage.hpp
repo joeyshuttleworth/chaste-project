@@ -132,7 +132,7 @@ public:
             std::cout << "APD90s are " << analytic_apd << " " << original_apd << "\n";
 
             const double apd_error = std::abs(analytic_apd - original_apd);
-            TS_ASSERT(apd_error < 1e-5);
+            TS_ASSERT(apd_error < 1);
           }
 
           sim_o.SetStateVariables(original_initial_states);
