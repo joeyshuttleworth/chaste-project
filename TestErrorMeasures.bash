@@ -11,7 +11,7 @@ bin_dir=$1
 name_of_test="TestErrorMeasures"
 
 mkdir log
-mkdir log/TestGroundTruth
+mkdir log/${name_of_test}
 
 for IKrBlock in ${IKrBlocks[@]}; do
     for period in ${periods[@]}; do
