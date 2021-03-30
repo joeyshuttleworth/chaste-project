@@ -13,14 +13,27 @@
 #include <boost/filesystem.hpp>
 #include <fstream>
 
-/* These header files are generated from the cellml files provided at github.com/chaste/cellml */
+// Non algebraic models
+#include "ten_tusscher_model_2004_epiCvode.hpp"
+#include "ohara_rudy_2011_epiCvode.hpp"
+#include "decker_2009Cvode.hpp"
 #include "ohara_rudy_cipa_v1_2017Cvode.hpp"
-#include "ohara_rudy_cipa_v1_2017_analyticCvode.hpp"
 #include "ten_tusscher_model_2006_epiCvode.hpp"
-#include "ten_tusscher_model_2006_epi_analyticCvode.hpp"
-#include "iyer_2004_analytic_voltageCvode.hpp"
+#include "hund_rudy_2004Cvode.hpp"
 #include "iyer_2004Cvode.hpp"
+#include "ToRORd_dynCl_epiCvode.hpp"
+#include "hund_rudy_2004Cvode.hpp"
 
+
+// Analytic models
+#include "decker_2009_analytic_voltageCvode.hpp"
+#include "hund_rudy_2004_analytic_voltageCvode.hpp"
+#include "iyer_2004_analytic_voltageCvode.hpp"
+#include "ohara_rudy_2011_epi_analytic_voltageCvode.hpp"
+#include "ohara_rudy_cipa_2017_epi_analytic_voltageCvode.hpp"
+#include "ten_tusscher_2006_epi_analytic_voltageCvode.hpp"
+#include "ten_tusscher_2004_epi_analytic_voltageCvode.hpp"
+#include "ToRORd_dyn_chloride_epi_analytic_voltageCvode.hpp"
 
 class TestExtrapolationMethod : public CxxTest::TestSuite
 {
@@ -152,18 +165,15 @@ private:
     return brute_finished&&smart_finished;
   }
 
-  void CompareMethodsKrBlock(boost::shared_ptr<AbstractCvodeCell> brute_model, boost::shared_ptr<AbstractCvodeCell> smart_model){
+  void CompareMethodsIKrBlock(boost::shared_ptr<AbstractCvodeCell> brute_model, boost::shared_ptr<AbstractCvodeCell> smart_model){
     const std::string model_name = brute_model->GetSystemInformation()->GetSystemName();
-
     std::cout << "Testing " << model_name  << " with 50% block of IKr\n";
-
-    //set Gkr parameter
-    double default_GKr = brute_model->GetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance");
-    brute_model->SetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance", default_GKr*0.5);
-    smart_model->SetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance", default_GKr*0.5);
 
     Simulation simulation(brute_model, 1000);
     SmartSimulation smart_simulation(smart_model, 1000);
+
+    simulation.SetIKrBlock(0.5);
+    smart_simulation.SetIKrBlock(0.5);
 
     simulation.RunPaces(paces);
     smart_simulation.RunPaces(paces);
@@ -195,8 +205,6 @@ private:
     TS_ASSERT(smart_simulation.IsFinished() && simulation.IsFinished());
 
     // reset GKr parameter
-    brute_model->SetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance", default_GKr);
-    smart_model->SetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance", default_GKr);
   }
 
 public:
@@ -209,23 +217,30 @@ public:
 
     /* Compare each model with a version modified for the extrapolation method */
 
-    // ohara_rudy_cipa_v1_2017 model
-    boost::shared_ptr<AbstractCvodeCell> p_model1(new Cellohara_rudy_cipa_v1_2017FromCellMLCvode(p_solver, p_stimulus));
-    boost::shared_ptr<AbstractCvodeCell> p_model2(new Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode(p_solver, p_stimulus));
-    // CompareMethodsPeriod(p_model1, p_model2);
-    // CompareMethodsKrBlock(p_model1, p_model2);
+    std::vector<boost::shared_ptr<AbstractCvodeCell>> original_models;
+    original_models.push_back(boost::make_shared<CellToRORd_dynCl_epiFromCellMLCvode>(p_solver, p_stimulus));
+    original_models.push_back(boost::make_shared<Celliyer_2004FromCellMLCvode>(p_solver, p_stimulus));
+    original_models.push_back(boost::make_shared<Cellhund_rudy_2004FromCellMLCvode>(p_solver, p_stimulus));
+    original_models.push_back(boost::make_shared<Celldecker_2009FromCellMLCvode>(p_solver, p_stimulus));
+    original_models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
+    original_models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2006_epiFromCellMLCvode(p_solver, p_stimulus)));
+    original_models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_2011_epiFromCellMLCvode(p_solver, p_stimulus)));
+    original_models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_cipa_v1_2017FromCellMLCvode(p_solver, p_stimulus)));
 
-    // ten_tusscher_model_2006_epiFromCellMLCvode
-    boost::shared_ptr<AbstractCvodeCell> p_model3(new Cellten_tusscher_model_2006_epiFromCellMLCvode(p_solver, p_stimulus));
-    boost::shared_ptr<AbstractCvodeCell> p_model4(new Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode(p_solver, p_stimulus));
-    // CompareMethodsPeriod(p_model3, p_model4);
-    // CompareMethodsKrBlock(p_model3, p_model4);
+    std::vector<boost::shared_ptr<AbstractCvodeCell>> algebraic_models;
+    algebraic_models.push_back(boost::make_shared<CellToRORd_dyn_chloride_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
+    algebraic_models.push_back(boost::make_shared<Celliyer_2004_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
+    algebraic_models.push_back(boost::make_shared<Cellhund_rudy_2004_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
+    algebraic_models.push_back(boost::make_shared<Celldecker_2009_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
+    algebraic_models.push_back(boost::make_shared<Cellten_tusscher_2004_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
+    algebraic_models.push_back(boost::make_shared<Cellten_tusscher_2006_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
+    algebraic_models.push_back(boost::make_shared<Cellohara_rudy_2011_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
+    algebraic_models.push_back(boost::make_shared<Cellohara_rudy_cipa_2017_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
 
-    boost::shared_ptr<AbstractCvodeCell> p_model5= boost::make_shared<Celliyer_2004FromCellMLCvode>(p_solver, p_stimulus);
-    boost::shared_ptr<AbstractCvodeCell> p_model6= boost::make_shared<Celliyer_2004_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus);
-
-    CompareMethodsPeriod(p_model5, p_model6);
-    CompareMethodsKrBlock(p_model5, p_model6);
+    for(unsigned int i = 0; i < original_models.size(); i++){
+      CompareMethodsPeriod(original_models[i], algebraic_models[i]);
+      // CompareMethodsIKrBlock(original_models[i], algebraic_models[i]);
+    }
 
 #else
     std::cout << "Cvode is not enabled.\n";

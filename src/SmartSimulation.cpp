@@ -138,11 +138,13 @@ bool SmartSimulation::RunPace(){
       std::ofstream errors;
       mMrmsBuffer.clear();
       mStatesBuffer.clear();
-      // The solver has been crashed so don't do any more extrapolations.
-      mMaxJumps=0;
       if(mMaxJumps==0){
+        // We can't recover so throw an exception
         throw std::exception();
       }
+
+      // The solver has been crashed so don't do any more extrapolations.
+      mMaxJumps=0;
       return false;
     }
     std::vector<double> new_state_variables = GetStateVariables();
@@ -171,7 +173,7 @@ bool SmartSimulation::ExtrapolateStates(){
     std::string model_name = mpModel->GetSystemInformation()->GetSystemName();
     const std::string dir_name = mOutputDir + model_name;
     boost::filesystem::create_directory(dir_name);
-    if(mrms_pmcc < -0.95){
+    if(mrms_pmcc < -0.975){
       mSafeStateVariables = mStateVariables;
       std::cout << "Extrapolating - start of buffer is " << mPaces - mBufferSize + 1<< "\n";
 
