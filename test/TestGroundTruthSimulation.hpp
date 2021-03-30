@@ -14,29 +14,14 @@
 
 #include "Simulation.hpp"
 
-<<<<<<< HEAD
+/* Run the models under different scenarios with fine tolerances and lots of
+   paces. Then output:
 
-=======
-#include "Simulation.hpp"
+   - All variables over the final pace,
+   - The APD90 of the final paces,
+   - Terminal state variables,
 
-/* These header files are generated from the cellml files provided at github.com/chaste/cellml */
-
-#include "beeler_reuter_model_1977Cvode.hpp"
-#include "ten_tusscher_model_2004_epiCvode.hpp"
-#include "ohara_rudy_2011_endoCvode.hpp"
-#include "shannon_wang_puglisi_weber_bers_2004Cvode.hpp"
-#include "decker_2009Cvode.hpp"
-#include "ohara_rudy_cipa_v1_2017Cvode.hpp"
-#include "ohara_rudy_cipa_v1_2017_analyticCvode.hpp"
-#include "ten_tusscher_model_2006_epiCvode.hpp"
-#include "ten_tusscher_model_2006_epi_analyticCvode.hpp"
-
->>>>>>> e40a0a2dda788944b67c844ec4db5252a0b39e60
-/* Run the models under different scenarios and output:
-   - All variables over the final pace
-   - The APD90
-   - Terminal state variables
-   to separate files.
+   all to separate files.
  */
 
 class TestGroundTruthSimulation : public CxxTest::TestSuite

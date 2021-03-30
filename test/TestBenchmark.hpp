@@ -11,15 +11,6 @@
 #include <fstream>
 #include "SmartSimulation.hpp"
 
-/* These header files are generated from the cellml files provided at github.com/chaste/cellml */
-
-#include "ohara_rudy_cipa_v1_2017Cvode.hpp"
-#include "ohara_rudy_cipa_v1_2017_analyticCvode.hpp"
-#include "ten_tusscher_model_2006_epiCvode.hpp"
-#include "ten_tusscher_model_2006_epi_analyticCvode.hpp"
-
-/*Output the total number of paces to reach limiting behaviour by SmartSimulation over all models for different choices of buffer_size and extrapolation_constant*/
-
 class TestBenchmark : public CxxTest::TestSuite
 {
 private:
@@ -36,8 +27,8 @@ public:
   void TestBenchmarkRun(){
     boost::shared_ptr<RegularStimulus> p_stimulus;
     boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
-    std::vector<boost::shared_ptr<AbstractCvodeCell>> models;
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode(p_solver, p_stimulus)));
+
+    auto models = get_analytic_models();
 
     const boost::filesystem::path test_dir(getenv("CHASTE_TEST_OUTPUT"));
     std::string filepath = (boost::filesystem::path(test_dir) / boost::filesystem::path("TestBenchmark/results.dat")).string();

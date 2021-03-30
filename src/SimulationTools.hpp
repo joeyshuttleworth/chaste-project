@@ -70,6 +70,8 @@ double CalculatePMCC(Container values){
 
 std::vector<boost::shared_ptr<AbstractCvodeCell>> get_models();
 
+std::vector<boost::shared_ptr<AbstractCvodeCell>> get_analytic_models();
+
 std::vector<double> get_periods();
 
 std::vector<double> get_IKr_blocks();
