@@ -46,6 +46,10 @@ Simulation::~Simulation(){
   mpModel->SetStateVariables(mStateVariables);
   mpStimulus->SetPeriod(mPeriod);
   mpModel->SetForceReset(true);
+
+  // Return IKr block to its original value
+  if(mDefaultGKr!=DOUBLE_UNSET)
+    SetIKrBlock(mDefaultGKr);
 }
 
 bool Simulation::RunPaces(int max_paces){

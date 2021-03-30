@@ -83,6 +83,7 @@ public:
   boost::shared_ptr<AbstractCvodeCell> GetModel(){return mpModel;}
 
   void SetIKrBlock(double block);
+
 };
 
 

@@ -25,10 +25,14 @@
 class TestGroundTruthSimulation : public CxxTest::TestSuite
 {
 public:
-  const int paces = 25000;
+  const int default_max_paces = 25000;
   void TestRunSimulation()
   {
 #ifdef CHASTE_CVODE
+    int paces = get_max_paces();
+    // Use default_max_paces if get_max_paces returns DOUBLE_UNSET
+    paces = paces==DOUBLE_UNSET?default_max_paces:paces;
+
     const std::string username = std::string(getenv("USER"));
     boost::filesystem::create_directories("/home/" + username + "/testoutput/");
 
@@ -48,7 +52,7 @@ public:
       const N_Vector initial_states = model->GetStateVariables();
       for(double period : periods){
         for(double IKrBlock : IKrBlocks){
-          ComputeGroundTruth(model, period, IKrBlock);
+          ComputeGroundTruth(paces, model, period, IKrBlock);
           model->SetStateVariables(initial_states);
         }
       }
@@ -59,7 +63,7 @@ public:
 #endif
   }
 #ifdef CHASTE_CVODE
-  void ComputeGroundTruth(boost::shared_ptr<AbstractCvodeCell> model, double period, double IKrBlock){
+  void ComputeGroundTruth(int paces, boost::shared_ptr<AbstractCvodeCell> model, double period, double IKrBlock){
     const std::string username = std::string(getenv("USER"));
     const std::string CHASTE_TEST_OUTPUT = std::string(getenv("CHASTE_TEST_OUTPUT"));
     const std::string model_name = model->GetSystemInformation()->GetSystemName();

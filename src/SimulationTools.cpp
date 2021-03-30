@@ -218,18 +218,13 @@ void WriteStatesToFile(std::vector<double> states, std::ofstream &f_out){
   return;
 }
 
-void compare_error_measures(boost::shared_ptr<AbstractCvodeCell> model, double period, double IKrBlock, double tolerance, std::string filename_suffix){
+void compare_error_measures(int paces, boost::shared_ptr<AbstractCvodeCell> model, double period, double IKrBlock, double tolerance, std::string filename_suffix){
   const boost::filesystem::path test_dir(getenv("CHASTE_TEST_OUTPUT"));
-  const unsigned int paces  = 500;
-
-  const double default_GKr = model->GetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance");
-  model->SetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance", default_GKr*(1- IKrBlock));
 
   const std::string model_name = model->GetSystemInformation()->GetSystemName();
   const unsigned int starting_index = 0;
 
   std::cout << "For model " << model_name << " using starting_index " << starting_index << "\n";
-  model->SetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance", (1-IKrBlock)*default_GKr);
 
   const double starting_period = period==1000?500:1000;
   const double starting_block  = period==0?0.5:0;
@@ -246,6 +241,7 @@ void compare_error_measures(boost::shared_ptr<AbstractCvodeCell> model, double p
 
   Simulation simulation(model, period, input_path, tolerance, tolerance);
   model->SetTolerances(tolerance, tolerance);
+  simulation.SetIKrBlock(IKrBlock);
 
   std::cout << model->GetRelativeTolerance() << model->GetAbsoluteTolerance() << "\n";
 
@@ -277,7 +273,7 @@ void compare_error_measures(boost::shared_ptr<AbstractCvodeCell> model, double p
   output_file << "\n";
 
   std::vector<double> times;
-  for(unsigned int j = 0; j < paces; j++){
+  for(int j = 0; j < paces; j++){
     // std::cout << "pace = " << j << "\n";
     OdeSolution current_solution = simulation.GetPace(1, false);
     const std::vector<std::vector<double>> previous_pace = current_solution.rGetSolutions();
@@ -321,7 +317,6 @@ void compare_error_measures(boost::shared_ptr<AbstractCvodeCell> model, double p
   }
   output_file.close();
 
-  model->SetParameter("membrane_rapid_delayed_rectifier_potassium_current_conductance", default_GKr);
 }
 
 std::vector<boost::shared_ptr<AbstractCvodeCell>> get_models(){
@@ -375,7 +370,7 @@ std::vector<boost::shared_ptr<AbstractCvodeCell>> get_models(){
 
 std::vector<double> get_IKr_blocks(){
   const std::string option = "--IKrBlocks";
-  /* Get IKrBlocks using specified command line argument. If no argument is given use all models */
+  /* Get IKrBlocks using specified command line argument. If no argument is given default to defaults */
   std::vector<double> IKrBlocks = {0, 0.25, 0.5};
 
   /* If "--IKrBlocks" option is provided, use only those IKrBlocks that are specified */
@@ -388,15 +383,26 @@ std::vector<double> get_IKr_blocks(){
 
 std::vector<double> get_periods(){
   const std::string option = "--periods";
-  /* Get periods using specified command line argument. If no argument is given use all models */
+  /* Get periods using specified command line argument. If no argument is given, default to defaults */
   std::vector<double> periods={1000, 500, 750, 1250};
 
-  /* If "--periods" option is provided, use only those IKrBlocks that are specified */
     if(CommandLineArguments::Instance()->OptionExists(option)){
     periods = CommandLineArguments::Instance()->GetDoublesCorrespondingToOption(option);
   }
 
   return periods;
+}
+
+double get_max_paces(){
+  double paces = DOUBLE_UNSET;
+  const std::string option = "--paces";
+
+  /* Get maximum number of paces to run using specified command line argument. If no argument is given, return DOUBLE_UNSET */
+
+  if(CommandLineArguments::Instance()->OptionExists(option)){
+    paces = CommandLineArguments::Instance()->GetIntCorrespondingToOption(option);
+  }
+  return paces;
 }
 
 

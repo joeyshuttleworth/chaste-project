@@ -29,35 +29,29 @@
 #include "ohara_rudy_cipa_v1_2017_analyticCvode.hpp"
 
 
-
-
 class TestErrorMeasures : public CxxTest::TestSuite
 {
 public:
   std::string username;
+  const int default_max_paces = 10000;
   void TestErrors(){
-    const std::vector<double> periods={500, 750, 1000, 1250};
-    const std::vector<double> IKrBlocks={0, 0.25, 0.5};
+    int paces = get_paces();
+    paces = paces==INT_UNSET?default_max_paces:paces;
+    const std::vector<double> periods= get_periods(); {500, 750, 1000, 1250};
+    const std::vector<double> IKrBlocks= get_IKr_blocks();
+
+    std::vector<boost::shared_ptr<AbstractCvodeCell>> models = get_models();
+
     const std::string filename_suffix = "error_measures";
     const double tolerance = 1e-10;
 
     boost::shared_ptr<RegularStimulus> p_stimulus;
     boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
 
-    std::vector<boost::shared_ptr<AbstractCvodeCell>> models;
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_2011_endoFromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Celldecker_2009FromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellshannon_wang_puglisi_weber_bers_2004FromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellbeeler_reuter_model_1977FromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_cipa_v1_2017_analyticFromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2006_epi_analyticFromCellMLCvode(p_solver, p_stimulus)));
-    models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellhund_rudy_2004FromCellMLCvode(p_solver, p_stimulus)));
-
     for(auto model : models){
       for(auto period : periods){
         for(auto IKrBlock : IKrBlocks){
-          compare_error_measures(model, period, IKrBlock, tolerance, filename_suffix);
+          compare_error_measures(paces, model, period, IKrBlock, tolerance, filename_suffix);
         }
       }
     }

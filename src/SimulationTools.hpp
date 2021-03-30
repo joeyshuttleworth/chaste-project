@@ -74,4 +74,6 @@ std::vector<double> get_periods();
 
 std::vector<double> get_IKr_blocks();
 
+double get_max_paces();
+
 #endif
