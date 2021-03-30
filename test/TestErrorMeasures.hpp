@@ -11,33 +11,15 @@
 #include <boost/filesystem.hpp>
 #include <fstream>
 
-/* These header files are generated from the cellml files provided at github.com/chaste/cellml */
-
-#include "beeler_reuter_model_1977Cvode.hpp"
-#include "ten_tusscher_model_2004_epiCvode.hpp"
-#include "ohara_rudy_2011_endoCvode.hpp"
-#include "shannon_wang_puglisi_weber_bers_2004Cvode.hpp"
-#include "decker_2009Cvode.hpp"
-#include "ohara_rudy_cipa_v1_2017Cvode.hpp"
-#include "ten_tusscher_model_2006_epiCvode.hpp"
-#include "hund_rudy_2004Cvode.hpp"
-#include "iyer_2004.hpp"
-#include "ToRORd_dynCl_endo.hpp"
-
-// Models modified to have analytic voltage:
-#include "ten_tusscher_model_2006_epi_analyticCvode.hpp"
-#include "ohara_rudy_cipa_v1_2017_analyticCvode.hpp"
-
-
 class TestErrorMeasures : public CxxTest::TestSuite
 {
 public:
   std::string username;
   const int default_max_paces = 10000;
   void TestErrors(){
-    int paces = get_paces();
+    int paces = get_max_paces();
     paces = paces==INT_UNSET?default_max_paces:paces;
-    const std::vector<double> periods= get_periods(); {500, 750, 1000, 1250};
+    const std::vector<double> periods= get_periods();
     const std::vector<double> IKrBlocks= get_IKr_blocks();
 
     std::vector<boost::shared_ptr<AbstractCvodeCell>> models = get_models();

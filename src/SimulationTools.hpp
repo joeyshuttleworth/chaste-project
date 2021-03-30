@@ -47,7 +47,7 @@ std::vector<std::vector<double>> GetPace(std::vector<double> initial_conditions,
 
 double CalculatePMCC(std::vector<double>, std::vector<double>);
 
-void compare_error_measures(boost::shared_ptr<AbstractCvodeCell>, double period, double IKrBlock, double tolerance, std::string filename_suffix);
+void compare_error_measures(int paces, boost::shared_ptr<AbstractCvodeCell>, double period, double IKrBlock, double tolerance, std::string filename_suffix);
 
 template<typename Container>
 double CalculatePMCC(Container values){

@@ -219,6 +219,9 @@ void WriteStatesToFile(std::vector<double> states, std::ofstream &f_out){
 }
 
 void compare_error_measures(int paces, boost::shared_ptr<AbstractCvodeCell> model, double period, double IKrBlock, double tolerance, std::string filename_suffix){
+
+  if(paces == INT_UNSET)
+    EXCEPTION("Invalid number of paces");
   const boost::filesystem::path test_dir(getenv("CHASTE_TEST_OUTPUT"));
 
   const std::string model_name = model->GetSystemInformation()->GetSystemName();
@@ -240,10 +243,7 @@ void compare_error_measures(int paces, boost::shared_ptr<AbstractCvodeCell> mode
   const std::string input_path = (test_dir / boost::filesystem::path(input_dirname_ss.str()) / boost::filesystem::path("final_states.dat")).string();
 
   Simulation simulation(model, period, input_path, tolerance, tolerance);
-  model->SetTolerances(tolerance, tolerance);
   simulation.SetIKrBlock(IKrBlock);
-
-  std::cout << model->GetRelativeTolerance() << model->GetAbsoluteTolerance() << "\n";
 
   simulation.SetTerminateOnConvergence(false);
 
@@ -274,7 +274,6 @@ void compare_error_measures(int paces, boost::shared_ptr<AbstractCvodeCell> mode
 
   std::vector<double> times;
   for(int j = 0; j < paces; j++){
-    // std::cout << "pace = " << j << "\n";
     OdeSolution current_solution = simulation.GetPace(1, false);
     const std::vector<std::vector<double>> previous_pace = current_solution.rGetSolutions();
     bool failed = false;
@@ -302,21 +301,12 @@ void compare_error_measures(int paces, boost::shared_ptr<AbstractCvodeCell> mode
       output_file << current_states[k] << " ";
     }
     output_file << "\n";
-    try{
-      simulation.RunPaces(9);
-    }
-    catch(const Exception &exc){
-      failed = true;
-    }
-
-    j+=9;
     if(failed){
       std::cout << "Terminated early after " << j  << " paces";
       break;
     }
   }
   output_file.close();
-
 }
 
 std::vector<boost::shared_ptr<AbstractCvodeCell>> get_models(){
@@ -394,7 +384,7 @@ std::vector<double> get_periods(){
 }
 
 double get_max_paces(){
-  double paces = DOUBLE_UNSET;
+  double paces = INT_UNSET;
   const std::string option = "--paces";
 
   /* Get maximum number of paces to run using specified command line argument. If no argument is given, return DOUBLE_UNSET */
