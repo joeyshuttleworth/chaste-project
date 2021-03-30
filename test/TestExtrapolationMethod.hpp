@@ -40,9 +40,9 @@ class TestExtrapolationMethod : public CxxTest::TestSuite
 private:
   const unsigned int buffer_size = 100;
   const double extrapolation_coefficient = 1;
-  const unsigned int paces = 2000;
+  const unsigned int default_paces = 3000;
 
-  bool CompareMethodsPeriod(boost::shared_ptr<AbstractCvodeCell> brute_force_model, boost::shared_ptr<AbstractCvodeCell> smart_model){
+  bool CompareMethodsPeriod(int paces, boost::shared_ptr<AbstractCvodeCell> brute_force_model, boost::shared_ptr<AbstractCvodeCell> smart_model){
     const double IKrBlock = 0;
     std::string username = std::string(getenv("USER"));
     const std::string model_name = brute_force_model->GetSystemInformation()->GetSystemName();
@@ -80,7 +80,7 @@ private:
     // Run the simulations until they finish
     bool brute_finished = false;
     bool smart_finished = false;
-    for(unsigned int j = 0; j < 5000; j++){
+    for(int j = 0; j < paces; j++){
       if(!smart_finished){
         if(smart_simulation.RunPace()){
           std::cout << "Model " << model_name << " period " << period << " extrapolation method finished after " << j << " paces \n";
@@ -136,8 +136,9 @@ private:
     // Compare smart apd with reference version
     std::stringstream apd_file_ss;
     const std::string CHASTE_TEST_OUTPUT = getenv("CHASTE_TEST_OUTPUT");
-    apd_file_ss << model_name << "_" << std::to_string(int(period)) << "ms_" << int(100*IKrBlock)<<"_percent_block/apds_using_groundtruth.dat";
-    std::ifstream apd_file(apd_file_ss.str());
+    apd_file_ss << CHASTE_TEST_OUTPUT << model_name << "_" << std::to_string(int(period)) << "ms_" << int(100*IKrBlock)<<"_percent_block/final_apd90.dat";
+    const std::string apd_filename = apd_file_ss.str();
+    std::ifstream apd_file(apd_filename);
     std::string line;
     std::getline(apd_file, line);
     const double reference_apd = std::stod(line);
@@ -165,7 +166,7 @@ private:
     return brute_finished&&smart_finished;
   }
 
-  void CompareMethodsIKrBlock(boost::shared_ptr<AbstractCvodeCell> brute_model, boost::shared_ptr<AbstractCvodeCell> smart_model){
+  void CompareMethodsIKrBlock(int paces, boost::shared_ptr<AbstractCvodeCell> brute_model, boost::shared_ptr<AbstractCvodeCell> smart_model){
     const std::string model_name = brute_model->GetSystemInformation()->GetSystemName();
     std::cout << "Testing " << model_name  << " with 50% block of IKr\n";
 
@@ -211,7 +212,10 @@ public:
   void TestTusscherSimulation()
   {
 #ifdef CHASTE_CVODE
+    int paces = get_max_paces();
+    paces = paces==INT_UNSET?default_paces:paces;
 
+    std::cout << "Running each scenario for " << paces << " paces.\n";
     boost::shared_ptr<RegularStimulus> p_stimulus;
     boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
 
@@ -238,7 +242,7 @@ public:
     algebraic_models.push_back(boost::make_shared<Cellohara_rudy_cipa_2017_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
 
     for(unsigned int i = 0; i < original_models.size(); i++){
-      CompareMethodsPeriod(original_models[i], algebraic_models[i]);
+      CompareMethodsPeriod(paces, original_models[i], algebraic_models[i]);
       // CompareMethodsIKrBlock(original_models[i], algebraic_models[i]);
     }
 

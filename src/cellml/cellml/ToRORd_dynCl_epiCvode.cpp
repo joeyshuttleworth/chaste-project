@@ -60,8 +60,8 @@
 
         // We have a default stimulus specified in the CellML file metadata
         this->mHasDefaultStimulusFromCellML = true;
-        mUseAnalyticJacobian = true;
-        mHasAnalyticJacobian = true;
+        mUseAnalyticJacobian = false;
+        mHasAnalyticJacobian = false;
         
         NV_Ith_S(this->mParameters, 0) = 1.5378000000000001; // (var_ryr__Jrel_b) [dimensionless]
         NV_Ith_S(this->mParameters, 1) = 1.0; // (var_SERCA__Jup_b) [dimensionless]
