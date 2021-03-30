@@ -245,7 +245,7 @@ void compare_error_measures(int paces, boost::shared_ptr<AbstractCvodeCell> mode
   std::stringstream input_dirname_ss;
   input_dirname_ss << model_name+"_" << std::to_string(int(starting_period)) << "ms_" << int(100*starting_block)<<"_percent_block/";
   const std::string input_dirname = (test_dir / boost::filesystem::path(input_dirname_ss.str())).string();
-  std::cout << "Testing model: " << model_name << " with period " << period << "ms and IKrBlock " << IKrBlock << "and tolerances " << tolerance << "\n";
+  std::cout << "Testing model: " << model_name << " with period " << period << "ms and IKrBlock " << IKrBlock << " and tolerances " << tolerance << "\n";
 
   const std::string input_path = (test_dir / boost::filesystem::path(input_dirname_ss.str()) / boost::filesystem::path("final_states.dat")).string();
 

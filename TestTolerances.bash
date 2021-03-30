@@ -12,6 +12,7 @@ name_of_test="TestTolerances"
 
 mkdir log
 mkdir log/${name_of_test}
+mkdir log/${name_of_test}/${model}_${period}_${IKrBlock}.log;
 
 for IKrBlock in ${IKrBlocks[@]}; do
     for period in ${periods[@]}; do

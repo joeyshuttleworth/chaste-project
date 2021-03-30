@@ -12,6 +12,7 @@ name_of_test="TestGroundTruthSimulation"
 
 mkdir log
 mkdir log/TestGroundTruth
+mkdir log/${name_of_test}/${model}_${period}_${IKrBlock}.log;
 
 for IKrBlock in ${IKrBlocks[@]}; do
     for period in ${periods[@]}; do

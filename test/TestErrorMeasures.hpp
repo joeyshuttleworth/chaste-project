@@ -19,13 +19,14 @@ public:
   void TestErrors(){
     int paces = get_max_paces();
     paces = paces==INT_UNSET?default_max_paces:paces;
+
     const std::vector<double> periods= get_periods();
     const std::vector<double> IKrBlocks= get_IKr_blocks();
 
     std::vector<boost::shared_ptr<AbstractCvodeCell>> models = get_models();
 
     const std::string filename_suffix = "error_measures";
-    const double tolerance = 1e-10;
+    const double tolerance = 1e-8;
 
     boost::shared_ptr<RegularStimulus> p_stimulus;
     boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
