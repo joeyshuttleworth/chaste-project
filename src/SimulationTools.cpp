@@ -219,9 +219,16 @@ void WriteStatesToFile(std::vector<double> states, std::ofstream &f_out){
 }
 
 void compare_error_measures(int paces, boost::shared_ptr<AbstractCvodeCell> model, double period, double IKrBlock, double tolerance, std::string filename_suffix){
+  /* Run the models and output each of the error measures after every paces.
+     Also output the APD90 resulting from computing a pace using the current
+     state variables as the initial conditions in the model and integrating
+     forward one pace with fine tolerances. This is very slow and involves a lot
+     of work.
+   */
 
   if(paces == INT_UNSET)
     EXCEPTION("Invalid number of paces");
+
   const boost::filesystem::path test_dir(getenv("CHASTE_TEST_OUTPUT"));
 
   const std::string model_name = model->GetSystemInformation()->GetSystemName();
