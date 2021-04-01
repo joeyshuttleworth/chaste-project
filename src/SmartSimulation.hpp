@@ -67,11 +67,11 @@ private:
   boost::circular_buffer<std::vector<double>>  mStatesBuffer;
   boost::circular_buffer<double> mMrmsBuffer;
   unsigned int mJumps = 0;
-  unsigned int mMaxJumps = 1;
+  unsigned int mMaxJumps = 10;
   std::vector<double> mSafeStateVariables;
   std::ofstream errors;
 
-  bool ExtrapolateState(unsigned int state_index);
+  bool ExtrapolateState(unsigned int state_index, bool& stop_extrapolation);
   bool ExtrapolateStates();
 };
 

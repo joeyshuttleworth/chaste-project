@@ -38,9 +38,9 @@
 class TestExtrapolationMethod : public CxxTest::TestSuite
 {
 private:
-  const unsigned int buffer_size = 100;
+  const unsigned int buffer_size = 200;
   const double extrapolation_coefficient = 1;
-  const unsigned int default_paces = 3000;
+  const unsigned int default_paces = 5000;
 
   bool CompareMethodsPeriod(int paces, boost::shared_ptr<AbstractCvodeCell> brute_force_model, boost::shared_ptr<AbstractCvodeCell> smart_model){
     const double IKrBlock = 0;
@@ -50,15 +50,12 @@ private:
     boost::filesystem::create_directories(dirname);
     const int period = 750;
     // Uses a method to extrapolate to the steady state
-    SmartSimulation smart_simulation(smart_model, period, "", 1e-8, 1e-8, 200, 1, "/home/chaste/testoutput/" + model_name + "/TestExtrapolationMethod");
+    SmartSimulation smart_simulation(smart_model, period, "", 1e-8, 1e-8, buffer_size, extrapolation_coefficient, "/home/chaste/testoutput/" + model_name + "/TestExtrapolationMethod");
     // Runs the model without using this method
-    Simulation      simulation(brute_force_model, period, "", 1e-8, 1e-8);
-
-    smart_simulation.SetThreshold(0);
-    simulation.SetThreshold(0);
+    Simulation simulation(brute_force_model, period, "", 1e-8, 1e-8);
 
     // Setup directories for output
-    std::cout << "Testing " << model_name  << "\n";
+    std::cout << "-------------------------------\n\n\nTesting " << model_name  << "\n";
 
     //Open files to output states to at the start/end of each pace
     std::ofstream smart_output_file, brute_output_file;
@@ -68,8 +65,8 @@ private:
     std::vector<std::string> state_names = smart_model->rGetStateVariableNames();
 
     // Set up header line
-    smart_output_file << "pace ";
-    brute_output_file << "pace ";
+    smart_output_file << "pace mrms ";
+    brute_output_file << "pace mrms ";
     for(unsigned int i = 0; i < state_names.size(); i++){
       smart_output_file << state_names[i] << " ";
       brute_output_file << state_names[i] << " ";
@@ -88,6 +85,7 @@ private:
         }
         std::vector<double> state_vars = smart_model->GetStdVecStateVariables();
         smart_output_file << j << " ";
+        smart_output_file << simulation.GetMrms() << " ";
         for(unsigned int i = 0; i < state_vars.size(); i++){
           smart_output_file << state_vars[i] << " ";
         }
@@ -101,6 +99,7 @@ private:
         }
         std::vector<double> state_vars = brute_force_model->GetStdVecStateVariables();
         brute_output_file << j << " ";
+        brute_output_file << simulation.GetMrms() << " ";
         //Don't print membrane_voltage (usually the first state variable)
         for(unsigned int i = 1; i < state_vars.size(); i++){
           brute_output_file << state_vars[i] << " ";
@@ -118,11 +117,6 @@ private:
       brute_states.erase(brute_states.begin());
     }
 
-
-    for(unsigned int i = 0; i < smart_states.size() && i < brute_states.size(); i++){
-      std::cout << brute_states[i] << " " << smart_states[i] << "\n";
-    }
-
     /*Check that the methods have converged to the same place*/
     // First calculate and output the mrms error between the solutions
     double mrms_difference = mrms(brute_states, smart_states);
@@ -136,13 +130,20 @@ private:
     // Compare smart apd with reference version
     std::stringstream apd_file_ss;
     const std::string CHASTE_TEST_OUTPUT = getenv("CHASTE_TEST_OUTPUT");
-    apd_file_ss << CHASTE_TEST_OUTPUT << model_name << "_" << std::to_string(int(period)) << "ms_" << int(100*IKrBlock)<<"_percent_block/final_apd90.dat";
-    const std::string apd_filename = apd_file_ss.str();
-    std::ifstream apd_file(apd_filename);
-    std::string line;
-    std::getline(apd_file, line);
-    const double reference_apd = std::stod(line);
-    std::cout << "Difference between apd and reference apd " << smart_apd - reference_apd << "\n";
+    boost::filesystem::path apd_filepath(CHASTE_TEST_OUTPUT);
+    apd_file_ss << model_name << "_" << std::to_string(int(period)) << "ms_" << int(100*IKrBlock)<<"_percent_block";
+    apd_filepath = apd_filepath / apd_file_ss.str() / "final_apd90.dat";
+    try{
+      std::ifstream apd_file(apd_filepath.string());
+      std::string line;
+      std::getline(apd_file, line);
+      const double reference_apd = std::stod(line);
+      std::cout << "Difference between apd and reference apd " << smart_apd - reference_apd << "\n";
+    }
+    catch(const std::exception& e){
+      std::cout << "Couldn't find reference voltage at " << apd_filepath.string() << " - ignoring\n" << e.what() << "\n---------------------------\n";
+    }
+
 
     std::string smart_filename = "smart_final_pace.dat";
     std::string brute_filename = "brute_final_pace.dat";
