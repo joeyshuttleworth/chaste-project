@@ -9,11 +9,11 @@ import numpy as np
 
 # matplotlib.style.use('classic')
 
-def make_plot(model_name):
+def make_plot(model_name, jump_number=0):
     print("Plotting extrapolation for {}".format(model_name))
     dir = "~/Chaste/testoutput/"
 
-    with open(os.path.expanduser(dir) + model_name + "/TestExtrapolationMethod/750JumpParameters.dat") as csv_file:
+    with open(os.path.expanduser(dir) + model_name + "/TestExtrapolationMethod/750JumpParameters{}.dat".format(jump_number)) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=' ')
         lines = [row for row in csv_reader]
 
@@ -41,7 +41,7 @@ def make_plot(model_name):
         vinf = extrap_parameters[i-1][2]
 
         print("plotting extrapolation of {}".format(var_name))
-        print(extrap_parameters[i-1])
+        print(alpha, tau, vinf)
 
         V_diff = np.exp(alpha  - buffer_size/tau + 1/tau)/(np.exp(1/tau) - 1);
 
@@ -89,21 +89,32 @@ def make_plot(model_name):
 
         plt.clf()
 
-def plot_state_vars(model_name):
+def compare_p2p_errors(model_name):
     dir = "~/Chaste/testoutput/"
     dir = dir + model_name + "/TestExtrapolationMethod/"
-    df = pd.read_csv(dir + "smart.dat", delim_whitespace=True)
-    df=df.drop("pace", 1)
+    smart_df = pd.read_csv(dir + "smart.dat", delim_whitespace=True)
+    smart_df = smart_df.drop("pace", 1)
 
-    for column in df:
-        df[column].plot(title=column)
-        plt.show()
+    brute_df = pd.read_csv(dir + "bruteforce.dat", delim_whitespace=True)
+    brute_df = brute_df.drop("pace", 1)
+    np.log10(smart_df['mrms']).plot(label="extrapolation method", title = "{} pace to pace mixed root mean square error comparison".format(model_name))
+    np.log10(brute_df['mrms']).plot(label="brute force method")
+    plt.show()
+
+    # for column in df:
+    #     df[column].plot(title=column)
+    #     plt.show(
 
 
 if __name__=="__main__":
-    # plot_state_vars("IyerMazhariWinslow2004")
+    # compare_p2p_errors("IyerMazhariWinslow2004")
     # make_plot("IyerMazhariWinslow2004")
-    # make_plot("HundRudy2004_units")
+    compare_p2p_errors("HundRudy2004_units")
+    make_plot("HundRudy2004_units", 2)
+    # compare_p2p_errors("tentusscher_model_2004_epi")
     # make_plot("tentusscher_model_2004_epi")
-    make_plot("ohara_rudy_2011_epi")
-    # make_plot("Tomek2020epi")
+    # make_plot("ohara_rudy_2011_epi")
+    # compare_p2p_errors("Tomek2020epi")
+    # make_plot("Tomek2020epi", 0)
+    # compare_p2p_errors("decker_2009")
+    # make_plot("decker_2009", 0)

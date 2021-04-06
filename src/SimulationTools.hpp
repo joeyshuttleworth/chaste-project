@@ -68,7 +68,7 @@ double CalculatePMCC(Container values){
 }
 
 
-std::vector<boost::shared_ptr<AbstractCvodeCell>> get_models();
+std::vector<boost::shared_ptr<AbstractCvodeCell>> get_models(const std::string& type = "all");
 
 std::vector<boost::shared_ptr<AbstractCvodeCell>> get_analytic_models();
 

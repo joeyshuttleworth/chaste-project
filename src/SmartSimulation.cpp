@@ -7,6 +7,7 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <iomanip> 
 #include "SmartSimulation.hpp"
 
 bool SmartSimulation::ExtrapolateState(unsigned int state_index, bool& stop_extrapolation){
@@ -26,7 +27,7 @@ bool SmartSimulation::ExtrapolateState(unsigned int state_index, bool& stop_extr
   }
   const double pmcc = CalculatePMCC(x_vals, y_vals);
 
-  if(pmcc>-0.9){  //keep the unchanged value if there is no negative correlation (PMCC > -0.9 or PMCC = NAN)
+  if(pmcc>-0.8 && std::isfinite(pmcc)){  //keep the unchanged value if there is no negative correlation (PMCC > -0.9 or PMCC = NAN)
     std::cout <<  mpModel->GetSystemInformation()->rGetStateVariableNames()[state_index]<< ": PMCC was " << pmcc << " Ignoring. \n";
     return false;
   }
@@ -83,8 +84,9 @@ bool SmartSimulation::ExtrapolateState(unsigned int state_index, bool& stop_extr
   }
 
   // Check timescale isn't too big
-  if(tau > 5000){
+  if(tau > mBufferSize * 50){
     std::cout << "timescale too long, ignoring: tau = \t" << tau << "\n";
+    return false;
   }
   // std::cout << "Change in " << p_model->GetSystemInformation()->rGetStateVariableNames()[state_index] << " is: " << change_in_variable << "\n" << "New value is " << new_value << "\n";
 
@@ -158,11 +160,12 @@ bool SmartSimulation::ExtrapolateStates(){
     std::string model_name = mpModel->GetSystemInformation()->GetSystemName();
     const std::string dir_name = mOutputDir;
     boost::filesystem::create_directory(dir_name);
-    if(mrms_pmcc < -0.90){
+    if(true){// if(mrms_pmcc < -0.90){
       mSafeStateVariables = mStateVariables;
       std::cout << "Extrapolating - start of buffer is " << mPaces - mBufferSize + 1<< "\n";
 
-      mOutputFile.open(dir_name + "/" + std::to_string(int(mPeriod)) + "JumpParameters.dat");
+      mOutputFile.open(dir_name + "/" + std::to_string(int(mPeriod)) + "JumpParameters" + std::to_string(mJumps) + ".dat");
+      mOutputFile << std::setprecision(20);
       mOutputFile << mPaces << " " << mBufferSize << " " << mExtrapolationConstant << "\n";
 
       bool stop_extrapolation = false;
@@ -185,6 +188,13 @@ bool SmartSimulation::ExtrapolateStates(){
         mJumps++;
         mpModel->SetStateVariables(mStateVariables);
         std::cout << "Extrapolated \n";
+
+        // Debugging
+        std::cout << "new state variables are:\n";
+        for(auto variable : mStateVariables){
+          std::cout << variable << " ";
+        }
+        std::cout<<"\n";
       }
       mMrmsBuffer.clear();
       mStatesBuffer.clear();
