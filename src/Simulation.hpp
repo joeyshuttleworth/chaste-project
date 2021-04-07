@@ -61,8 +61,6 @@ public:
 
   OdeSolution GetPace(double sampling_timestep = 1, bool update_vars=false);
 
-  double GetMrms();
-
   std::vector<double> GetStateVariables();
 
  // Setters and getters

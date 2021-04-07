@@ -45,7 +45,7 @@
     {
         return NV_Ith_S(mStateVariables, 1);
     }
-    
+
     CellToRORd_dynCl_epiFromCellMLCvode::CellToRORd_dynCl_epiFromCellMLCvode(boost::shared_ptr<AbstractIvpOdeSolver> pOdeSolver /* unused; should be empty */, boost::shared_ptr<AbstractStimulusFunction> pIntracellularStimulus)
         : AbstractCvodeCell(
                 pOdeSolver,
@@ -62,7 +62,7 @@
         this->mHasDefaultStimulusFromCellML = true;
         mUseAnalyticJacobian = false;
         mHasAnalyticJacobian = false;
-        
+
         NV_Ith_S(this->mParameters, 0) = 1.5378000000000001; // (var_ryr__Jrel_b) [dimensionless]
         NV_Ith_S(this->mParameters, 1) = 1.0; // (var_SERCA__Jup_b) [dimensionless]
         NV_Ith_S(this->mParameters, 2) = 1.8; // (var_extracellular__cao) [millimolar]
@@ -88,7 +88,7 @@
     {
     }
 
-    
+
     double CellToRORd_dynCl_epiFromCellMLCvode::GetIIonic(const std::vector<double>* pStateVariables)
     {
         // For state variable interpolation (SVI) we read in interpolated state variables,
@@ -178,7 +178,7 @@
         // Units: dimensionless; Initial value: 0.2233584
         double var_chaste_interface__IKs__xs2 = NV_Ith_S(rY, 42);
         // Units: dimensionless; Initial value: 0.0001418247
-        
+
         const double var_CaMK__CaMKo = 0.050000000000000003; // dimensionless
         const double var_CaMK__KmCaM = 0.0015; // millimolar
         const double var_CaMK__KmCaMK = 0.14999999999999999; // millimolar
@@ -928,7 +928,7 @@
             const double var_ICl__IClCa = var_ICl__IClCa_junc + var_ICl__IClCa_sl; // microA_per_microF
             d_dt_chaste_interface_var_membrane__v = -var_ICaL__ICaK - var_ICaL__ICaL - var_ICaL__ICaNa - var_ICab__ICab - var_ICl__IClCa - var_ICl__IClb - var_IK1__IK1 - var_IKb__IKb - var_IKr__IKr - var_IKs__IKs - var_INa__INa - var_INaCa__INaCa_i - var_INaCa__INaCa_ss - var_INaK__INaK - var_INaL__INaL - var_INab__INab - var_I_katp__I_katp - var_IpCa__IpCa - var_Ito__Ito - var_membrane__Istim; // millivolt / millisecond
         }
-        
+
         NV_Ith_S(rDY,0) = d_dt_chaste_interface_var_membrane__v;
         NV_Ith_S(rDY,1) = d_dt_chaste_interface_var_intracellular_ions__cai;
         NV_Ith_S(rDY,2) = d_dt_chaste_interface_var_CaMK__CaMKt;
@@ -2517,7 +2517,7 @@
         const double var_x1446 = var_x1413 * var_x1445;
         const double var_x1447 = -var_x1425 * var_x1446;
         const double var_x1448 = 3.1350000000000002 * var_x1444;
-        
+
         // Matrix entries
         IJth(rJacobian, 0, 0) = mSetVoltageDerivativeToZero ? 0.0 : (-0.00198 + var_x496 + var_x535 + var_x577 + var_x619 + var_x690 - var_x3 - var_x463 - var_x478 + var_x428 * var_x453 + var_x466 * var_x472 + (2.2883093838538917 * var_x116 + 0.35468795449735319 * var_x122 - 0.0024432929743287307 * var_x124 - 27.352034447734344 * var_x125 + var_x108 * var_x111 + var_x108 * var_x121 + var_x90 * var_x92 - var_x103 * var_x107 - var_x108 * var_x119 - var_x112 * var_x114 - var_x73 * var_x82) * NV_Ith_S(mParameters, 16) - var_x279 * var_x283 - var_x376 * var_x380);
         IJth(rJacobian, 1, 0) = var_x1124 * (var_x577 + var_x1119 * var_x279);
@@ -2888,7 +2888,7 @@
         // Units: millimolar_per_millisecond; Initial value: 6.778827e-25
         double var_chaste_interface__ryr__Jrel_p = NV_Ith_S(rY, 44);
         // Units: millimolar_per_millisecond; Initial value: -1.581941e-23
-        
+
         // Mathematics
         const double var_CaMK__CaMKo = 0.050000000000000003; // dimensionless
         const double var_CaMK__KmCaM = 0.0015; // millimolar

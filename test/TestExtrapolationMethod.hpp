@@ -12,35 +12,14 @@
 
 #include <boost/filesystem.hpp>
 #include <fstream>
-
-// Non algebraic models
-#include "ten_tusscher_model_2004_epiCvode.hpp"
-#include "ohara_rudy_2011_epiCvode.hpp"
-#include "decker_2009Cvode.hpp"
-#include "ohara_rudy_cipa_v1_2017Cvode.hpp"
-#include "ten_tusscher_model_2006_epiCvode.hpp"
-#include "hund_rudy_2004Cvode.hpp"
-#include "iyer_2004Cvode.hpp"
-#include "ToRORd_dynCl_epiCvode.hpp"
-#include "hund_rudy_2004Cvode.hpp"
-
-
-// Analytic models
-#include "decker_2009_analytic_voltageCvode.hpp"
-#include "hund_rudy_2004_analytic_voltageCvode.hpp"
-#include "iyer_2004_analytic_voltageCvode.hpp"
-#include "ohara_rudy_2011_epi_analytic_voltageCvode.hpp"
-#include "ohara_rudy_cipa_2017_epi_analytic_voltageCvode.hpp"
-#include "ten_tusscher_2006_epi_analytic_voltageCvode.hpp"
-#include "ten_tusscher_2004_epi_analytic_voltageCvode.hpp"
-#include "ToRORd_dyn_chloride_epi_analytic_voltageCvode.hpp"
+#include <iomanip>
 
 class TestExtrapolationMethod : public CxxTest::TestSuite
 {
 private:
-  const unsigned int buffer_size = 100;
+  unsigned int buffer_size = 750;
   const double extrapolation_coefficient = 1;
-  const unsigned int default_paces = 3000;
+  const unsigned int default_paces = 5000;
 
   bool CompareMethodsPeriod(int paces, boost::shared_ptr<AbstractCvodeCell> brute_force_model, boost::shared_ptr<AbstractCvodeCell> smart_model){
     const double IKrBlock = 0;
@@ -50,26 +29,25 @@ private:
     boost::filesystem::create_directories(dirname);
     const int period = 750;
     // Uses a method to extrapolate to the steady state
-    SmartSimulation smart_simulation(smart_model, period, "", 1e-8, 1e-8, 200, 1, "/home/chaste/testoutput/" + model_name + "/TestExtrapolationMethod");
+    SmartSimulation smart_simulation(smart_model, period, "", 1e-8, 1e-8, buffer_size, extrapolation_coefficient, "/home/chaste/testoutput/" + model_name + "/TestExtrapolationMethod");
     // Runs the model without using this method
-    Simulation      simulation(brute_force_model, period, "", 1e-8, 1e-8);
-
-    smart_simulation.SetThreshold(0);
-    simulation.SetThreshold(0);
+    Simulation simulation(brute_force_model, period, "", 1e-8, 1e-8);
 
     // Setup directories for output
-    std::cout << "Testing " << model_name  << "\n";
+    std::cout << "-------------------------------\n\n\nTesting " << model_name  << "\n";
 
     //Open files to output states to at the start/end of each pace
     std::ofstream smart_output_file, brute_output_file;
     smart_output_file.open("/home/"+username+"/testoutput/"+model_name+"/TestExtrapolationMethod/smart.dat");
     brute_output_file.open("/home/"+username+"/testoutput/"+model_name+"/TestExtrapolationMethod/bruteforce.dat");
+    smart_output_file << std::setprecision(20);
+    brute_output_file << std::setprecision(20);
 
     std::vector<std::string> state_names = smart_model->rGetStateVariableNames();
 
     // Set up header line
-    smart_output_file << "pace ";
-    brute_output_file << "pace ";
+    smart_output_file << "pace mrms ";
+    brute_output_file << "pace mrms ";
     for(unsigned int i = 0; i < state_names.size(); i++){
       smart_output_file << state_names[i] << " ";
       brute_output_file << state_names[i] << " ";
@@ -88,6 +66,7 @@ private:
         }
         std::vector<double> state_vars = smart_model->GetStdVecStateVariables();
         smart_output_file << j << " ";
+        smart_output_file << smart_simulation.GetMrms() << " ";
         for(unsigned int i = 0; i < state_vars.size(); i++){
           smart_output_file << state_vars[i] << " ";
         }
@@ -101,6 +80,7 @@ private:
         }
         std::vector<double> state_vars = brute_force_model->GetStdVecStateVariables();
         brute_output_file << j << " ";
+        brute_output_file << simulation.GetMrms() << " ";
         //Don't print membrane_voltage (usually the first state variable)
         for(unsigned int i = 1; i < state_vars.size(); i++){
           brute_output_file << state_vars[i] << " ";
@@ -118,11 +98,6 @@ private:
       brute_states.erase(brute_states.begin());
     }
 
-
-    for(unsigned int i = 0; i < smart_states.size() && i < brute_states.size(); i++){
-      std::cout << brute_states[i] << " " << smart_states[i] << "\n";
-    }
-
     /*Check that the methods have converged to the same place*/
     // First calculate and output the mrms error between the solutions
     double mrms_difference = mrms(brute_states, smart_states);
@@ -136,13 +111,20 @@ private:
     // Compare smart apd with reference version
     std::stringstream apd_file_ss;
     const std::string CHASTE_TEST_OUTPUT = getenv("CHASTE_TEST_OUTPUT");
-    apd_file_ss << CHASTE_TEST_OUTPUT << model_name << "_" << std::to_string(int(period)) << "ms_" << int(100*IKrBlock)<<"_percent_block/final_apd90.dat";
-    const std::string apd_filename = apd_file_ss.str();
-    std::ifstream apd_file(apd_filename);
-    std::string line;
-    std::getline(apd_file, line);
-    const double reference_apd = std::stod(line);
-    std::cout << "Difference between apd and reference apd " << smart_apd - reference_apd << "\n";
+    boost::filesystem::path apd_filepath(CHASTE_TEST_OUTPUT);
+    apd_file_ss << model_name << "_" << std::to_string(int(period)) << "ms_" << int(100*IKrBlock)<<"_percent_block";
+    apd_filepath = apd_filepath / apd_file_ss.str() / "final_apd90.dat";
+    try{
+      std::ifstream apd_file(apd_filepath.string());
+      std::string line;
+      std::getline(apd_file, line);
+      const double reference_apd = std::stod(line);
+      std::cout << "Difference between apd and reference apd " << smart_apd - reference_apd << "\n";
+    }
+    catch(const std::exception& e){
+      std::cout << "Couldn't find reference voltage at " << apd_filepath.string() << " - ignoring\n" << e.what() << "\n---------------------------\n";
+    }
+
 
     std::string smart_filename = "smart_final_pace.dat";
     std::string brute_filename = "brute_final_pace.dat";
@@ -215,31 +197,20 @@ public:
     int paces = get_max_paces();
     paces = paces==INT_UNSET?default_paces:paces;
 
+    if(CommandLineArguments::Instance()->OptionExists("--buffer-size")){
+      buffer_size = CommandLineArguments::Instance()->GetIntCorrespondingToOption("--buffer-size");
+    }
+
     std::cout << "Running each scenario for " << paces << " paces.\n";
     boost::shared_ptr<RegularStimulus> p_stimulus;
     boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
 
     /* Compare each model with a version modified for the extrapolation method */
 
-    std::vector<boost::shared_ptr<AbstractCvodeCell>> original_models;
-    original_models.push_back(boost::make_shared<CellToRORd_dynCl_epiFromCellMLCvode>(p_solver, p_stimulus));
-    original_models.push_back(boost::make_shared<Celliyer_2004FromCellMLCvode>(p_solver, p_stimulus));
-    original_models.push_back(boost::make_shared<Cellhund_rudy_2004FromCellMLCvode>(p_solver, p_stimulus));
-    original_models.push_back(boost::make_shared<Celldecker_2009FromCellMLCvode>(p_solver, p_stimulus));
-    original_models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2004_epiFromCellMLCvode(p_solver, p_stimulus)));
-    original_models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellten_tusscher_model_2006_epiFromCellMLCvode(p_solver, p_stimulus)));
-    original_models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_2011_epiFromCellMLCvode(p_solver, p_stimulus)));
-    original_models.push_back(boost::shared_ptr<AbstractCvodeCell>(new Cellohara_rudy_cipa_v1_2017FromCellMLCvode(p_solver, p_stimulus)));
+    auto original_models = get_models("original");
+    auto algebraic_models = get_models("algebraic");
 
-    std::vector<boost::shared_ptr<AbstractCvodeCell>> algebraic_models;
-    algebraic_models.push_back(boost::make_shared<CellToRORd_dyn_chloride_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
-    algebraic_models.push_back(boost::make_shared<Celliyer_2004_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
-    algebraic_models.push_back(boost::make_shared<Cellhund_rudy_2004_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
-    algebraic_models.push_back(boost::make_shared<Celldecker_2009_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
-    algebraic_models.push_back(boost::make_shared<Cellten_tusscher_2004_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
-    algebraic_models.push_back(boost::make_shared<Cellten_tusscher_2006_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
-    algebraic_models.push_back(boost::make_shared<Cellohara_rudy_2011_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
-    algebraic_models.push_back(boost::make_shared<Cellohara_rudy_cipa_2017_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus));
+    TS_ASSERT(original_models.size()==algebraic_models.size());
 
     for(unsigned int i = 0; i < original_models.size(); i++){
       CompareMethodsPeriod(paces, original_models[i], algebraic_models[i]);
