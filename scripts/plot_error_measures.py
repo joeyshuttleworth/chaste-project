@@ -11,15 +11,16 @@ test_dir =  "testoutput/"
 def plot_error_measure(measure):
     for dir in os.listdir(test_dir):
         if re.search("_1000ms_0_percent", dir):
-            model_name = re.search("([a-z|0-9|_]*)_1000ms_0_percent", dir).group(1)
+            model_name = re.search("([A-Z|a-z|0-9|_]*)_1000ms_0_percent", dir).group(1)
             print(dir)
-            file_path = os.path.join(os.path.join(os.getcwd(), "testoutput", dir, "error_measures_1e-10.dat"))
+            file_path = os.path.join(os.path.join(os.getcwd(), "testoutput", dir, "error_measures_1e-08.dat"))
             # apd_file_path = os.path.join(os.path.join(os.getcwd(), "testoutput", dir, "apds_using_groundtruth_1e-12.dat"))
             if os.path.exists(file_path):
                 df = pd.read_csv(file_path, delim_whitespace = True)
                 y_vals = np.log10(df[measure])  # df[['MRMS', '2-Norm', "Trace-2-Norm", "Trace-MRMS"]].values)
                 apds = df["APD"].values
-                plt.plot(y_vals, label=model_name)
+                apd_errors = [np.log10(abs(apd - apds[-1])) for apd in apds]
+                plt.plot(apd_errors, y_vals, label=model_name)
             #     apd_errors = [np.log10(abs(apd - apds[-1])) for apd in apds]
             #     true_apd = pd.read_csv(apd_file_path).values[-1,0]
             #     plt.plot(apd_errors, y_vals, label=model_name)
@@ -37,7 +38,7 @@ def compare_scenarios(measure, model_name):
         print(dir)
         if re.search(model_name, dir):
             print(dir)
-            file_path = os.path.join(os.path.join(os.getcwd(), "testoutput", dir, "error_measures_1e-10.dat"))
+            file_path = os.path.join(os.path.join(os.getcwd(), "testoutput", dir, "error_measures_1e-08.dat"))
             apd_file_path = os.path.join(os.path.join(os.getcwd(), "testoutput", dir, "apds_using_groundtruth_1e-12.dat"))
             if os.path.exists(file_path):
                 df = pd.read_csv(file_path, delim_whitespace = True)
@@ -65,9 +66,9 @@ def main():
 
     for measure in measures:
         print("using measure {}".format(measure))
-        # compare_scenarios(measure, "ohara_rudy_2011")
-        # compare_scenarios(measure, "decker_2009")
-        plot_error_measure(measure)
+        compare_scenarios(measure, "HundRudy2004_analytic_voltage_units")
+        # compare_scenarios(measure, "IyerMazhariWinslow2004")
+        # plot_error_measure(measure)
 
 if __name__ == "__main__":
     main()
