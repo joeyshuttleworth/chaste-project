@@ -17,15 +17,15 @@ public:
   std::string username;
   void TestTolerances(){
     const std::vector<double> tolerances={1e-8, 1e-6, 1e-04, 1e-10, 1e-12};
-    const std::vector<double> periods={1000};
-    const std::vector<double> IKrBlocks={0};
     const std::string filename_suffix = "test_tolerances";
+
+    auto periods = get_periods();
+    auto IKrBlocks = get_IKr_blocks();
 
     auto models = get_models();
 
     const int default_max_paces = 10000;
     int paces = get_max_paces();
-
     paces = paces==INT_UNSET?default_max_paces:paces;
 
     for(auto tolerance : tolerances){

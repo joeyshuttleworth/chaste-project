@@ -17,7 +17,7 @@ mkdir log/${name_of_test}/${model}_${period}_${IKrBlock}.log;
 for IKrBlock in ${IKrBlocks[@]}; do
     for period in ${periods[@]}; do
         for model in ${models[@]}; do
-            ${bin_dir}/projects/chaste-project/test/${name_of_test} --models $model --periods $period --IKrBlocks $IKrBlocks & >> log/${name_of_test}/${model}_${period}_${IKrBlock}.log;
+            ${bin_dir}/projects/chaste-project/test/${name_of_test} --models $model --paces 10000 --periods $period --IKrBlocks $IKrBlocks & >> log/${name_of_test}/${model}_${period}_${IKrBlock}.log;
         done;
     done;
 done;

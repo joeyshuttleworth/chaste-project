@@ -9,9 +9,9 @@ import numpy as np
 def plot_tolerances(measure, model):
     for dir in os.listdir("testoutput/"):
         if re.search("{}_1000ms_0_percent".format(model), dir):
-            model_name = re.search("([a-z|0-9|_]*)_1000ms_0_percent", dir).group(1)
+            model_name = re.search("([A-Z|a-z|0-9|_]*)_1000ms_0_percent", dir).group(1)
             plot = False
-            for tol in ["0.0001", "1e-12", "1e-06", "e-08", "1e-10"]:
+            for tol in ["0.0001", "1e-12", "1e-06", "1e-08", "1e-10"]:
                 file_path = os.path.join(os.path.join(os.getcwd(), "testoutput", dir, "test_tolerances_{}.dat".format(tol)))
                 apd_file_path = os.path.join(os.path.join(os.getcwd(), "testoutput", dir, "apds_using_groundtruth_1e-12.dat"))
                 if os.path.exists(file_path):
@@ -29,12 +29,12 @@ def plot_tolerances(measure, model):
                 plt.title(model_name)
                 plt.xlabel("log10 error in APD90")
                 plt.ylabel("{} error between sucessive paces".format(measure))
-                # plt.savefig("compare_measures_{}".format(measure))
                 plt.show()
 
 def main():
     measures = ["MRMS", "2-Norm", "Trace-MRMS", "Trace-2-Norm"]
-    models   = ["tentusscher_model_2006_epi_analytic", "tentusscher_model_2004_epi", "ohara_rudy_2011"]
+    models = ["Tomek2020epi_analytic_voltage", "IyerMazhariWinslow2004_analytic_voltage", "HundRudy2004_analytic_voltage_units", "decker_2009_analytic_voltage", "tentusscher_model_2004_epi_analytic_voltage", "tentusscher_model_2006_epi_analytic_voltage", "ohara_rudy_2011_epi_analytic_voltage", "ohara_rudy_cipa_2017_analytic_voltage"]
+
     for model in models:
         for measure in measures:
             plot_tolerances(measure, model)

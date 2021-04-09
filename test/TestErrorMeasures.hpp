@@ -27,10 +27,6 @@ public:
 
     const std::string filename_suffix = "error_measures";
     const double tolerance = 1e-8;
-
-    boost::shared_ptr<RegularStimulus> p_stimulus;
-    boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
-
     for(auto model : models){
       for(auto period : periods){
         for(auto IKrBlock : IKrBlocks){
