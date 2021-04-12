@@ -7,7 +7,7 @@
 #include <string>
 #include <sstream>
 #include <iostream>
-#include <iomanip> 
+#include <iomanip>
 #include "SmartSimulation.hpp"
 
 bool SmartSimulation::ExtrapolateState(unsigned int state_index, bool& stop_extrapolation){
@@ -25,17 +25,17 @@ bool SmartSimulation::ExtrapolateState(unsigned int state_index, bool& stop_extr
       x_vals.push_back(i);
     }
   }
-  const double pmcc = CalculatePMCC(x_vals, y_vals);
+  // const double pmcc = CalculatePMCC(x_vals, y_vals);
 
-  if(pmcc>-0.8 && std::isfinite(pmcc)){  //keep the unchanged value if there is no negative correlation (PMCC > -0.9 or PMCC = NAN)
-    std::cout <<  mpModel->GetSystemInformation()->rGetStateVariableNames()[state_index]<< ": PMCC was " << pmcc << " Ignoring. \n";
-    return false;
-  }
+  // if(pmcc>-0.8 && std::isfinite(pmcc)){  //keep the unchanged value if there is no negative correlation (PMCC > -0.9 or PMCC = NAN)
+  //   std::cout <<  mpModel->GetSystemInformation()->rGetStateVariableNames()[state_index]<< ": PMCC was " << pmcc << " Ignoring. \n";
+  //   return false;
+  // }
 
 
   /*Compute the required sums*/
 
-  double sum_x = 0, sum_y = 0, sum_x2 = 0, sum_xy = 0;
+  double sum_x = 0, sum_y = 0, sum_x2 = 0, sum_xy = 0, sum_y2 = 0;
   const unsigned int N = x_vals.size();
 
   if(N<=2){
@@ -47,6 +47,14 @@ bool SmartSimulation::ExtrapolateState(unsigned int state_index, bool& stop_extr
     sum_y += y_vals[i];
     sum_x2+= x_vals[i]*x_vals[i];
     sum_xy+= x_vals[i]*y_vals[i];
+    sum_y2+= y_vals[i]*y_vals[i];
+  }
+
+  const double r2 = pow(sum_xy/N - sum_x*sum_y/(N*N), 2)/((sum_x2/N - sum_x*sum_x/(N*N))*(sum_y2/N - sum_y*sum_y/(N*N)));
+
+  if(r2<0.5 && std::isfinite(r2)){
+    std::cout <<  mpModel->GetSystemInformation()->rGetStateVariableNames()[state_index]<< ": r^2 was " << r2 << " Ignoring. \n";
+    return false;
   }
 
   const double beta  = (N*sum_xy - sum_x*sum_y) / (N*sum_x2 - sum_x*sum_x);
@@ -104,69 +112,34 @@ if(std::isfinite(new_value)){
 
 
 bool SmartSimulation::RunPace(){
-  mPaces++;
   bool extrapolated = false;
 
-  if(mFinished)
+  if(mHasTerminated)
     return true;
 
   extrapolated = ExtrapolateStates();
   if(!extrapolated){
-    /*Solve in two parts*/
-    try{
-      mpModel->SolveAndUpdateState(0, mpStimulus->GetDuration());
-      mpModel->SolveAndUpdateState(mpStimulus->GetDuration(), mPeriod);
-    }
-    catch(Exception &e){
-      if(mSafeStateVariables.size()==0){
-        // We can't recover so throw an exception
-        throw std::exception();
-      }
-      std::cout << "RunPace failed - returning to old mStateVariables\n";
-      mStateVariables = mSafeStateVariables;
-      mSafeStateVariables.clear();
-      mpModel->SetStateVariables(mStateVariables);
-      std::ofstream errors;
-      mMrmsBuffer.clear();
-      mStatesBuffer.clear();
-
-      // The solver has been crashed so maybe don't do any more extrapolations?
-      // mMaxJumps=0;
-      return false;
-    }
-    std::vector<double> new_state_variables = GetStateVariables();
-    mStatesBuffer.push_back(new_state_variables);
-    mCurrentMrms = mrms(new_state_variables, mStateVariables);
-    mMrmsBuffer.push_back(mCurrentMrms);
-    mStateVariables = new_state_variables;
-    if(mCurrentMrms < mThreshold && mTerminateOnConvergence){
-      mFinished = true;
-      return true;
-    }
+    Simulation::RunPace();
   }
-  else{
-    mCurrentMrms = 0;
-  }
-  return false;
 }
 
 bool SmartSimulation::ExtrapolateStates(){
     if(mJumps>=mMaxJumps)
       return false;
-    if(!mMrmsBuffer.full())
+    if(!mMRMSBuffer.full())
       return false;
-    double mrms_pmcc = CalculatePMCC(mMrmsBuffer);
+    // double mrms_pmcc = CalculatePMCC(mMRMSBuffer);
     bool extrapolated = false;
     std::string model_name = mpModel->GetSystemInformation()->GetSystemName();
     const std::string dir_name = mOutputDir;
     boost::filesystem::create_directory(dir_name);
     if(true){// if(mrms_pmcc < -0.90){
       mSafeStateVariables = mStateVariables;
-      std::cout << "Extrapolating - start of buffer is " << mPaces - mBufferSize + 1<< "\n";
+      std::cout << "Extrapolating - start of buffer is " << mPace - mBufferSize + 1<< "\n";
 
       mOutputFile.open(dir_name + "/" + std::to_string(int(mPeriod)) + "JumpParameters" + std::to_string(mJumps) + ".dat");
       mOutputFile << std::setprecision(20);
-      mOutputFile << mPaces << " " << mBufferSize << " " << mExtrapolationConstant << "\n";
+      mOutputFile << mPace << " " << mBufferSize << " " << mExtrapolationConstant << "\n";
 
       bool stop_extrapolation = false;
       for(unsigned int i = 0; i < mStateVariables.size(); i++){
@@ -190,16 +163,22 @@ bool SmartSimulation::ExtrapolateStates(){
         std::cout << "Extrapolated \n";
 
         // Debugging
-        std::cout << "new state variables are:\n";
-        for(auto variable : mStateVariables){
-          std::cout << variable << " ";
-        }
-        std::cout<<"\n";
+        // std::cout << "new state variables are:\n";
+        // for(auto variable : mStateVariables){
+        //   std::cout << variable << " ";
+        // }
+        // std::cout<<"\n";
+
       }
-      mMrmsBuffer.clear();
-      mStatesBuffer.clear();
+      ClearBuffers();
       return extrapolated;
     }
     else
       return false;
   }
+
+void SmartSimulation::ClearBuffers(){
+  Simulation::ClearBuffers();
+  mStatesBuffer.clear();
+  return;
+}

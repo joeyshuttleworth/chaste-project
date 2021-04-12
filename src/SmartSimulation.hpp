@@ -15,7 +15,7 @@ public:
     mExtrapolationConstant = _extrapolation_constant;
     mpModel = _p_model;
 
-    mFinished = false;
+    mHasTerminated = false;
     mpStimulus = mpModel->UseCellMLDefaultStimulus();
     mpStimulus->SetStartTime(0);
     mpStimulus->SetPeriod(2*mPeriod);
@@ -31,7 +31,7 @@ public:
       LoadStatesFromFile(mpModel, input_path);
     }
 
-    mMrmsBuffer.set_capacity(mBufferSize);
+    mMRMSBuffer.set_capacity(mBufferSize);
     mStatesBuffer.set_capacity(mBufferSize);
 
     if(output_dir=="")
@@ -51,7 +51,7 @@ public:
   void SetExtrapolationConstant(double e_c){mExtrapolationConstant=e_c;}
   void SetBufferSize(unsigned int buffer_size){
     mBufferSize = buffer_size;
-    mMrmsBuffer.set_capacity(mBufferSize);
+    mMRMSBuffer.set_capacity(mBufferSize);
     mStatesBuffer.set_capacity(mBufferSize);
   }
 
@@ -65,14 +65,15 @@ private:
   unsigned int mBufferSize;
   double  mExtrapolationConstant;
   boost::circular_buffer<std::vector<double>>  mStatesBuffer;
-  boost::circular_buffer<double> mMrmsBuffer;
   unsigned int mJumps = 0;
-  unsigned int mMaxJumps = 3;
+  unsigned int mMaxJumps = 20;
   std::vector<double> mSafeStateVariables;
   std::ofstream errors;
 
   bool ExtrapolateState(unsigned int state_index, bool& stop_extrapolation);
   bool ExtrapolateStates();
+
+  void ClearBuffers();
 };
 
 #endif

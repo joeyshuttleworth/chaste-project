@@ -3,7 +3,7 @@
 #include <algorithm>
 
 Simulation::Simulation(boost::shared_ptr<AbstractCvodeCell> _p_model, double _period, std::string input_path, double _tol_abs, double _tol_rel) : mpModel(_p_model), mPeriod(_period), mTolAbs(_tol_abs), mTolRel(_tol_rel){
-  mFinished = false;
+  mHasTerminated = false;
   mpStimulus = mpModel->UseCellMLDefaultStimulus();
   mpStimulus->SetStartTime(0);
   //There's no need to be near the second stimulus because Solve is called for
@@ -34,35 +34,68 @@ bool Simulation::RunPaces(int max_paces){
   RunPace();
   mpModel->SetForceReset(false);
   for(int i = 1; i < max_paces; i++){
-    if(RunPace() || mFinished)
+    mHasTerminated=RunPace();
+    if(mHasTerminated)
       return true;
   }
   return false;
 }
 
 bool Simulation::RunPace(){
-  mPaces++;
-  if(mFinished)
+  mPace++;
+  if(mHasTerminated)
     return false;
-  if(mTerminateOnConvergence){
-    /*Solve in two parts*/
-    std::vector<double> tmp_state_variables = mpModel->GetStdVecStateVariables();
-    mpModel->SolveAndUpdateState(0, mpStimulus->GetDuration());
-    mpModel->SolveAndUpdateState(mpStimulus->GetDuration(), mPeriod);
-    std::vector<double> mStateVariables = mpModel->GetStdVecStateVariables();
-    mCurrentMrms = mrms(tmp_state_variables, mStateVariables);
-    if(mCurrentMrms < mThreshold){
-       mFinished = true;
-       mStateVariables = mpModel->GetStdVecStateVariables();
-       std::cout << "finished after " << mPaces << " paces \n";
-      return true;
-    }
+
+  /*Solve in two parts*/
+  std::vector<double> tmp_state_variables = mpModel->GetStdVecStateVariables();
+  mpModel->SolveAndUpdateState(0, mpStimulus->GetDuration());
+  mpModel->SolveAndUpdateState(mpStimulus->GetDuration(), mPeriod);
+  std::vector<double> mStateVariables = mpModel->GetStdVecStateVariables();
+
+  mCurrentMRMS = mrms(tmp_state_variables, mStateVariables);
+
+  if(mCurrentMRMS < mCurrentMinimalMRMS || mCurrentMinimalMRMS == DOUBLE_UNSET)
+    mCurrentMinimalMRMS = mCurrentMRMS;
+
+  if(mPace % mPreviousMinimalMRMSsWindowSize == 0){
+    mPreviousMinimalMRMSs.push_back(mCurrentMinimalMRMS);
+    mCurrentMinimalMRMS = DOUBLE_UNSET;
+    if(mPreviousMinimalMRMSs.full())
+      mPreviousMinimalMRMSsPMCC = CalculatePMCC(mPreviousMinimalMRMSs);
   }
-  else{
-    mpModel->SolveAndUpdateState(0, mpStimulus->GetDuration());
-    mpModel->SolveAndUpdateState(mpStimulus->GetDuration(), mPeriod);
-  }
+
   mStateVariables = mpModel->GetStdVecStateVariables();
+
+  /*  Check stopping criteria */
+  if(mCurrentMRMS < 1e-5 && mPreviousMinimalMRMSsPMCC > - 0.1 && mMRMSBuffer.size()>=mMRMSBufferSize){
+
+    assert(mPreviousMinimalMRMSs.full());
+
+    /*  Perform Dickey-Fuller test */
+
+    /* Calculate auto-difference statistics */
+    double sum_x = 0;
+    double sum_x2 = 0;
+    double n = mPreviousMinimalMRMSsSize-1;
+    for(unsigned int i = 0; i < n; i++){
+      //Calculate auto-difference
+      const double diff = mMRMSBuffer[i+1] - mMRMSBuffer[i];
+
+      sum_x += diff;
+      sum_x2+= diff*diff;
+    }
+
+    const double mean = sum_x/n;
+    const double std_dev = sqrt(sum_x2/n - sum_x*sum_x/(n*n));
+
+    const double test_statistic = mean/(std_dev/n);
+
+    if(test_statistic>-0.1)
+      return true;
+    else
+      return false;
+  }
+
   return false;
 }
 
@@ -99,7 +132,7 @@ void Simulation::WriteStatesToFile(boost::filesystem::path dir, std::string file
   f_out.close();
 }
 
-double Simulation::GetMrms(bool update){
+double Simulation::GetMRMS(bool update){
   if(!mTerminateOnConvergence){
     std::vector<double> last_variables = mpModel->GetStdVecStateVariables();
     mpModel->SolveAndUpdateState(0, mpStimulus->GetDuration());
@@ -109,11 +142,11 @@ double Simulation::GetMrms(bool update){
     return mrms(last_variables, new_variables);
   }
   else
-    return mCurrentMrms;
+    return mCurrentMRMS;
 }
 
-bool Simulation::IsFinished(){
-  return mFinished;
+bool Simulation::HasTerminated(){
+  return mHasTerminated;
 }
 
 OdeSolution Simulation::GetPace(double sampling_timestep, bool update_vars){

@@ -11,7 +11,7 @@ from statsmodels.tsa.stattools import adfuller
 
 def plot_moving_average(measure, model_name="", period=1000, block=0, to_plot=True):
     stopping_pace=0
-    auto_difference_window_size = 200
+    auto_difference_window_size = 50
     window_size = 50
     for dir in os.listdir("testoutput/"):
         if re.search("{}_{}ms_{}_percent".format(model_name, period, block), dir):
@@ -93,7 +93,7 @@ def plot_moving_average(measure, model_name="", period=1000, block=0, to_plot=Tr
                 test_statistic   = [math.nan if abs(val)>5 else val for val in test_statistic.values]
                 ax2.plot(test_statistic, label="Dickey Fuller Test Statistic", color="black", alpha=0.75)
 
-                auto_differences = pd.DataFrame(np.diff(df["average"]), columns=["Auto Differences"])
+                auto_differences = pd.DataFrame(np.diff(df[measure]), columns=["Auto Differences"])
                 auto_differences = auto_differences.rolling(window=int(auto_difference_window_size/2))
                 test_statistic2   = auto_differences.mean()/(auto_differences.std()/np.sqrt(int(auto_difference_window_size/2)))
                 test_statistic2   = [math.nan if abs(val)>5 else val for val in test_statistic2.values]
@@ -101,38 +101,37 @@ def plot_moving_average(measure, model_name="", period=1000, block=0, to_plot=Tr
                 # Now find where our criteria would have stopped
                 pmccs_to_check = 5
                 dfs_to_check = 5
-                for i in range(minimum_window_size, len(mean_pmccs)):
+                for i in range(minimum_window_size, len(test_statistic)):
                     finish = True
-                    if df["logged_measure"].values[i] > -5:
-                        finish=False
-                    elif mean_pmccs[i] > -0.2 and i + pmccs_to_check < len(mean_pmccs):
-                        for j in range(i+1, i + pmccs_to_check):
-                            if mean_pmccs[j] < -0.5:
-                                finish=False
-                                break
-                        if not finish:
+                    # if df["logged_measure"].values[i] > -5:
+                    #     finish=False
+                    # elif mean_pmccs[i] > -0.2 and i + pmccs_to_check < len(mean_pmccs):
+                    #     for j in range(i+1, i + pmccs_to_check):
+                    #         if mean_pmccs[j] < -0.5:
+                    #             finish=False
+                    #             break
+                    #     if not finish:
+                    #         break
+                    #     else:
+                    # Check the test_statistic
+                    for j in range(0, dfs_to_check):
+                        if j + dfs_to_check > len(mean_pmccs):
                             break
-                        else:
-                            # Check the test_statistic
-                            for j in range(0, dfs_to_check):
-                                if j + dfs_to_check > len(mean_pmccs):
-                                    break
-                                if test_statistic[i] < -0.2:
-                                    finish = False
-                                    break
-                                # Check auto difference test with smaller window size
-                                elif test_statistic2[i] < -0.2:
-                                    break
-                                    finish = False
-                    else:
-                        finish=False
+                        if test_statistic[i] < -0.1:
+                            finish = False
+                            break
+                        # Check auto difference test with smaller window size
+                        # elif test_statistic2[i] < -0.2:
+                        #     finish = False
+                        #     break
 
                     if finish:
                         minima_window_index = int(i / minimum_window_size)
+                        minima_to_consider
                         # finally check last five minima
-                        if minima_window_index - 10 < 0 or minima_window_index >= len(minima):
+                        if minima_window_index - minima_to_consider < 0 or minima_window_index >= len(minima):
                             continue
-                        vals = [minima[k] for k in range(minima_window_index-10, minima_window_index+1)]
+                        vals = [minima[k] for k in range(minima_window_index - minima_to_consider, minima_window_index+1)]
                         if pearsonr(range(0,len(vals)), vals)[0] < -0.1:
                             finish = False
                         else:

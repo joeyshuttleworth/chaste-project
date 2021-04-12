@@ -7,6 +7,7 @@
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/circular_buffer.hpp>
 #include <string>
 #include <sstream>
 #include <iostream>
@@ -16,7 +17,6 @@
 class Simulation
 {
 protected:
-  bool mFinished;
   boost::shared_ptr<AbstractCvodeCell> mpModel;
   unsigned int mNumberOfStateVariables;
   std::vector<double> mStateVariables;
@@ -24,13 +24,32 @@ protected:
   double mPeriod = 1000;
   double mTolAbs;
   double mTolRel;
-  double mCurrentMrms = NAN;
+  double mCurrentMRMS = NAN;
   double mThreshold = 1e-08;
   boost::shared_ptr<RegularStimulus> mpStimulus;
   bool mTerminateOnConvergence = true;
-  unsigned int mPaces = 0;
+  unsigned int mPace = 0;
+
+  unsigned int mPreviousMinimalMRMSsSize = 5;
+  unsigned int mPreviousMinimalMRMSsWindowSize = 50;
+  boost::circular_buffer<double> mPreviousMinimalMRMSs{mPreviousMinimalMRMSsSize};
+  double mPreviousMinimalMRMSsPMCC = DOUBLE_UNSET;
+
+  unsigned int mMRMSBufferSize = 50;
+  boost::circular_buffer<double> mMRMSBuffer{mMRMSBufferSize};
+
+  double mCurrentMinimalMRMS = DOUBLE_UNSET;
 
   double mDefaultGKr = DOUBLE_UNSET;
+
+  bool mHasTerminated = false;
+
+  void ClearBuffers(){
+    mPreviousMinimalMRMSs.clear();
+    mPreviousMinimalMRMSsPMCC = DOUBLE_UNSET;
+    mMRMSBuffer.clear();
+  }
+
 public:
   Simulation(){
     return;
@@ -43,7 +62,7 @@ public:
   /* Run paces until max_paces is exceeded or the model reaches a steady state */
   bool RunPaces(int);
 
-  unsigned int GetPaces(){return mPaces;}
+  unsigned int GetPaces(){return mPace;}
 
   void SetTolerances(double atol, double rtol){
     if(mpModel)
@@ -74,15 +93,14 @@ public:
 
   void SetTerminateOnConvergence(bool b){mTerminateOnConvergence=b;}
 
-  bool IsFinished();
+  bool HasTerminated();
 
-  double GetMrms(bool update=false);
+  double GetMRMS(bool update=false);
 
   boost::shared_ptr<AbstractCvodeCell> GetModel(){return mpModel;}
 
   void SetIKrBlock(double block);
 
 };
-
 
 #endif
