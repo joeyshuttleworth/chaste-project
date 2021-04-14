@@ -53,7 +53,7 @@ bool SmartSimulation::ExtrapolateState(unsigned int state_index, bool& stop_extr
   const double r2 = pow(sum_xy/N - sum_x*sum_y/(N*N), 2)/((sum_x2/N - sum_x*sum_x/(N*N))*(sum_y2/N - sum_y*sum_y/(N*N)));
 
   if(r2<0.5 && std::isfinite(r2)){
-    std::cout <<  mpModel->GetSystemInformation()->rGetStateVariableNames()[state_index]<< ": r^2 was " << r2 << " Ignoring. \n";
+    // std::cout <<  mpModel->GetSystemInformation()->rGetStateVariableNames()[state_index]<< ": r^2 was " << r2 << " Ignoring. \n";
     return false;
   }
 
@@ -63,7 +63,7 @@ bool SmartSimulation::ExtrapolateState(unsigned int state_index, bool& stop_extr
 
   if(beta > 0){
     //The difference is increasing or
-    std::cout << mpModel->GetSystemInformation()->rGetStateVariableNames()[state_index] << ": Beta is positive\n";
+    // std::cout << mpModel->GetSystemInformation()->rGetStateVariableNames()[state_index] << ": Beta is positive\n";
     return false;
   }
 
@@ -87,13 +87,13 @@ bool SmartSimulation::ExtrapolateState(unsigned int state_index, bool& stop_extr
   const double check_val = std::abs((state.front() - predicted_v0)/ V_total_difference);
 
   if(check_val > 0.5){
-    std::cout << "Not extrapolating - first residual too high \t" << check_val << "\n";
+    // std::cout << "Not extrapolating - first residual too high \t" << check_val << "\n";
     return false;
   }
 
   // Check timescale isn't too big
   if(tau > mBufferSize * 50){
-    std::cout << "timescale too long, ignoring: tau = \t" << tau << "\n";
+    // std::cout << "timescale too long, ignoring: tau = \t" << tau << "\n";
     return false;
   }
   // std::cout << "Change in " << p_model->GetSystemInformation()->rGetStateVariableNames()[state_index] << " is: " << change_in_variable << "\n" << "New value is " << new_value << "\n";
@@ -119,14 +119,45 @@ bool SmartSimulation::RunPace(){
 
   extrapolated = ExtrapolateStates();
   if(!extrapolated){
-    Simulation::RunPace();
+    try{
+      Simulation::RunPace();
+    }
+    catch(Exception& e){
+      std::cout << "Failed to integrate pace. Returning to last known safe state.\n";
+      if(mSafeStateVariables.size()==0){
+        EXCEPTION("Solver crashed and there's no safe state to return to.");
+      }
+      else{
+        mStateVariables = mSafeStateVariables;
+        mpModel->SetStateVariables(mStateVariables);
+        mSafeStateVariables = {};
+        ClearBuffers();
+      }
+    }
+
+    /* If the extrapolation method has been and a good number of paces have
+       passed. We should check the pace-to-pace MRMS error is lower than it was
+       before the jump. If not, we may have jumped further away from the
+       solution and should reset to the state before the extrapolation. This
+       seems to be quite rare so print a warning and stop any further extrapolations */
+
+    if(mCurrentMRMS > mMRMSBeforeExtrapolation && mLastExtrapolationPace + mBufferSize == mPace){
+      std::cout << "The extrapolation appears to have gone wrong. The pace-to-pace MRMS error is greater than it was before the extrapolation\n";
+      mStateVariables = mSafeStateVariables;
+      mpModel->SetStateVariables(mStateVariables);
+      mSafeStateVariables = {};
+      // mMaxJumps = 0 ensures that no further extrapolation will take place
+      mMaxJumps=0;
+    }
   }
+  mStatesBuffer.push_back(mStateVariables);
+  return mHasTerminated;
 }
 
 bool SmartSimulation::ExtrapolateStates(){
     if(mJumps>=mMaxJumps)
       return false;
-    if(!mMRMSBuffer.full())
+    if(!mStatesBuffer.full())
       return false;
     // double mrms_pmcc = CalculatePMCC(mMRMSBuffer);
     bool extrapolated = false;
@@ -171,6 +202,9 @@ bool SmartSimulation::ExtrapolateStates(){
 
       }
       ClearBuffers();
+      mPreviousMinimalMRMSsPMCC = DOUBLE_UNSET;
+      mLastExtrapolationPace=mPace;
+      mMRMSBeforeExtrapolation=mCurrentMRMS;
       return extrapolated;
     }
     else

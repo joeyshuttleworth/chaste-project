@@ -52,7 +52,7 @@ public:
           const int paces_taken = sim.GetPaces();
 
           if(sim.HasTerminated())
-            std::cout << model_name << " with period " << period << " and IKrBlock " << IKrBlock << "finished after " << paces_taken << " paces\n";
+            std::cout << model_name << " with period " << period << " and IKrBlock " << IKrBlock << " finished after " << paces_taken << " paces\n";
 
           TS_ASSERT(sim.HasTerminated());
           model->SetStateVariables(initial_states);

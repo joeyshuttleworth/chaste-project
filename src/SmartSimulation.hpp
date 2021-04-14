@@ -66,9 +66,12 @@ private:
   double  mExtrapolationConstant;
   boost::circular_buffer<std::vector<double>>  mStatesBuffer;
   unsigned int mJumps = 0;
-  unsigned int mMaxJumps = 20;
+  unsigned int mMaxJumps = 1000;
   std::vector<double> mSafeStateVariables;
   std::ofstream errors;
+
+  unsigned int mLastExtrapolationPace = 0;
+  double mMRMSBeforeExtrapolation = DOUBLE_UNSET;
 
   bool ExtrapolateState(unsigned int state_index, bool& stop_extrapolation);
   bool ExtrapolateStates();

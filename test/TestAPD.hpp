@@ -55,7 +55,7 @@ public:
     boost::filesystem::create_directories(dirname.str());
 
 
-    Simulation simulation(model, period, CHASTE_TEST_OUTPUT + "/" + dirname.str() + "final_states.dat");
+    Simulation simulation(model, period, CHASTE_TEST_OUTPUT + "/" + dirname.str() + "final_states.dat", 1e-12, 1e-12);
     simulation.SetTerminateOnConvergence(false);
     simulation.SetIKrBlock(IKrBlock);
 

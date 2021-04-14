@@ -30,9 +30,8 @@ protected:
   bool mTerminateOnConvergence = true;
   unsigned int mPace = 0;
 
-  unsigned int mPreviousMinimalMRMSsSize = 5;
   unsigned int mPreviousMinimalMRMSsWindowSize = 50;
-  boost::circular_buffer<double> mPreviousMinimalMRMSs{mPreviousMinimalMRMSsSize};
+  boost::circular_buffer<double> mPreviousMinimalMRMSs{mPreviousMinimalMRMSsWindowSize};
   double mPreviousMinimalMRMSsPMCC = DOUBLE_UNSET;
 
   unsigned int mMRMSBufferSize = 50;
@@ -50,6 +49,8 @@ protected:
     mMRMSBuffer.clear();
   }
 
+  double mIKrBlock = 0;
+
 public:
   Simulation(){
     return;
@@ -65,8 +66,9 @@ public:
   unsigned int GetPaces(){return mPace;}
 
   void SetTolerances(double atol, double rtol){
-    if(mpModel)
+    if(mpModel){
       mpModel->SetTolerances(atol, rtol);
+    }
     mTolAbs = atol;
     mTolRel = rtol;
   }

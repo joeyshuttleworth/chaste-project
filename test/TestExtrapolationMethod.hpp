@@ -19,7 +19,7 @@ class TestExtrapolationMethod : public CxxTest::TestSuite
 private:
   unsigned int buffer_size = 750;
   const double extrapolation_coefficient = 1;
-  const unsigned int default_paces = 5000;
+  const unsigned int default_paces = 200000;
 
   bool CompareMethodsPeriod(int paces, boost::shared_ptr<AbstractCvodeCell> brute_force_model, boost::shared_ptr<AbstractCvodeCell> smart_model){
     const double IKrBlock = 0;
@@ -66,7 +66,7 @@ private:
         }
         std::vector<double> state_vars = smart_model->GetStdVecStateVariables();
         smart_output_file << j << " ";
-        smart_output_file << smart_simulation.GetMrms() << " ";
+        smart_output_file << smart_simulation.GetMRMS() << " ";
         for(unsigned int i = 0; i < state_vars.size(); i++){
           smart_output_file << state_vars[i] << " ";
         }
@@ -80,7 +80,7 @@ private:
         }
         std::vector<double> state_vars = brute_force_model->GetStdVecStateVariables();
         brute_output_file << j << " ";
-        brute_output_file << simulation.GetMrms() << " ";
+        brute_output_file << simulation.GetMRMS() << " ";
         //Don't print membrane_voltage (usually the first state variable)
         for(unsigned int i = 1; i < state_vars.size(); i++){
           brute_output_file << state_vars[i] << " ";
@@ -185,7 +185,7 @@ private:
     smart_simulation.WritePaceToFile(output_dir+"/smart", "smart_pace");
 
     TS_ASSERT_LESS_THAN(mrms_difference, 1e-3);
-    TS_ASSERT(smart_simulation.IsFinished() && simulation.IsFinished());
+    TS_ASSERT(smart_simulation.HasTerminated() && simulation.HasTerminated());
 
     // reset GKr parameter
   }

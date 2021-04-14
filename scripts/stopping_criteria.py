@@ -127,7 +127,7 @@ def plot_moving_average(measure, model_name="", period=1000, block=0, to_plot=Tr
 
                     if finish:
                         minima_window_index = int(i / minimum_window_size)
-                        minima_to_consider
+                        minima_to_consider = 20
                         # finally check last five minima
                         if minima_window_index - minima_to_consider < 0 or minima_window_index >= len(minima):
                             continue

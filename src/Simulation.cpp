@@ -44,39 +44,44 @@ bool Simulation::RunPaces(int max_paces){
 bool Simulation::RunPace(){
   mPace++;
   if(mHasTerminated)
-    return false;
+    return mHasTerminated;
 
   /*Solve in two parts*/
   std::vector<double> tmp_state_variables = mpModel->GetStdVecStateVariables();
   mpModel->SolveAndUpdateState(0, mpStimulus->GetDuration());
   mpModel->SolveAndUpdateState(mpStimulus->GetDuration(), mPeriod);
-  std::vector<double> mStateVariables = mpModel->GetStdVecStateVariables();
+  mStateVariables = mpModel->GetStdVecStateVariables();
 
   mCurrentMRMS = mrms(tmp_state_variables, mStateVariables);
 
   if(mCurrentMRMS < mCurrentMinimalMRMS || mCurrentMinimalMRMS == DOUBLE_UNSET)
     mCurrentMinimalMRMS = mCurrentMRMS;
 
-  if(mPace % mPreviousMinimalMRMSsWindowSize == 0){
+  mMRMSBuffer.push_back(log(mCurrentMRMS));
+
+  if(mPreviousMinimalMRMSs.full()){
+    mPreviousMinimalMRMSs.clear();
     mPreviousMinimalMRMSs.push_back(mCurrentMinimalMRMS);
     mCurrentMinimalMRMS = DOUBLE_UNSET;
-    if(mPreviousMinimalMRMSs.full())
-      mPreviousMinimalMRMSsPMCC = CalculatePMCC(mPreviousMinimalMRMSs);
+
+    std::vector<double> log_minima;
+    log_minima.reserve(mPreviousMinimalMRMSs.size());
+
+    for(auto val : mPreviousMinimalMRMSs)
+      log_minima.push_back(log(val));
+
+    mPreviousMinimalMRMSsPMCC = CalculatePMCC(log_minima);
   }
 
-  mStateVariables = mpModel->GetStdVecStateVariables();
-
   /*  Check stopping criteria */
-  if(mCurrentMRMS < 1e-5 && mPreviousMinimalMRMSsPMCC > - 0.1 && mMRMSBuffer.size()>=mMRMSBufferSize){
-
-    assert(mPreviousMinimalMRMSs.full());
+  if(mCurrentMRMS < 1e-5 && mPreviousMinimalMRMSsPMCC != DOUBLE_UNSET && mPreviousMinimalMRMSsPMCC >= 0 && mMRMSBuffer.full()){
 
     /*  Perform Dickey-Fuller test */
 
     /* Calculate auto-difference statistics */
     double sum_x = 0;
     double sum_x2 = 0;
-    double n = mPreviousMinimalMRMSsSize-1;
+    double n = mPreviousMinimalMRMSsWindowSize-1;
     for(unsigned int i = 0; i < n; i++){
       //Calculate auto-difference
       const double diff = mMRMSBuffer[i+1] - mMRMSBuffer[i];
@@ -90,13 +95,14 @@ bool Simulation::RunPace(){
 
     const double test_statistic = mean/(std_dev/n);
 
+    // std::cout << "test_statistic is " << test_statistic << "\n";
     if(test_statistic>-0.1)
-      return true;
+      mHasTerminated = true;
     else
-      return false;
+      mHasTerminated = false;
   }
 
-  return false;
+  return mHasTerminated;
 }
 
 void Simulation::WritePaceToFile(std::string dirname, std::string filename, double sampling_timestep, bool update_vars){
@@ -216,6 +222,8 @@ void Simulation::SetIKrBlock(double block){
   const std::string GKr_parameter_name = "membrane_rapid_delayed_rectifier_potassium_current_conductance";
 
   const std::vector<std::string> parameter_names = mpModel->rGetParameterNames();
+
+  mIKrBlock = block;
 
   if(std::count_if(parameter_names.begin(), parameter_names.end(), [&](std::string name) -> bool {return name==GKr_parameter_name;}) > 0){
     // Parameter exists
