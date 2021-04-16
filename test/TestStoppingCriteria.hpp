@@ -53,6 +53,8 @@ public:
 
           if(sim.HasTerminated())
             std::cout << model_name << " with period " << period << " and IKrBlock " << IKrBlock << " finished after " << paces_taken << " paces\n";
+          else
+            std::cout << model_name << " with period " << period << " and IKrBlock " << IKrBlock << " failed to converge\n";
 
           TS_ASSERT(sim.HasTerminated());
           model->SetStateVariables(initial_states);

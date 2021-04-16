@@ -18,6 +18,9 @@ Simulation::Simulation(boost::shared_ptr<AbstractCvodeCell> _p_model, double _pe
   }
   mStateVariables = mpModel->GetStdVecStateVariables();
   SetTolerances(_tol_abs, _tol_rel);
+
+  mPreviousMinimalMRMSs.set_capacity(mPreviousMinimalMRMSsWindowSize);
+  mMRMSBuffer.set_capacity(mMRMSBufferSize);
 }
 
 Simulation::~Simulation(){
@@ -53,28 +56,28 @@ bool Simulation::RunPace(){
   mStateVariables = mpModel->GetStdVecStateVariables();
 
   mCurrentMRMS = mrms(tmp_state_variables, mStateVariables);
+  mMRMSBuffer.push_back(log(mCurrentMRMS));
 
   if(mCurrentMRMS < mCurrentMinimalMRMS || mCurrentMinimalMRMS == DOUBLE_UNSET)
     mCurrentMinimalMRMS = mCurrentMRMS;
 
-  mMRMSBuffer.push_back(log(mCurrentMRMS));
-
-  if(mPreviousMinimalMRMSs.full()){
-    mPreviousMinimalMRMSs.clear();
+  if(mPace % mMRMSBufferSize == 0 && mCurrentMinimalMRMS!=DOUBLE_UNSET){
     mPreviousMinimalMRMSs.push_back(mCurrentMinimalMRMS);
     mCurrentMinimalMRMS = DOUBLE_UNSET;
 
-    std::vector<double> log_minima;
-    log_minima.reserve(mPreviousMinimalMRMSs.size());
+    if(mPreviousMinimalMRMSs.full()){
+      std::vector<double> log_minima;
+      log_minima.reserve(mPreviousMinimalMRMSs.size());
 
-    for(auto val : mPreviousMinimalMRMSs)
-      log_minima.push_back(log(val));
+      for(auto val : mPreviousMinimalMRMSs)
+        log_minima.push_back(log(val));
 
-    mPreviousMinimalMRMSsPMCC = CalculatePMCC(log_minima);
+      mPreviousMinimalMRMSsPMCC = CalculatePMCC(log_minima);
+    }
   }
 
   /*  Check stopping criteria */
-  if(mCurrentMRMS < 1e-5 && mPreviousMinimalMRMSsPMCC != DOUBLE_UNSET && mPreviousMinimalMRMSsPMCC >= 0 && mMRMSBuffer.full()){
+  if(mPreviousMinimalMRMSsPMCC!=DOUBLE_UNSET && mTerminateOnConvergence && mCurrentMRMS < mThreshold && mPreviousMinimalMRMSsPMCC != DOUBLE_UNSET && mPreviousMinimalMRMSsPMCC >= 0 && mMRMSBuffer.full()){
 
     /*  Perform Dickey-Fuller test */
 
@@ -84,7 +87,7 @@ bool Simulation::RunPace(){
     double n = mPreviousMinimalMRMSsWindowSize-1;
     for(unsigned int i = 0; i < n; i++){
       //Calculate auto-difference
-      const double diff = mMRMSBuffer[i+1] - mMRMSBuffer[i];
+      const double diff = (mMRMSBuffer[i+1] - mMRMSBuffer[i])/mMRMSBuffer[i];
 
       sum_x += diff;
       sum_x2+= diff*diff;
@@ -93,11 +96,13 @@ bool Simulation::RunPace(){
     const double mean = sum_x/n;
     const double std_dev = sqrt(sum_x2/n - sum_x*sum_x/(n*n));
 
-    const double test_statistic = mean/(std_dev/n);
+    const double test_statistic = std::abs(mean/(std_dev/n));
 
-    // std::cout << "test_statistic is " << test_statistic << "\n";
-    if(test_statistic>-0.1)
+    std::cout << "test_statistic is " << test_statistic << "\n";
+    if(test_statistic<0.1){
       mHasTerminated = true;
+      std::cout <<"terminating\n";
+    }
     else
       mHasTerminated = false;
   }
