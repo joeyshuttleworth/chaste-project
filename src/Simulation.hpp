@@ -25,17 +25,17 @@ protected:
   double mTolAbs;
   double mTolRel;
   double mCurrentMRMS = NAN;
-  double mThreshold = 1e-08;
+  double mThreshold = 1e-05;
   boost::shared_ptr<RegularStimulus> mpStimulus;
   bool mTerminateOnConvergence = true;
   unsigned int mPace = 0;
 
-  unsigned int mPreviousMinimalMRMSsWindowSize = 50;
-  boost::circular_buffer<double> mPreviousMinimalMRMSs{mPreviousMinimalMRMSsWindowSize};
+  unsigned int mPreviousMinimalMRMSsWindowSize = 10;
+  boost::circular_buffer<double> mPreviousMinimalMRMSs;
   double mPreviousMinimalMRMSsPMCC = DOUBLE_UNSET;
 
-  unsigned int mMRMSBufferSize = 50;
-  boost::circular_buffer<double> mMRMSBuffer{mMRMSBufferSize};
+  unsigned int mMRMSBufferSize = 25;
+  boost::circular_buffer<double> mMRMSBuffer;
 
   double mCurrentMinimalMRMS = DOUBLE_UNSET;
 
@@ -56,7 +56,7 @@ public:
     return;
   }
 
-  Simulation(boost::shared_ptr<AbstractCvodeCell> _p_model, double _period, std::string input_path = "", double _tol_abs=1e-8, double _tol_rel=1e-8);
+  Simulation(boost::shared_ptr<AbstractCvodeCell> _p_model, double _period=1000, std::string input_path = "", double _tol_abs=1e-8, double _tol_rel=1e-8);
 
   ~Simulation();
 
