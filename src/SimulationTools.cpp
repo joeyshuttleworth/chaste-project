@@ -237,7 +237,7 @@ void compare_error_measures(int paces, boost::shared_ptr<AbstractCvodeCell> mode
   std::cout << "For model " << model_name << " using starting_index " << starting_index << "\n";
 
   const double starting_period = period==1000?500:1000;
-  const double starting_block  = period==0?0.5:0;
+  const double starting_block  = IKrBlock==0?0.5:0;
 
   std::stringstream dirname;
   dirname << "/" << model_name << "_" << std::to_string(int(period)) << "ms_" << int(100*IKrBlock)<<"_percent_block/";
