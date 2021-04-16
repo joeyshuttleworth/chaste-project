@@ -98,7 +98,7 @@ bool Simulation::RunPace(){
 
     const double test_statistic = std::abs(mean/(std_dev/n));
 
-    std::cout << "test_statistic is " << test_statistic << "\n";
+    // std::cout << "test_statistic is " << test_statistic << "\n";
     if(test_statistic<0.1){
       mHasTerminated = true;
       std::cout <<"terminating\n";
