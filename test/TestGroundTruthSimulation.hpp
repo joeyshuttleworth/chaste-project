@@ -104,7 +104,7 @@ public:
     apd_file.close();
 
     // Print final mrms
-    std::cout << "final mrms is " << simulation.GetMrms(false) << "\n";
+    std::cout << "final mrms is " << simulation.GetMRMS(false) << "\n";
 
     simulation.WriteStatesToFile(dir, "final_states.dat");
   }
