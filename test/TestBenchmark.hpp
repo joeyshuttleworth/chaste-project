@@ -15,7 +15,6 @@ class TestBenchmark : public CxxTest::TestSuite
 {
 private:
   std::ofstream output_file;
-  std::string username;
   int baseline_score = 0;
 
   const std::vector<unsigned int> buffer_sizes = {25, 50, 100, 250, 500, 750, 1000, 2000};//{25, 50, 100, 150, 200, 300 ,400};
@@ -34,12 +33,14 @@ public:
 
     const boost::filesystem::path test_dir(getenv("CHASTE_TEST_OUTPUT"));
 
+    boost::filesystem::path directory = (boost::filesystem::path(test_dir) / boost::filesystem::path("TestBenchmark/"));
+    boost::filesystem::create_directories(directory);
 
     for(auto model : models){
-        const std::string model_name = model->GetSystemInformation()->GetSystemName();
-        std::string filepath = (boost::filesystem::path(test_dir) / boost::filesystem::path("TestBenchmark/" + model_name + "_results.dat")).string();
-        boost::filesystem::create_directories(filepath);
-        std::ofstream output_file(filepath);
+      const std::string model_name = model->GetSystemInformation()->GetSystemName();
+      const std::string filepath = (directory / boost::filesystem::path(model_name + "_results.dat")).string();
+
+      std::ofstream output_file(directory.string());
 
         output_file << "what_modified model_name buffer_size extrapolation_constant period IKrBlock score APD90";
 
