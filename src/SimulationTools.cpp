@@ -218,9 +218,9 @@ void WriteStatesToFile(std::vector<double> states, std::ofstream &f_out){
   return;
 }
 
-void compare_error_measures(int paces, boost::shared_ptr<AbstractCvodeCell> model, double period, double IKrBlock, double tolerance, std::string filename_suffix){
+void compare_error_measures(int paces, boost::shared_ptr<AbstractCvodeCell> model, double period, double IKrBlock, double tolerance, std::string filename_prefix){
   /* Run the models and output each of the error measures after every paces.
-     Also output the APD90 resulting from computing a pace using the current
+     Also output the APD90 resulting fromcomputing a pace using the current
      state variables as the initial conditions in the model and integrating
      forward one pace with fine tolerances. This is very slow and involves a lot
      of work.
@@ -259,7 +259,7 @@ void compare_error_measures(int paces, boost::shared_ptr<AbstractCvodeCell> mode
   const std::vector<std::string> state_variable_names = model->rGetStateVariableNames();
 
   std::stringstream output_file_name;
-  output_file_name << filename_suffix << "_" << tolerance << ".dat";
+  output_file_name << filename_prefix << "_" << tolerance << ".dat";
   const std::string output_file_path = (test_dir / boost::filesystem::path(dirname.str()) / boost::filesystem::path(output_file_name.str())).string();
 
   std::cout << "outputting to " << output_file_path << "\n";
