@@ -120,7 +120,7 @@ bool SmartSimulation::RunPace(){
   extrapolated = ExtrapolateStates();
   if(!extrapolated){
     try{
-      Simulation::RunPace();
+      mHasTerminated = Simulation::RunPace();
     }
     catch(Exception& e){
       std::cout << "Failed to integrate pace. Returning to last known safe state.\n";
@@ -134,20 +134,21 @@ bool SmartSimulation::RunPace(){
         ClearBuffers();
       }
     }
-
     /* If the extrapolation method has been and a good number of paces have
        passed. We should check the pace-to-pace MRMS error is lower than it was
        before the jump. If not, we may have jumped further away from the
        solution and should reset to the state before the extrapolation. This
        seems to be quite rare so print a warning and stop any further extrapolations */
+    if(mLastExtrapolationPace + mBufferSize == mPace  && mPreviousMinimalMRMSs.size()>0){
+      if(mPreviousMinimalMRMSs.back() > mMRMSBeforeExtrapolation){
+          std::cout << "Warning: the extrapolation appears to have gone wrong. The pace-to-pace MRMS error is greater than it was before the extrapolation. Will not perform further extrapolations\n";
+          mStateVariables = mSafeStateVariables;
+          mpModel->SetStateVariables(mStateVariables);
+          mSafeStateVariables = {};
 
-    if(mCurrentMRMS > mMRMSBeforeExtrapolation && mLastExtrapolationPace + mBufferSize == mPace){
-      std::cout << "The extrapolation appears to have gone wrong. The pace-to-pace MRMS error is greater than it was before the extrapolation\n";
-      mStateVariables = mSafeStateVariables;
-      mpModel->SetStateVariables(mStateVariables);
-      mSafeStateVariables = {};
-      // mMaxJumps = 0 ensures that no further extrapolation will take place
-      mMaxJumps=0;
+          //  Ensures that no further extrapolation will take place
+          mMaxJumps=0;
+        }
     }
   }
   mStatesBuffer.push_back(mStateVariables);

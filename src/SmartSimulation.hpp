@@ -10,28 +10,16 @@
 
 class SmartSimulation : public Simulation{
 public:
-  SmartSimulation(boost::shared_ptr<AbstractCvodeCell> _p_model, double _period, std::string input_path = "", double _tol_abs=1e-8, double _tol_rel=1e-8, int _buffer_size = 200, double _extrapolation_constant = 1, std::string output_dir = ""){
-    mBufferSize = _buffer_size;
-    mExtrapolationConstant = _extrapolation_constant;
-    mpModel = _p_model;
+  SmartSimulation(boost::shared_ptr<AbstractCvodeCell> _p_model, double _period, std::string input_path = "", double _tol_abs=1e-8, double _tol_rel=1e-8, int _buffer_size = 200, double _extrapolation_constant = 1, std::string output_dir = "") : Simulation(_p_model, _period, input_path, _tol_abs, _tol_rel), mBufferSize(_buffer_size), mExtrapolationConstant(_extrapolation_constant){
 
-    mHasTerminated = false;
-    mpStimulus = mpModel->UseCellMLDefaultStimulus();
-    mpStimulus->SetStartTime(0);
-    mpStimulus->SetPeriod(2*mPeriod);
-    mPeriod = _period;
-    mpModel->SetMaxSteps(1e5);
-    mpModel->SetMaxTimestep(1000);
-    mpModel->SetTolerances(mTolAbs, mTolRel);
-    mpModel->SetMinimalReset(false); //Not sure if this is needed
     mNumberOfStateVariables = mpModel->GetSystemInformation()->rGetStateVariableNames().size();
     mStateVariables = mpModel->GetStdVecStateVariables();
     mSafeStateVariables=mStateVariables;
+
     if(input_path.length()>=1){
       LoadStatesFromFile(mpModel, input_path);
     }
 
-    mMRMSBuffer.set_capacity(mBufferSize);
     mStatesBuffer.set_capacity(mBufferSize);
 
     if(output_dir=="")
@@ -41,7 +29,6 @@ public:
 
     boost::filesystem::create_directories(mOutputDir);
 
-    Simulation(_p_model, _period, input_path, _tol_abs, _tol_rel);
   }
 
   bool RunPace();
@@ -63,8 +50,8 @@ public:
 private:
   std::string mOutputDir;
   unsigned int mBufferSize;
-  double  mExtrapolationConstant;
   boost::circular_buffer<std::vector<double>>  mStatesBuffer;
+  double  mExtrapolationConstant;
   unsigned int mJumps = 0;
   unsigned int mMaxJumps = 1000;
   std::vector<double> mSafeStateVariables;
