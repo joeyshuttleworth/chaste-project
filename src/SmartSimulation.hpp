@@ -13,13 +13,7 @@ public:
   SmartSimulation(boost::shared_ptr<AbstractCvodeCell> _p_model, double _period, std::string input_path = "", double _tol_abs=1e-8, double _tol_rel=1e-8, int _buffer_size = 200, double _extrapolation_constant = 1, std::string output_dir = "") : Simulation(_p_model, _period, input_path, _tol_abs, _tol_rel), mBufferSize(_buffer_size), mExtrapolationConstant(_extrapolation_constant){
 
     mNumberOfStateVariables = mpModel->GetSystemInformation()->rGetStateVariableNames().size();
-    mStateVariables = mpModel->GetStdVecStateVariables();
     mSafeStateVariables=mStateVariables;
-
-    if(input_path.length()>=1){
-      LoadStatesFromFile(mpModel, input_path);
-    }
-
     mStatesBuffer.set_capacity(mBufferSize);
 
     if(output_dir=="")
@@ -28,7 +22,6 @@ public:
       mOutputDir = output_dir;
 
     boost::filesystem::create_directories(mOutputDir);
-
   }
 
   bool RunPace();

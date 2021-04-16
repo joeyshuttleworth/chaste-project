@@ -17,7 +17,7 @@ const std::vector<std::string> model_names = {"beeler_reuter_model_1997", "ten_t
 
 void RunSimulation(boost::shared_ptr<AbstractCvodeCell>, unsigned int paces, double tolerances);
 
-int LoadStatesFromFile(boost::shared_ptr<AbstractCvodeCell>, std::string file_path);
+std::vector<double> LoadStatesFromFile(std::string file_path);
 
 void OutputVariablesToFile(boost::shared_ptr<AbstractCvodeCell>, std::string file_path);
 

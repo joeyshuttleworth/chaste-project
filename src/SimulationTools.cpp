@@ -41,13 +41,13 @@ void RunSimulation(boost::shared_ptr<AbstractCvodeCell> p_model, unsigned int pa
   return;
 }
 
-int LoadStatesFromFile(boost::shared_ptr<AbstractCvodeCell> p_model, std::string file_path){
+std::vector<double> LoadStatesFromFile(std::string file_path){
   std::ifstream file_in;
   file_in.open(file_path);
   if(!file_in.is_open()){
     std::cout << "Couldn't open file! " + file_path + " \n";
     EXCEPTION("Couldn't open file " + file_path);
-    return -1;
+    return {};
   }
   std::string line;
   std::vector<std::string> state_variables_str;
@@ -64,8 +64,7 @@ int LoadStatesFromFile(boost::shared_ptr<AbstractCvodeCell> p_model, std::string
   }
 
   file_in.close();
-  p_model->SetStateVariables(state_variables);
-  return 0;
+  return state_variables;
 }
 
 std::vector<double> GetNthVariable(std::vector<std::vector<double>> states, unsigned int index){
@@ -279,6 +278,15 @@ void compare_error_measures(int paces, boost::shared_ptr<AbstractCvodeCell> mode
   }
   output_file << "\n";
 
+  output_file << simulation.GetApd(90) << " 0 0 0 0 ";
+
+  auto current_states = simulation.GetStateVariables();
+
+  for(auto state : current_states)
+    output_file << state << " ";
+
+  output_file << "\n";
+
   std::vector<double> times;
   for(int j = 0; j < paces; j++){
     OdeSolution current_solution = simulation.GetPace(1, false);
@@ -295,8 +303,8 @@ void compare_error_measures(int paces, boost::shared_ptr<AbstractCvodeCell> mode
     const std::vector<std::vector<double>> current_pace = current_solution.rGetSolutions();
     times = current_solution.rGetTimes();
 
-    const std::vector<double> current_states = current_pace.back();
-    const std::vector<double> previous_states = previous_pace.back();
+    const std::vector<double> current_states = current_pace.front();
+    const std::vector<double> previous_states = previous_pace.front();
 
     output_file << simulation.GetApd(90, false) << " ";
     output_file << TwoNorm(current_states, previous_states, starting_index) << " ";
@@ -413,4 +421,3 @@ double get_max_paces(){
 std::vector<boost::shared_ptr<AbstractCvodeCell>> get_analytic_models(){
   get_models("algebraic");
 }
-
