@@ -29,9 +29,9 @@ private:
     boost::filesystem::create_directories(dirname);
     const int period = 750;
     // Uses a method to extrapolate to the steady state
-    SmartSimulation smart_simulation(smart_model, period, "", 1e-8, 1e-8, buffer_size, extrapolation_coefficient, "/home/chaste/testoutput/" + model_name + "/TestExtrapolationMethod");
+    SmartSimulation smart_simulation(smart_model, period, "", 1e-08, 1e-08, buffer_size, extrapolation_coefficient, "/home/chaste/testoutput/" + model_name + "/TestExtrapolationMethod");
     // Runs the model without using this method
-    Simulation simulation(brute_force_model, period, "", 1e-8, 1e-8);
+    Simulation simulation(brute_force_model, period, "", 1e-08, 1e-08);
 
     // Setup directories for output
     std::cout << "-------------------------------\n\n\nTesting " << model_name  << "\n";
@@ -54,6 +54,13 @@ private:
     }
     smart_output_file << "\n";
     brute_output_file << "\n";
+
+    // Calculate difference in APD90s using initial conditions
+    {
+      const double smart_apd = smart_simulation.GetApd(90);
+      const double apd_difference = smart_apd - simulation.GetApd(90);
+      std::cout << "Difference in APD90s using initial conditions " << apd_difference << "\n";
+    }
 
     // Run the simulations until they finish
     bool brute_finished = false;
@@ -191,7 +198,7 @@ private:
   }
 
 public:
-  void TestTusscherSimulation()
+  void TestExtrapolationRun()
   {
 #ifdef CHASTE_CVODE
     int paces = get_max_paces();
