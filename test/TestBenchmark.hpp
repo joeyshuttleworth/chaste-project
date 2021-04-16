@@ -18,8 +18,8 @@ private:
   std::string username;
   int baseline_score = 0;
 
-  const std::vector<unsigned int> buffer_sizes = {100, 250, 500, 750, 1000, 1250, 1500, 2000};//{25, 50, 100, 150, 200, 300 ,400};
-  const std::vector<double> extrapolation_constants ={0.25, 0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5};
+  const std::vector<unsigned int> buffer_sizes = {25, 50, 100, 250, 500, 750, 1000, 2000};//{25, 50, 100, 150, 200, 300 ,400};
+  const std::vector<double> extrapolation_constants ={0.1, 0.5, 0.75, 0.9, 1, 1.1, 1.25};
   const unsigned int max_paces = 100000;
 public:
 
@@ -30,7 +30,7 @@ public:
     std::vector<double> periods = get_periods();
     std::vector<double> IKrBlocks = get_IKr_blocks();
 
-    auto models = get_analytic_models();
+    auto models = get_models("algebraic");
 
     const boost::filesystem::path test_dir(getenv("CHASTE_TEST_OUTPUT"));
 

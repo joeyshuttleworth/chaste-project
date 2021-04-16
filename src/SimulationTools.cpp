@@ -411,20 +411,6 @@ double get_max_paces(){
 }
 
 std::vector<boost::shared_ptr<AbstractCvodeCell>> get_analytic_models(){
-
-  boost::shared_ptr<RegularStimulus> p_stimulus;
-  boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
-
-  std::vector<boost::shared_ptr<AbstractCvodeCell>> models =
-
-    {boost::make_shared<Cellohara_rudy_2011_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus),
-    boost::make_shared<Cellohara_rudy_cipa_2017_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus)};
-    boost::make_shared<CellToRORd_dyn_chloride_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus),
-      boost::make_shared<Celliyer_2004_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus),
-      boost::make_shared<Cellhund_rudy_2004_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus),
-      boost::make_shared<Celldecker_2009_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus),
-      boost::make_shared<Cellten_tusscher_2004_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus),
-      boost::make_shared<Cellten_tusscher_2006_epi_analytic_voltageFromCellMLCvode>(p_solver, p_stimulus);
-    return models;
+  get_models("algebraic");
 }
 
