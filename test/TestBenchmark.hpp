@@ -39,8 +39,9 @@ public:
     for(auto model : models){
       const std::string model_name = model->GetSystemInformation()->GetSystemName();
       const std::string filepath = (directory / boost::filesystem::path(model_name + "_results.dat")).string();
+      // std::cout << "filepath: " << filepath << "\n";
 
-      std::ofstream output_file(directory.string());
+      std::ofstream output_file(filepath);
 
         output_file << "what_modified model_name buffer_size extrapolation_constant period IKrBlock score APD90";
 
@@ -113,7 +114,11 @@ public:
 
     SmartSimulation smart_simulation(model, period, input_path, 1e-8, 1e-8);
     smart_simulation.SetIKrBlock(IKrBlock);
-    smart_simulation.RunPaces(max_paces);
+
+    int paces_to_run = get_max_paces();
+    paces_to_run = paces_to_run==INT_UNSET?max_paces:paces_to_run;
+
+    smart_simulation.RunPaces(paces_to_run);
 
     unsigned int paces = smart_simulation.GetPaces();
     std::cout << "took " << paces << " paces\n";

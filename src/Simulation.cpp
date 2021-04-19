@@ -15,8 +15,11 @@ Simulation::Simulation(boost::shared_ptr<AbstractCvodeCell> _p_model, double _pe
   mNumberOfStateVariables = mpModel->GetSystemInformation()->rGetStateVariableNames().size();
   if(input_path.length()>=1){
     mStateVariables=LoadStatesFromFile(input_path);
+    mpModel->SetStateVariables(mStateVariables);
   }
-  mpModel->SetStateVariables(mStateVariables);
+  else
+    mStateVariables = mpModel->GetStdVecStateVariables();
+
   SetTolerances(_tol_abs, _tol_rel);
 
   mPreviousMinimalMRMSs.set_capacity(mPreviousMinimalMRMSsWindowSize);
