@@ -58,6 +58,7 @@ public:
 
   void OutputScore(boost::shared_ptr<AbstractCvodeCell> model, std::vector<double> periods, std::vector<double> IKrBlocks, double extrapolation_constant, unsigned int buffer_size, std::ofstream& output_file){
     /*  Output a scores for each setting. Test 3 times, first varying both IKrBlock and pacing then once with each individually.  */
+    output_file.precision(20);
     const std::string model_name = model->GetSystemInformation()->GetSystemName();
     for(auto period : periods){
       for(auto IKrBlock : IKrBlocks){
