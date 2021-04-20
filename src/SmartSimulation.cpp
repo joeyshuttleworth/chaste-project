@@ -200,13 +200,13 @@ bool SmartSimulation::ExtrapolateStates(){
         //   std::cout << variable << " ";
         // }
         // std::cout<<"\n";
-
+        ClearBuffers();
+        mPreviousMinimalMRMSsPMCC = DOUBLE_UNSET;
+        mLastExtrapolationPace=mPace;
+        mMRMSBeforeExtrapolation=mCurrentMRMS;
       }
-      ClearBuffers();
-      mPreviousMinimalMRMSsPMCC = DOUBLE_UNSET;
-      mLastExtrapolationPace=mPace;
-      mMRMSBeforeExtrapolation=mCurrentMRMS;
-      return extrapolated;
+      mStatesBuffer.clear();
+     return extrapolated;
     }
     else
       return false;
