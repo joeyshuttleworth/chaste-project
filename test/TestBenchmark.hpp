@@ -34,8 +34,6 @@ public:
     const boost::filesystem::path test_dir(getenv("CHASTE_TEST_OUTPUT"));
 
     boost::filesystem::path directory = (boost::filesystem::path(test_dir) / boost::filesystem::path("TestBenchmark/"));
-    // Clear the directory
-    boost::filesystem::remove_all(directory);
     // Remake the empty directoy
     boost::filesystem::create_directories(directory);
 
