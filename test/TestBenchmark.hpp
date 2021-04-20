@@ -17,7 +17,7 @@ private:
   std::ofstream output_file;
   int baseline_score = 0;
 
-  const std::vector<unsigned int> buffer_sizes = {25, 50, 100, 250, 500, 750, 1000, 2000};//{25, 50, 100, 150, 200, 300 ,400};
+  const std::vector<unsigned int> buffer_sizes = {25, 50, 100, 250, 500, 750, 1000, 2000};
   const std::vector<double> extrapolation_constants ={0.1, 0.5, 0.75, 0.9, 1, 1.1, 1.25};
   const unsigned int max_paces = 100000;
 public:
@@ -34,6 +34,9 @@ public:
     const boost::filesystem::path test_dir(getenv("CHASTE_TEST_OUTPUT"));
 
     boost::filesystem::path directory = (boost::filesystem::path(test_dir) / boost::filesystem::path("TestBenchmark/"));
+    // Clear the directory
+    boost::filesystem::remove_all(directory);
+    // Remake the empty directoy
     boost::filesystem::create_directories(directory);
 
     for(auto model : models){
