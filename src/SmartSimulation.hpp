@@ -28,6 +28,10 @@ public:
 
   // Getters and Setters
 
+  int GetNumberOfJumps(){
+    return mJumps;
+  }
+
   void SetExtrapolationConstant(double e_c){mExtrapolationConstant=e_c;}
   void SetBufferSize(unsigned int buffer_size){
     mBufferSize = buffer_size;

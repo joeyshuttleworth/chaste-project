@@ -44,7 +44,7 @@ public:
 
       std::ofstream output_file(filepath);
 
-        output_file << "what_modified model_name buffer_size extrapolation_constant period IKrBlock score APD90";
+        output_file << "what_modified model_name buffer_size extrapolation_constant period IKrBlock score jumps_used APD90";
 
         // First get the score with no extrapolation
         OutputScore(model, periods, IKrBlocks, 0, 100, output_file);
@@ -69,7 +69,8 @@ public:
 
         // Print the performance of this model with these settings
         output_file << "period_IKrBlock " << model_name << " " << buffer_size << " " << extrapolation_constant << " " << period << " " << IKrBlock << " ";
-        output_file << RunModel(model, ic_period, ic_block, period, IKrBlock, buffer_size, extrapolation_constant) << " ";
+        auto sim = RunModel(model, ic_period, ic_block, period, IKrBlock, buffer_size, extrapolation_constant);
+        output_file << sim->GetPaces() << " " << sim->GetNumberOfJumps() << " ";
         // Output APD90
         output_file << Simulation(model).GetApd(90) << "\n";
 
@@ -79,7 +80,8 @@ public:
 
         // Print the performance of this model with these settings
         output_file << "period " << model_name << " " << buffer_size << " " << extrapolation_constant << " " << period << " " << IKrBlock << " ";
-        output_file << RunModel(model, ic_period, ic_block, period, IKrBlock, buffer_size, extrapolation_constant) << " ";
+
+        output_file << sim->GetPaces() << " " << sim->GetNumberOfJumps() << " ";
         // Output APD90
         output_file << Simulation(model).GetApd(90) << "\n";
 
@@ -89,16 +91,17 @@ public:
 
         // Print the performance of this model with these settings
         output_file << "IKrBlock " << model_name << " " << buffer_size << " " << extrapolation_constant << " " << period << " " << IKrBlock << " ";
-        output_file << RunModel(model, ic_period, ic_block, period, IKrBlock, buffer_size, extrapolation_constant) << " ";
+
+        output_file << sim->GetPaces() << " " << sim->GetNumberOfJumps() << " ";
+
         // Output APD90
         output_file << Simulation(model, period, "" ).GetApd(90) << "\n";
-
       }
     }
   }
 
 
-  unsigned int RunModel(boost::shared_ptr<AbstractCvodeCell> model, double ic_period, double ic_IKrBlock, double period, double IKrBlock, unsigned int buffer_size, double extrapolation_constant){
+  std::shared_ptr<SmartSimulation> RunModel(boost::shared_ptr<AbstractCvodeCell> model, double ic_period, double ic_IKrBlock, double period, double IKrBlock, unsigned int buffer_size, double extrapolation_constant){
     const boost::filesystem::path test_dir(getenv("CHASTE_TEST_OUTPUT"));
 
     const std::string model_name = model->GetSystemInformation()->GetSystemName();
@@ -114,18 +117,19 @@ public:
 
     const std::string input_path = (test_dir / boost::filesystem::path(input_dirname_ss.str()) / boost::filesystem::path("final_states.dat")).string();
 
-    SmartSimulation smart_simulation(model, period, input_path, 1e-8, 1e-8);
-    smart_simulation.SetIKrBlock(IKrBlock);
+    std::shared_ptr<SmartSimulation> smart_simulation = std::make_shared<SmartSimulation>(model, period, input_path, 1e-8, 1e-8);
+    smart_simulation->SetIKrBlock(IKrBlock);
 
     int paces_to_run = get_max_paces();
     paces_to_run = paces_to_run==INT_UNSET?max_paces:paces_to_run;
 
-    smart_simulation.RunPaces(paces_to_run);
+    smart_simulation->RunPaces(paces_to_run);
 
-    unsigned int paces = smart_simulation.GetPaces();
+    unsigned int paces = smart_simulation->GetPaces();
+
     std::cout << "took " << paces << " paces\n";
     TS_ASSERT(paces+2<max_paces);
 
-    return paces;
+    return smart_simulation;
   }
 };
