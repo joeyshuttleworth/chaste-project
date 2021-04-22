@@ -92,7 +92,7 @@ double TwoNorm(std::vector<double> A, std::vector<double> B, unsigned int starti
     double b = B[i];
     norm += pow(a - b, 2);
   }
-  return sqrt(norm);
+  return sqrt(norm/(A.size()-starting_index));
 }
 
 double mrms(std::vector<double> A, std::vector<double> B, unsigned int starting_index){
@@ -103,7 +103,7 @@ double mrms(std::vector<double> A, std::vector<double> B, unsigned int starting_
     double b = B[i];
     norm += pow((a - b)/(1 + abs(a)), 2);
   }
-  const double return_val = sqrt(norm/A.size());
+  const double return_val = sqrt(norm/(A.size()-starting_index));
   return return_val;
 }
 
@@ -114,7 +114,7 @@ double TwoNormTrace(std::vector<std::vector<double>> A, std::vector<std::vector<
       norm += pow(A[i][j] - B[i][j], 2);
     }
   }
-  return sqrt(norm);
+  return sqrt(norm/(A.size() * (A[0].size()-starting_index)));
 }
 
 double mrmsTrace(std::vector<std::vector<double>> A, std::vector<std::vector<double>> B, unsigned int starting_index){
@@ -126,7 +126,7 @@ double mrmsTrace(std::vector<std::vector<double>> A, std::vector<std::vector<dou
       norm += pow((a - b)/(1+abs(a)), 2);
     }
   }
-  return sqrt(norm/(A.size() * A[0].size()));
+  return sqrt(norm/(A.size() * (A[0].size()-starting_index)));
 }
 
 double CalculateAPD(boost::shared_ptr<AbstractCvodeCell> p_model, double period, double duration, double percentage){

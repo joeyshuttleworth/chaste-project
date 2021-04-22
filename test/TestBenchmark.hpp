@@ -114,7 +114,7 @@ public:
       double reference_trace_two_norm = TwoNormTrace(reference_pace, pace);
       double reference_trace_mrms = mrmsTrace(reference_pace, pace);
 
-      output_file << reference_mrms << " " << two_norm << " " << reference_trace_two_norm << " " << reference_trace_mrms << "\n";
+      output_file << reference_mrms << " " << reference_trace_mrms << " " << two_norm << " " << reference_trace_two_norm << "\n";
 
 
     }
