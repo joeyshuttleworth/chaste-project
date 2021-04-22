@@ -17,7 +17,7 @@ private:
   std::ofstream output_file;
   int baseline_score = 0;
 
-  const std::vector<unsigned int> buffer_sizes = {25, 50, 100, 250, 500, 750, 1000, 2000};
+  const std::vector<unsigned int> buffer_sizes = {50, 100, 250, 500, 750, 1000, 2000};
   const std::vector<double> extrapolation_constants ={0.1, 0.5, 0.75, 0.9, 1, 1.1, 1.25};
   const unsigned int max_paces = 100000;
 public:
@@ -44,7 +44,7 @@ public:
 
       std::ofstream output_file(filepath);
 
-        output_file << "what_modified model_name buffer_size extrapolation_constant period IKrBlock score jumps_used APD90";
+        output_file << "what_modified model_name buffer_size extrapolation_constant ic_period ic_block period IKrBlock score jumps_used APD90 last_mrms\n";
 
         // First get the score with no extrapolation
         OutputScore(model, periods, IKrBlocks, 0, 100, output_file);
@@ -68,34 +68,61 @@ public:
         double ic_block  = IKrBlock==0?0.5:0;
 
         // Print the performance of this model with these settings
-        output_file << "period_IKrBlock " << model_name << " " << buffer_size << " " << extrapolation_constant << " " << period << " " << IKrBlock << " ";
-        auto sim = RunModel(model, ic_period, ic_block, period, IKrBlock, buffer_size, extrapolation_constant);
-        output_file << sim->GetPaces() << " " << sim->GetNumberOfJumps() << " ";
-        // Output APD90
-        output_file << Simulation(model).GetApd(90) << "\n";
+        output_file << "period_IKrBlock " << model_name << " " << buffer_size << " " << extrapolation_constant << " " << ic_period << " " << ic_block << " " << period << " " << IKrBlock << " ";
+
+        try{
+          auto sim = RunModel(model, ic_period, ic_block, period, IKrBlock, buffer_size, extrapolation_constant);
+          output_file << sim->GetPaces() << " " << sim->GetNumberOfJumps() << " ";
+          // Output APD90
+          output_file << Simulation(model).GetApd(90) << " " << sim->GetMRMS() << "\n";
+        }
+        catch(Exception& e){
+          std::cout << "Something went wrong when running the model! " << e.GetMessage() << "\n";;
+          output_file << -1 << " " << -1 << " ";
+          // Output APD90
+          output_file << "-1 -1\n";
+        }
 
         // Change both only pacing frequency
         ic_period = period==1000?500:1000;
         ic_block  = IKrBlock;
 
         // Print the performance of this model with these settings
-        output_file << "period " << model_name << " " << buffer_size << " " << extrapolation_constant << " " << period << " " << IKrBlock << " ";
+        output_file << "period " << model_name << " " << buffer_size << " " << extrapolation_constant << " " << ic_period << " " << ic_block << " " << period << " " << IKrBlock << " ";
 
-        output_file << sim->GetPaces() << " " << sim->GetNumberOfJumps() << " ";
-        // Output APD90
-        output_file << Simulation(model).GetApd(90) << "\n";
+        try{
+          auto sim = RunModel(model, ic_period, ic_block, period, IKrBlock, buffer_size, extrapolation_constant);
+          output_file << sim->GetPaces() << " " << sim->GetNumberOfJumps() << " ";
+          // Output APD90
+          output_file << Simulation(model).GetApd(90) << " " << sim->GetMRMS() << "\n";
+        }
+        catch(Exception& e){
+          std::cout << "Something went wrong when running the model!  " << e.GetMessage() << "\n";;
+          output_file << -1 << " " << -1 << " ";
+          // Output APD90 and last mrms
+          output_file << "-1 -1 \n";
+        }
+
 
         // Change only IKrBlock
         ic_period = period;
         ic_block  = IKrBlock==0?0.5:0;
 
         // Print the performance of this model with these settings
-        output_file << "IKrBlock " << model_name << " " << buffer_size << " " << extrapolation_constant << " " << period << " " << IKrBlock << " ";
+        output_file << "IKrBlock " << model_name << " " << buffer_size << " " << extrapolation_constant << " " << ic_period << " " << ic_block << " " << period << " " << IKrBlock << " ";
 
-        output_file << sim->GetPaces() << " " << sim->GetNumberOfJumps() << " ";
-
-        // Output APD90
-        output_file << Simulation(model, period, "" ).GetApd(90) << "\n";
+        try{
+          auto sim = RunModel(model, ic_period, ic_block, period, IKrBlock, buffer_size, extrapolation_constant);
+          output_file << sim->GetPaces() << " " << sim->GetNumberOfJumps() << " ";
+          // Output APD90
+          output_file << Simulation(model).GetApd(90) << " " << sim->GetMRMS() << "\n";
+        }
+        catch(Exception& e){
+          std::cout << "Something went wrong when running the model!" << e.GetMessage() << "\n";
+          output_file << -1 << " " << -1 << " ";
+          // Output APD90
+          output_file << "-1 -1 \n";
+        }
       }
     }
   }

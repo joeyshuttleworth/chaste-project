@@ -17,7 +17,7 @@
 class TestExtrapolationMethod : public CxxTest::TestSuite
 {
 private:
-  unsigned int buffer_size = 750;
+  unsigned int buffer_size = 300;
   const double extrapolation_coefficient = 1;
   const unsigned int default_paces = 200000;
 

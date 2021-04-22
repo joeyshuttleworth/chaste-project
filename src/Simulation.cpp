@@ -13,6 +13,7 @@ Simulation::Simulation(boost::shared_ptr<AbstractCvodeCell> _p_model, double _pe
   mpModel->SetMaxTimestep(1000);
   mpModel->SetTolerances(mTolAbs, mTolRel);
   mNumberOfStateVariables = mpModel->GetSystemInformation()->rGetStateVariableNames().size();
+
   if(input_path.length()>=1){
     mStateVariables=LoadStatesFromFile(input_path);
     mpModel->SetStateVariables(mStateVariables);
@@ -27,13 +28,13 @@ Simulation::Simulation(boost::shared_ptr<AbstractCvodeCell> _p_model, double _pe
 }
 
 Simulation::~Simulation(){
-  mpModel->SetStateVariables(mStateVariables);
+  mpModel->ResetToInitialConditions();
   mpStimulus->SetPeriod(mPeriod);
   mpModel->SetForceReset(true);
 
   // Return IKr block to its original value
   if(mDefaultGKr!=DOUBLE_UNSET)
-    SetIKrBlock(mDefaultGKr);
+    SetIKrBlock(0);
 }
 
 bool Simulation::RunPaces(int max_paces){
@@ -237,7 +238,10 @@ void Simulation::SetIKrBlock(double block){
     // Parameter exists
     if(mDefaultGKr == DOUBLE_UNSET)
       mDefaultGKr = mpModel->GetParameter(GKr_parameter_name);
-    mpModel->SetParameter(GKr_parameter_name, mDefaultGKr*(1-block));
+    if(block==0)
+      mpModel->SetParameter(GKr_parameter_name, mDefaultGKr);
+    else
+      mpModel->SetParameter(GKr_parameter_name, mDefaultGKr*(1-block));
     return;
   }
 
@@ -245,7 +249,10 @@ void Simulation::SetIKrBlock(double block){
   if(std::count_if(parameter_names.begin(), parameter_names.end(), [&](std::string name) -> bool {return name==GKr_scaling_factor_name;}) > 0){
     if(mDefaultGKr == DOUBLE_UNSET)
       mDefaultGKr = mpModel->GetParameter(GKr_scaling_factor_name);
-    mpModel->SetParameter(GKr_scaling_factor_name, mDefaultGKr*(1-block));
+    if(block==0)
+      mpModel->SetParameter(GKr_parameter_name, mDefaultGKr);
+    else
+      mpModel->SetParameter(GKr_scaling_factor_name, mDefaultGKr*(1-block));
     return;
   }
   else{

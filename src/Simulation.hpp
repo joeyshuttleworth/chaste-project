@@ -39,7 +39,7 @@ protected:
 
   double mCurrentMinimalMRMS = DOUBLE_UNSET;
 
-  double mDefaultGKr = DOUBLE_UNSET;
+  long double mDefaultGKr = DOUBLE_UNSET;
 
   bool mHasTerminated = false;
 
