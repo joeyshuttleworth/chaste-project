@@ -25,6 +25,9 @@ Simulation::Simulation(boost::shared_ptr<AbstractCvodeCell> _p_model, double _pe
 
   mPreviousMinimalMRMSs.set_capacity(mPreviousMinimalMRMSsWindowSize);
   mMRMSBuffer.set_capacity(mMRMSBufferSize);
+
+  // Initialise GKr parameter
+  SetIKrBlock(0);
 }
 
 Simulation::~Simulation(){

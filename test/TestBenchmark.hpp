@@ -38,6 +38,12 @@ public:
     boost::filesystem::create_directories(directory);
 
     for(auto model : models){
+      // Construct and destruct a Simulation to prevent any discrepencies
+      // Without this there seems to be some small differences in the output for
+      // small numbers of max_paces. Probably due to some internal Cvode settings
+      {
+        Simulation sim(model);
+      }
       const std::string model_name = model->GetSystemInformation()->GetSystemName();
       const std::string filepath = (directory / boost::filesystem::path(model_name + "_results.dat")).string();
       // std::cout << "filepath: " << filepath << "\n";
