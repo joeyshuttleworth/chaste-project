@@ -51,6 +51,9 @@ public:
     auto periods = get_periods();
 
     for(auto model : models){
+      {
+        Simulation sim(model);
+      }
       const N_Vector initial_states = model->GetStateVariables();
       for(double period : periods){
         for(double IKrBlock : IKrBlocks){

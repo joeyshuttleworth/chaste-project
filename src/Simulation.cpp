@@ -231,29 +231,31 @@ void Simulation::SetIKrBlock(double block){
     EXCEPTION("Tried setting GKrConductance to an invalid amount");
   }
 
-  const std::string GKr_parameter_name = "membrane_rapid_delayed_rectifier_potassium_current_conductance";
-
   const std::vector<std::string> parameter_names = mpModel->rGetParameterNames();
 
   mIKrBlock = block;
 
-  if(std::count_if(parameter_names.begin(), parameter_names.end(), [&](std::string name) -> bool {return name==GKr_parameter_name;}) > 0){
-    // Parameter exists
-    if(mDefaultGKr == DOUBLE_UNSET)
-      mDefaultGKr = mpModel->GetParameter(GKr_parameter_name);
-    if(block==0)
-      mpModel->SetParameter(GKr_parameter_name, mDefaultGKr);
-    else
-      mpModel->SetParameter(GKr_parameter_name, mDefaultGKr*(1-block));
-    return;
-  }
+  {
+    const std::string GKr_parameter_name = "membrane_rapid_delayed_rectifier_potassium_current_conductance";
 
+    if(std::count_if(parameter_names.begin(), parameter_names.end(), [&](std::string name) -> bool {return name==GKr_parameter_name;}) > 0){
+      // Parameter exists
+      if(mDefaultGKr == DOUBLE_UNSET)
+        mDefaultGKr = mpModel->GetParameter(GKr_parameter_name);
+      if(block==0)
+        mpModel->SetParameter(GKr_parameter_name, mDefaultGKr);
+      else
+        mpModel->SetParameter(GKr_parameter_name, mDefaultGKr*(1-block));
+      return;
+    }
+  }
+  
   const std::string GKr_scaling_factor_name = "membrane_rapid_delayed_rectifier_potassium_current_conductance_scaling_factor";
   if(std::count_if(parameter_names.begin(), parameter_names.end(), [&](std::string name) -> bool {return name==GKr_scaling_factor_name;}) > 0){
     if(mDefaultGKr == DOUBLE_UNSET)
       mDefaultGKr = mpModel->GetParameter(GKr_scaling_factor_name);
     if(block==0)
-      mpModel->SetParameter(GKr_parameter_name, mDefaultGKr);
+      mpModel->SetParameter(GKr_scaling_factor_name, mDefaultGKr);
     else
       mpModel->SetParameter(GKr_scaling_factor_name, mDefaultGKr*(1-block));
     return;
