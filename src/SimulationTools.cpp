@@ -429,5 +429,5 @@ double get_max_paces(){
 }
 
 std::vector<boost::shared_ptr<AbstractCvodeCell>> get_analytic_models(){
-  get_models("algebraic");
+  return(get_models("algebraic"));
 }
