@@ -306,14 +306,24 @@ void compare_error_measures(int paces, boost::shared_ptr<AbstractCvodeCell> mode
     const std::vector<double> current_states = current_pace.front();
     const std::vector<double> previous_states = previous_pace.front();
 
-    output_file << simulation.GetApd(90, false) << " ";
+    // Expensive so only compute every 50 paces
+    if(j%50==0)
+      output_file << simulation.GetApd(90, false) << " ";
+    else
+      output_file << NAN << " ";
+
     output_file << TwoNorm(current_states, previous_states, starting_index) << " ";
     output_file << mrms(current_states,  previous_states, starting_index) << " ";
-    //Computationally expensive so ignore unless necessary
-    output_file << -1 << " ";
-    output_file << -1 << " ";
-    // output_file << TwoNormTrace(current_pace, previous_pace, starting_index) << " ";
-    // output_file << mrmsTrace(current_pace, previous_pace, starting_index) << " ";
+    //Computationally expensive so only plot every 50
+    if(j%50==0){
+      output_file << TwoNormTrace(current_pace, previous_pace, starting_index) << " ";
+      output_file << mrmsTrace(current_pace, previous_pace, starting_index) << " ";
+    }
+    else{
+      output_file << NAN << " ";
+      output_file << NAN << " ";
+    }
+
     //Print state variables
     for(unsigned int k = 0; k < current_states.size(); k++){
       output_file << current_states[k] << " ";

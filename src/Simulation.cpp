@@ -249,7 +249,7 @@ void Simulation::SetIKrBlock(double block){
       return;
     }
   }
-  
+
   const std::string GKr_scaling_factor_name = "membrane_rapid_delayed_rectifier_potassium_current_conductance_scaling_factor";
   if(std::count_if(parameter_names.begin(), parameter_names.end(), [&](std::string name) -> bool {return name==GKr_scaling_factor_name;}) > 0){
     if(mDefaultGKr == DOUBLE_UNSET)
