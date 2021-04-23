@@ -69,6 +69,7 @@ public:
     // Calculate Ground Truth APD
     simulation.SetTolerances(1e-12, 1e-12);
 
+    {
     std::vector<double> last_state_vars, state_vars = model->GetStdVecStateVariables();
     for(unsigned int i=0; i<paces; i++){
       last_state_vars = state_vars;
@@ -78,6 +79,7 @@ public:
       std::cout << "mrms = " << mrms(state_vars, last_state_vars) << "\n";
       output_file2 << reference_apd << "\n";
     }
+    }
 
     simulation.SetTolerances(1e-8, 1e-8);
 
@@ -85,6 +87,7 @@ public:
       simulation.RunPace();
       const double apd = simulation.GetApd(90, false);
       output_file << apd << "\n";
+      std::cout << "mrms (1e-8) = " << simulation.GetMRMS() << "\n";
     }
 
     output_file.close();
