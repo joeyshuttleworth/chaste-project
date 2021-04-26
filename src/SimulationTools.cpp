@@ -416,6 +416,18 @@ std::vector<double> get_periods(){
   return periods;
 }
 
+int get_max_jumps(){
+  const std::string option = "--max_jumps";
+  /* Get periods using specified command line argument. If no argument is given, default to defaults */
+  int max_jumps = INT_UNSET;
+
+  if(CommandLineArguments::Instance()->OptionExists(option)){
+    max_jumps = CommandLineArguments::Instance()->GetIntCorrespondingToOption(option);
+  }
+
+  return max_jumps;
+}
+
 double get_max_paces(){
   double paces = INT_UNSET;
   const std::string option = "--paces";

@@ -49,6 +49,8 @@ double CalculatePMCC(std::vector<double>, std::vector<double>);
 
 void compare_error_measures(int paces, boost::shared_ptr<AbstractCvodeCell>, double period, double IKrBlock, double tolerance, std::string filename_suffix);
 
+int get_max_jumps();
+
 template<typename Container>
 double CalculatePMCC(Container values){
   const unsigned int N = values.size();

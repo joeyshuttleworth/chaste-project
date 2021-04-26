@@ -17,9 +17,11 @@ private:
   std::ofstream output_file;
   int baseline_score = 0;
 
-  const std::vector<unsigned int> buffer_sizes = {50, 100, 250, 500, 750, 1000, 2000};
-  const std::vector<double> extrapolation_constants ={0.1, 0.5, 0.75, 0.9, 1, 1.1, 1.25};
+  const std::vector<unsigned int> buffer_sizes = {250, 50, 100, 500, 750, 1000, 2000};
+  const std::vector<double> extrapolation_constants ={1, 0.1, 0.5, 0.75, 0.9, 1.1, 1.25};
   const unsigned int max_paces = 100000;
+  // Get max jumps parameter
+  int max_jumps;
 public:
 
   void TestBenchmarkRun(){
@@ -30,6 +32,9 @@ public:
     std::vector<double> IKrBlocks = get_IKr_blocks();
 
     auto models = get_models("algebraic");
+
+    max_jumps = get_max_jumps();
+    max_jumps = max_jumps==INT_UNSET?2000:max_jumps;
 
     const boost::filesystem::path test_dir(getenv("CHASTE_TEST_OUTPUT"));
 
@@ -52,14 +57,13 @@ public:
 
         output_file << "what_modified model_name buffer_size extrapolation_constant ic_period ic_block period IKrBlock score jumps_used APD90 last_mrms reference_mrms reference_trace_mrms reference_2_norm reference_trace_2_norm\n";
 
-        // First get the score with no extrapolation
-        OutputScores(model, periods, IKrBlocks, 0, 100, output_file);
-
         for(auto buffer_size : buffer_sizes){
           for(auto extrapolation_constant : extrapolation_constants){
             OutputScores(model, periods, IKrBlocks, extrapolation_constant, buffer_size, output_file);
           }
         }
+        // Next, get the score with no extrapolation
+        OutputScores(model, periods, IKrBlocks, 0, 100, output_file);
       }
   }
 
@@ -139,11 +143,12 @@ public:
   }
 
   std::shared_ptr<SmartSimulation> RunModel(boost::shared_ptr<AbstractCvodeCell> model, double ic_period, double ic_IKrBlock, double period, double IKrBlock, unsigned int buffer_size, double extrapolation_constant){
+
     const boost::filesystem::path test_dir(getenv("CHASTE_TEST_OUTPUT"));
 
     const std::string model_name = model->GetSystemInformation()->GetSystemName();
 
-    std::cout << "For model " << model_name << "\n";
+    std::cout << "For model " << model_name << " with  n = " << buffer_size << " and e_c = " << extrapolation_constant << "\n";
 
     std::stringstream dirname;
     dirname << "/" << model_name << "_" << std::to_string(int(period)) << "ms_" << int(100*IKrBlock)<<"_percent_block/";
@@ -156,6 +161,7 @@ public:
 
     std::shared_ptr<SmartSimulation> smart_simulation = std::make_shared<SmartSimulation>(model, period, input_path, 1e-8, 1e-8, buffer_size, extrapolation_constant);
     smart_simulation->SetIKrBlock(IKrBlock);
+    smart_simulation->SetMaxJumps(max_jumps);
 
     int paces_to_run = get_max_paces();
     paces_to_run = paces_to_run==INT_UNSET?max_paces:paces_to_run;

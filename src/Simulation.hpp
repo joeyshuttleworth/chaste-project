@@ -58,7 +58,7 @@ public:
 
   Simulation(boost::shared_ptr<AbstractCvodeCell> _p_model, double _period=1000, std::string input_path = "", double _tol_abs=1e-8, double _tol_rel=1e-8);
 
-  ~Simulation();
+  virtual ~Simulation();
 
   /* Run paces until max_paces is exceeded or the model reaches a steady state */
   bool RunPaces(int);
@@ -73,7 +73,7 @@ public:
     mTolRel = rtol;
   }
 
-  bool RunPace();
+  virtual bool RunPace();
 
   /**Output a pace to file*/
   void WritePaceToFile(std::string dirname, std::string filename, double sampling_timestep = 1, bool update_variables=false);

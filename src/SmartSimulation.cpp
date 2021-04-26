@@ -124,7 +124,7 @@ bool SmartSimulation::RunPace(){
     }
     catch(Exception& e){
       std::cout << "Failed to integrate pace. Returning to last known safe state.\n";
-      if(mSafeStateVariables.size()==0){
+      if(mSafeStateVariables.size()==0 || mJumps==0){
         EXCEPTION("Solver crashed and there's no safe state to return to.");
       }
       else{
@@ -132,6 +132,8 @@ bool SmartSimulation::RunPace(){
         mpModel->SetStateVariables(mStateVariables);
         mSafeStateVariables = {};
         ClearBuffers();
+        //Decrement mJumps because this extrapolation failed
+        mJumps--;
       }
     }
     /* If the extrapolation method has been and a good number of paces have

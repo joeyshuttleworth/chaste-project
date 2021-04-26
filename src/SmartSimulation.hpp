@@ -40,6 +40,7 @@ public:
   }
 
   void SetMaxJumps(unsigned int max_jumps){mMaxJumps = max_jumps;}
+
   void SetOutputDir(std::string dir){
     mOutputDir = dir;
     boost::filesystem::create_directories(dir);
