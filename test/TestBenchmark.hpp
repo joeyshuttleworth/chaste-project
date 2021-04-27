@@ -101,7 +101,7 @@ public:
     try{
       auto sim = RunModel(model, ic_period, ic_block, period, IKrBlock, buffer_size, extrapolation_constant);
       if(!sim->HasTerminated()){
-        EXCEPTION("model failed to converge")
+        EXCEPTION("model failed to converge");
       }
       output_file << sim->GetPaces() << " " << sim->GetNumberOfJumps() << " ";
       // Output APD90
