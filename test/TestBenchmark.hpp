@@ -17,8 +17,8 @@ private:
   std::ofstream output_file;
   int baseline_score = 0;
 
-  const std::vector<unsigned int> buffer_sizes = {250, 50, 100, 500, 750, 1000, 2000};
-  const std::vector<double> extrapolation_constants ={1, 0.1, 0.5, 0.75, 0.9, 1.1, 1.25};
+  const std::vector<unsigned int> buffer_sizes = {250, 25, 50, 100, 500, 750, 1000, 2000};
+  const std::vector<double> extrapolation_constants ={1, 0.1, 0.5, 0.75, 0.9, 1.05, 1.1, 1.25};
   const unsigned int max_paces = 100000;
   // Get max jumps parameter
   int max_jumps;
@@ -100,7 +100,7 @@ public:
 
     try{
       auto sim = RunModel(model, ic_period, ic_block, period, IKrBlock, buffer_size, extrapolation_constant);
-      if(!sim.HasTerminated()){
+      if(!sim->HasTerminated()){
         EXCEPTION("model failed to converge")
       }
       output_file << sim->GetPaces() << " " << sim->GetNumberOfJumps() << " ";
@@ -127,7 +127,7 @@ public:
     }
     catch(Exception& e){
       std::cout << "Something went wrong when running the model! " << e.GetMessage() << "\n";;
-      output_file << "-1 -1 -1 -1 -1 -1 -1 -1\n";
+      output_file << "NaN NaN NaN NaN NaN NaN NaN NaN\n";
       // Output APD90
     }
   }
