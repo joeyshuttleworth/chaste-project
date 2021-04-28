@@ -39,7 +39,7 @@ public:
     const boost::filesystem::path test_dir(getenv("CHASTE_TEST_OUTPUT"));
 
     // Get directory name suffix
-    const std::string option = "suffix";
+    const std::string option = "--suffix";
 
     std::string suffix = "";
     if(CommandLineArguments::Instance()->OptionExists(option)){
