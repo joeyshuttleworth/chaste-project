@@ -166,14 +166,17 @@ bool SmartSimulation::ExtrapolateStates(){
     bool extrapolated = false;
     std::string model_name = mpModel->GetSystemInformation()->GetSystemName();
     const std::string dir_name = mOutputDir;
-    boost::filesystem::create_directory(dir_name);
-    if(true){// if(mrms_pmcc < -0.90){
+    if(dir_name!="")
+      boost::filesystem::create_directory(dir_name);
+    if(true){
       mSafeStateVariables = mStateVariables;
       std::cout << "Extrapolating - start of buffer is " << mPace - mBufferSize + 1<< "\n";
 
-      mOutputFile.open(dir_name + "/" + std::to_string(int(mPeriod)) + "JumpParameters" + std::to_string(mJumps) + ".dat");
-      mOutputFile << std::setprecision(20);
-      mOutputFile << mPace << " " << mBufferSize << " " << mExtrapolationConstant << "\n";
+      if(dir_name!=""){
+        mOutputFile.open(dir_name + "/" + std::to_string(int(mPeriod)) + "JumpParameters" + std::to_string(mJumps) + ".dat");
+        mOutputFile << std::setprecision(20);
+        mOutputFile << mPace << " " << mBufferSize << " " << mExtrapolationConstant << "\n";
+      }
 
       bool stop_extrapolation = false;
       for(unsigned int i = 0; i < mStateVariables.size(); i++){
@@ -189,7 +192,8 @@ bool SmartSimulation::ExtrapolateStates(){
         extrapolated=false;
       }
 
-      mOutputFile.close();
+      if(mOutputFile.open())
+        mOutputFile.close();
 
       if(extrapolated){
         mJumps++;

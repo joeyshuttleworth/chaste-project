@@ -38,7 +38,14 @@ public:
 
     const boost::filesystem::path test_dir(getenv("CHASTE_TEST_OUTPUT"));
 
-    boost::filesystem::path directory = (boost::filesystem::path(test_dir) / boost::filesystem::path("TestBenchmark/"));
+    // Get directory name suffix
+    const std::string option==suffix;
+    suffix = "";
+    if(CommandLineArguments::Instance()->OptionExists(option)){
+      suffix = CommandLineArguments::Instance()->GetStringCorrespondingToOption(option);
+    }
+
+    boost::filesystem::path directory = (boost::filesystem::path(test_dir) / (boost::filesystem::path("TestBenchmark"+suffix+"/")));
     // Remake the empty directoy
     boost::filesystem::create_directories(directory);
 

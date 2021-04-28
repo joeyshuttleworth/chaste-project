@@ -16,10 +16,7 @@ public:
     mSafeStateVariables=mStateVariables;
     mStatesBuffer.set_capacity(mBufferSize);
 
-    if(output_dir=="")
-      mOutputDir = std::string(getenv("CHASTE_TEST_OUTPUT"));
-    else
-      mOutputDir = output_dir;
+    mOutputDir = output_dir;
 
     boost::filesystem::create_directories(mOutputDir);
   }
