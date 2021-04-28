@@ -192,7 +192,7 @@ bool SmartSimulation::ExtrapolateStates(){
         extrapolated=false;
       }
 
-      if(mOutputFile.open())
+      if(mOutputFile.is_open())
         mOutputFile.close();
 
       if(extrapolated){
