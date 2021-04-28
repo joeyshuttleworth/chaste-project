@@ -17,8 +17,8 @@ public:
     mStatesBuffer.set_capacity(mBufferSize);
 
     mOutputDir = output_dir;
-
-    boost::filesystem::create_directories(mOutputDir);
+    if(mOutputDir!="")
+      boost::filesystem::create_directories(mOutputDir);
   }
 
   bool RunPace();

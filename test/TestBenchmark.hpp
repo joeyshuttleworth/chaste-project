@@ -46,9 +46,10 @@ public:
       suffix = CommandLineArguments::Instance()->GetStringCorrespondingToOption(option);
     }
 
-    boost::filesystem::path directory = (boost::filesystem::path(test_dir) / (boost::filesystem::path("TestBenchmark"+suffix+"/")));
+    boost::filesystem::path directory = (boost::filesystem::path(test_dir) / (boost::filesystem::path("TestBenchmark"+suffix)));
     // Remake the empty directoy
-    boost::filesystem::create_directories(directory);
+    std::cout << "outputting to directory: " << directory.string() << "\n";
+    boost::filesystem::create_directories(directory.string());
 
     for(auto model : models){
       // Construct and destruct a Simulation to prevent any discrepencies
