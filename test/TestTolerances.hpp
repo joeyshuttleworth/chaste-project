@@ -22,8 +22,6 @@ public:
     auto periods = get_periods();
     auto IKrBlocks = get_IKr_blocks();
 
-    auto models = get_models();
-
     const int default_max_paces = 10000;
     int paces = get_max_paces();
     paces = paces==INT_UNSET?default_max_paces:paces;
@@ -31,6 +29,7 @@ public:
     for(auto tolerance : tolerances){
       for(auto IKrBlock : IKrBlocks){
         for(auto period : periods){
+          auto models = get_models();
            for(auto model : models){
              compare_error_measures(paces, model, period, IKrBlock, tolerance, filename_suffix);
           }

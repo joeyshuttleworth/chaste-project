@@ -10,8 +10,6 @@ import seaborn as sns
 def summarise_model(model_name):
     file_path = os.path.join(os.path.join(os.path.expanduser("~"), "Chaste-from-server", "testoutput", "TestBenchmark", "{}_results.dat".format(model_name)))
 
-    print("filepath is ".format(file_path))
-
     df_results = pd.read_csv(file_path, delim_whitespace=True)
     df_results = df_results[df_results.model_name==model_name]
 
@@ -30,7 +28,6 @@ def summarise_model(model_name):
     total_scores = []
 
     # Get reference rows
-    print(df_results.columns)
     reference_df=df_results[df_results.extrapolation_constant==0]
     reference_df=reference_df[reference_df.buffer_size==100]
     reference_df=reference_df[["score", "ic_period", "ic_block", "period", "IKrBlock"]]
@@ -46,7 +43,7 @@ def summarise_model(model_name):
 
             rows = rows.set_index(["ic_period", "ic_block", "period", "IKrBlock"])
 
-            scores = rows["score"].values
+            scores = rows["score"]
 
             paces_saved = (reference_df- rows)["score"]
             normalised_paces_saved = ((reference_df- rows)/reference_df)["score"]
@@ -55,9 +52,9 @@ def summarise_model(model_name):
             number_of_scenarios = len(scores)
             total_score = sum(scores)
             jumps_used = sum(rows["jumps_used"])
-            total_scores.append([e_c, int(buffer_size), jumps_used, total_score, total_score/sum(reference_df["score"]), normalised_paces_saved.quantile(0), normalised_paces_saved.quantile(0.25), normalised_paces_saved.quantile(0.5), normalised_paces_saved.quantile(0.75), normalised_paces_saved.quantile(1), paces_saved.mean()])
+            total_scores.append([e_c, int(buffer_size), jumps_used, total_score, normalised_paces_saved.quantile(0), normalised_paces_saved.quantile(0.25), normalised_paces_saved.quantile(0.5), normalised_paces_saved.quantile(0.75), normalised_paces_saved.quantile(1), paces_saved.mean()])
 
-    total_scores = pd.DataFrame(total_scores, columns=["lmbda", "n", "jumps used", "paces_saved", "normalised_paces_saved", "min", "lq", "median", "uq", "max", "mean"])
+    total_scores = pd.DataFrame(total_scores, columns=["lmbda", "n", "jumps used", "paces_saved", "min", "lq", "median", "uq", "max", "mean"])
 
     total_scores = total_scores[total_scores.paces_saved != 0]
 
@@ -71,7 +68,7 @@ def summarise_model(model_name):
 
     total_scores.sort_values(by=['paces_saved'], inplace=True, ascending=False)
     # plot boxplots for the top 3 scores
-    scores_to_plot=total_scores.iloc[0:8]
+    scores_to_plot=total_scores.iloc[0:5]
 
     df_to_plot=[]
     column_names=[]
@@ -85,7 +82,7 @@ def summarise_model(model_name):
 
         if(len(setting_results)!=36):
             print(len(setting_results), n, lmbda)
-        column_names.append("n={}, lamda={}".format(n,lmbda))
+        column_names.append("({}, {})".format(int(n),lmbda))
         df_to_plot.append(setting_results)
 
     df_to_plot=np.stack(df_to_plot).transpose()
@@ -105,8 +102,10 @@ def summarise_model(model_name):
                    marker='o',
                    alpha=0.5,
                    color='black')
-
-    plt.show()
+    plt.ylabel("proportion of paces saved")
+    plt.xlabel("(n, λ)")
+    plt.ylim(0,1)
+    plt.savefig("{}_boxplots.pdf".format(model_name))
 
     max_final_mrms=0
     max_apd_range=0
@@ -126,8 +125,26 @@ def summarise_model(model_name):
 
     print("biggest final mrms was {}".format(max_final_mrms))
     print("max apd range was {}".format(max_apd_range))
+    # return the total_scores data_frame
+
+    # Print a latex table to file
+    with open("{}_scores_table.tex".format(model_name), "w") as f:
+        table = total_scores[["n", "lmbda", "percentage_paces_saved", "jumps used", "min", "lq", "median", "uq", "max"]].iloc[0:10].to_latex(index=False, float_format="%.2f")
+        f.write(table)
+        f.write("\\biggest final mrms was {}\\".format(max_final_mrms))
+        f.write("max apd range was {}\\".format(max_apd_range))
+
+    return([df_to_plot.iloc[:,0], total_scores.iloc[0]])
 
 if __name__=="__main__":
     summarise_model("tentusscher_model_2006_epi_analytic_voltage")
-    # summarise_model("tentusscher_model_2006_epi_analytic_voltage")
-    # summarise_model("tentusscher_model_2006_epi_analytic_voltage")
+    models = ["Tomek2020epi_analytic_voltage", "IyerMazhariWinslow2004_analytic_voltage", "HundRudy2004_analytic_voltage_units", "decker_2009_analytic_voltage", "tentusscher_model_2004_epi_analytic_voltage", "tentusscher_model_2006_epi_analytic_voltage", "ohara_rudy_2011_epi_analytic_voltage", "ohara_rudy_cipa_2017_analytic_voltage"]
+
+    total_scores = []
+    boxplot_data = []
+    for model in models:
+        normalised_data_points, total_score = summarise_model(model)
+        # Get best score
+        total_scores.append(total_score)
+        data_to_plot.append(normalised_data_points)
+    # Construct new data frame with best results from each model to compare
