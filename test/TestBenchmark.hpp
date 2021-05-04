@@ -17,8 +17,8 @@ private:
   std::ofstream output_file;
   int baseline_score = 0;
 
-  const std::vector<unsigned int> buffer_sizes = {250, 25, 50, 100, 500, 750, 1000, 2000};
-  const std::vector<double> extrapolation_constants ={1, 0.1, 0.5, 0.75, 0.9, 1.05, 1.1, 1.25};
+  std::vector<int> buffer_sizes = {250, 25, 50, 100, 500, 750, 1000, 2000};
+  std::vector<double> extrapolation_constants ={1, 0.1, 0.5, 0.75, 0.9, 1.05, 1.1, 1.25};
   const unsigned int max_paces = 100000;
   // Get max jumps parameter
   int max_jumps;
@@ -38,8 +38,19 @@ public:
 
     const boost::filesystem::path test_dir(getenv("CHASTE_TEST_OUTPUT"));
 
+    std::string option = "--extrapolation_constants";
+    if(CommandLineArguments::Instance()->OptionExists(option)){
+      extrapolation_constants = CommandLineArguments::Instance()->GetDoublesCorrespondingToOption(option);
+    }
+
+    option = "--buffer_sizes";
+    if(CommandLineArguments::Instance()->OptionExists(option)){
+      buffer_sizes = CommandLineArguments::Instance()->GetIntsCorrespondingToOption(option);
+    }
+
+
     // Get directory name suffix
-    const std::string option = "--suffix";
+    option = "--suffix";
 
     std::string suffix = "";
     if(CommandLineArguments::Instance()->OptionExists(option)){
