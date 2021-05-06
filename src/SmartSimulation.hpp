@@ -7,7 +7,6 @@
 #include <string>
 #include "Simulation.hpp"
 
-
 class SmartSimulation : public Simulation{
 public:
   SmartSimulation(boost::shared_ptr<AbstractCvodeCell> _p_model, double _period, std::string input_path = "", double _tol_abs=1e-8, double _tol_rel=1e-8, int _buffer_size = 200, double _extrapolation_constant = 1, std::string output_dir = "") : Simulation(_p_model, _period, input_path, _tol_abs, _tol_rel), mBufferSize(_buffer_size), mExtrapolationConstant(_extrapolation_constant){

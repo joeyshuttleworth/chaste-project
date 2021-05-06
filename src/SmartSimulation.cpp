@@ -9,6 +9,7 @@
 #include <iostream>
 #include <iomanip>
 #include "SmartSimulation.hpp"
+#include "SimulationTools.hpp"
 
 bool SmartSimulation::ExtrapolateState(unsigned int state_index, bool& stop_extrapolation){
   /* Calculate the log absolute differences of the state and store these in y_vals. Store the corresponding x values in x_vals*/
@@ -141,6 +142,8 @@ bool SmartSimulation::RunPace(){
        before the jump. If not, we may have jumped further away from the
        solution and should reset to the state before the extrapolation. This
        seems to be quite rare so print a warning and stop any further extrapolations */
+
+    // if((mLastExtrapolationPace - mPace) % mBufferSize==0  && mPreviousMinimalMRMSs.size()>0){
     if(mLastExtrapolationPace + mBufferSize == mPace  && mPreviousMinimalMRMSs.size()>0){
       if(mPreviousMinimalMRMSs.back() > mMRMSBeforeExtrapolation){
           std::cout << "Warning: the extrapolation appears to have gone wrong. The pace-to-pace MRMS error is greater than it was before the extrapolation. Will not perform further extrapolations\n";

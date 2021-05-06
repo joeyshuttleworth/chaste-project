@@ -8,6 +8,7 @@
 #include "FakePetscSetup.hpp"
 #include "Simulation.hpp"
 #include "SmartSimulation.hpp"
+#include "SimulationTools.hpp"
 #include "CellProperties.hpp"
 
 #include <boost/filesystem.hpp>
@@ -17,21 +18,29 @@
 class TestExtrapolationMethod : public CxxTest::TestSuite
 {
 private:
-  unsigned int buffer_size = 300;
-  const double extrapolation_coefficient = 1;
   const unsigned int default_paces = 200000;
 
-  bool CompareMethodsPeriod(int paces, boost::shared_ptr<AbstractCvodeCell> brute_force_model, boost::shared_ptr<AbstractCvodeCell> smart_model){
-    const double IKrBlock = 0;
+  bool CompareMethods(double e_c, int bs, int paces, boost::shared_ptr<AbstractCvodeCell> brute_force_model, boost::shared_ptr<AbstractCvodeCell> smart_model, double ic_period, double ic_block, double period, double IKrBlock){
     std::string username = std::string(getenv("USER"));
+    std::string CHASTE_TEST_DIR = std::string(getenv("CHASTE_TEST_OUTPUT"));
     const std::string model_name = brute_force_model->GetSystemInformation()->GetSystemName();
     const std::string dirname  = "/home/"+username+"/testoutput/"+model_name+"/TestExtrapolationMethod";
     boost::filesystem::create_directories(dirname);
-    const int period = 750;
+
+    std::cout << "Testing " << model_name << " " << ic_period << " " << ic_block << " " << period << " " << IKrBlock << "\n";
+
+    std::stringstream input_dirname;
+    input_dirname << CHASTE_TEST_DIR << "/" << model_name << "_" << std::to_string(int(ic_period)) << "ms_" << int(100*ic_block)<<"_percent_block/";
+
+    const std::string input_file = input_dirname.str() + "final_states.dat";
+
     // Uses a method to extrapolate to the steady state
-    SmartSimulation smart_simulation(smart_model, period, "", 1e-08, 1e-08, buffer_size, extrapolation_coefficient, "/home/chaste/testoutput/" + model_name + "/TestExtrapolationMethod");
+    SmartSimulation smart_simulation(smart_model, period, input_file, 1e-08, 1e-08, bs, e_c, "/home/chaste/testoutput/" + model_name + "/TestExtrapolationMethod");
     // Runs the model without using this method
-    Simulation simulation(brute_force_model, period, "", 1e-08, 1e-08);
+    Simulation simulation(brute_force_model, period, input_file, 1e-08, 1e-08);
+
+    simulation.SetIKrBlock(IKrBlock);;
+    smart_simulation.SetIKrBlock(IKrBlock);
 
     // Setup directories for output
     std::cout << "-------------------------------\n\n\nTesting " << model_name  << "\n";
@@ -89,7 +98,7 @@ private:
         brute_output_file << j << " ";
         brute_output_file << simulation.GetMRMS() << " ";
         //Don't print membrane_voltage (usually the first state variable)
-        for(unsigned int i = 1; i < state_vars.size(); i++){
+        for(unsigned int i = 0; i < state_vars.size(); i++){
           brute_output_file << state_vars[i] << " ";
         }
         brute_output_file << "\n";
@@ -155,75 +164,43 @@ private:
     return brute_finished&&smart_finished;
   }
 
-  void CompareMethodsIKrBlock(int paces, boost::shared_ptr<AbstractCvodeCell> brute_model, boost::shared_ptr<AbstractCvodeCell> smart_model){
-    const std::string model_name = brute_model->GetSystemInformation()->GetSystemName();
-    std::cout << "Testing " << model_name  << " with 50% block of IKr\n";
-
-    Simulation simulation(brute_model, 1000);
-    SmartSimulation smart_simulation(smart_model, 1000);
-
-    simulation.SetIKrBlock(0.5);
-    smart_simulation.SetIKrBlock(0.5);
-
-    simulation.RunPaces(paces);
-    smart_simulation.RunPaces(paces);
-
-    std::vector<double> brute_states = simulation.GetStateVariables();
-    std::vector<double> smart_states = smart_simulation.GetStateVariables();
-
-    // drop voltage (assuming it's the first variable)
-    if(brute_states.size() == smart_states.size()+1){
-      assert(brute_model->GetSystemInformation()->rGetStateVariableNames()[0] == "membrane_voltage");
-      brute_states.erase(brute_states.begin());
-    }
-
-    double mrms_difference = mrms(brute_states, smart_states);
-
-    const double smart_apd = smart_simulation.GetApd(90);
-    smart_simulation.SetStateVariables(brute_states);
-    const double brute_apd = smart_simulation.GetApd(90);
-    smart_simulation.SetStateVariables(smart_states);
-    std::cout << "Difference in APD90s " << smart_apd - brute_apd << "\n";
-
-    std::cout << "MRMS between solutions is " << mrms_difference << "\n";
-
-    const std::string output_dir = model_name+"/TestExtrapolationMethod/IKrBlock";
-    simulation.WritePaceToFile(output_dir+"/brute", "brute_pace");
-    smart_simulation.WritePaceToFile(output_dir+"/smart", "smart_pace");
-
-    TS_ASSERT_LESS_THAN(mrms_difference, 1e-3);
-    TS_ASSERT(smart_simulation.HasTerminated() && simulation.HasTerminated());
-
-    // reset GKr parameter
-  }
 
 public:
   void TestExtrapolationRun()
   {
 #ifdef CHASTE_CVODE
-    int paces = get_max_paces();
-    paces = paces==INT_UNSET?default_paces:paces;
+    int max_paces = get_max_paces();
+    auto extrapolation_constants = get_extrapolation_constants();
+    auto buffer_sizes = get_buffer_sizes();
+    auto periods = get_periods();
+    auto blocks = get_IKr_blocks();
+    auto models = get_analytic_models();
+    auto brute_models = get_analytic_models();
 
-    if(CommandLineArguments::Instance()->OptionExists("--buffer-size")){
-      buffer_size = CommandLineArguments::Instance()->GetIntCorrespondingToOption("--buffer-size");
-    }
-
-    std::cout << "Running each scenario for " << paces << " paces.\n";
+    std::cout << "Running each scenario for " << max_paces << " paces.\n";
     boost::shared_ptr<RegularStimulus> p_stimulus;
     boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
 
     /* Compare each model with a version modified for the extrapolation method */
 
-    auto original_models = get_models("original");
-    auto algebraic_models = get_models("algebraic");
+    // TS_ASSERT(original_models.size()==algebraic_models.size());
 
-    TS_ASSERT(original_models.size()==algebraic_models.size());
-
-    for(unsigned int i = 0; i < original_models.size(); i++){
-      CompareMethodsPeriod(paces, original_models[i], algebraic_models[i]);
-      // CompareMethodsIKrBlock(original_models[i], algebraic_models[i]);
+    const double ic_period = 1000;
+    const double ic_block  = 0;
+    int i=0;
+    for(auto model : models){
+      auto brute_model = brute_models[i];
+      for(auto e_c : extrapolation_constants){
+        for(auto bs : buffer_sizes){
+          for(auto period : periods){
+            for(auto block : blocks){
+              // Just change IKrBlock
+              CompareMethods(e_c, bs, max_paces, brute_model, model, ic_period, ic_block,  period,  block);
+            }
+          }
+        }
+      }
     }
-
 #else
     std::cout << "Cvode is not enabled.\n";
 #endif

@@ -10,6 +10,7 @@
 #include <boost/filesystem.hpp>
 #include <fstream>
 #include "SmartSimulation.hpp"
+#include "SimulationTools.hpp"
 
 class TestBenchmark : public CxxTest::TestSuite
 {
@@ -38,24 +39,16 @@ public:
 
     const boost::filesystem::path test_dir(getenv("CHASTE_TEST_OUTPUT"));
 
-    std::string option = "--extrapolation_constants";
-    if(CommandLineArguments::Instance()->OptionExists(option)){
-      extrapolation_constants = CommandLineArguments::Instance()->GetDoublesCorrespondingToOption(option);
-    }
+    std::cout << "using extrapolation_constants: ";
 
-    option = "--buffer_sizes";
-    if(CommandLineArguments::Instance()->OptionExists(option)){
-      buffer_sizes = CommandLineArguments::Instance()->GetIntsCorrespondingToOption(option);
-    }
+    for(auto e_c : extrapolation_constants)
+      std::cout << e_c << " ";
 
+    std::cout << "and buffer sizes: ";
+    for(auto bs : buffer_sizes)
+      std::cout << bs << " ";
 
-    // Get directory name suffix
-    option = "--suffix";
-
-    std::string suffix = "";
-    if(CommandLineArguments::Instance()->OptionExists(option)){
-      suffix = CommandLineArguments::Instance()->GetStringCorrespondingToOption(option);
-    }
+    std::cout << "and suffix " << suffix << "\n";
 
     boost::filesystem::path directory = (boost::filesystem::path(test_dir) / (boost::filesystem::path("TestBenchmark"+suffix)));
     // Remake the empty directoy
@@ -75,7 +68,12 @@ public:
 
       std::ofstream output_file(filepath);
 
-        output_file << "what_modified model_name buffer_size extrapolation_constant ic_period ic_block period IKrBlock score jumps_used APD90 last_mrms reference_mrms reference_trace_mrms reference_2_norm reference_trace_2_norm\n";
+        output_file << "what_modified model_name buffer_size extrapolation_constant ic_period ic_block period IKrBlock score jumps_used APD90 last_mrms reference_mrms reference_trace_mrms reference_2_norm reference_trace_2_norm ";
+
+        for(auto var_name : model->GetSystemInformation()->rGetStateVariableNames())
+          output_file << var_name << " ";
+
+        output_file << "\n";
 
         for(auto buffer_size : buffer_sizes){
           for(auto extrapolation_constant : extrapolation_constants){
@@ -85,71 +83,6 @@ public:
         // Next, get the score with no extrapolation
         OutputScores(model, periods, IKrBlocks, 0, 100, output_file);
       }
-  }
-
-  void OutputScore(std::string to_change, boost::shared_ptr<AbstractCvodeCell> model, double period, double IKrBlock, double extrapolation_constant, unsigned int buffer_size, std::ofstream& output_file){
-
-    const boost::filesystem::path test_dir(getenv("CHASTE_TEST_OUTPUT"));
-    const std::string model_name = model->GetSystemInformation()->GetSystemName();
-    std::stringstream reference_path;
-    reference_path << test_dir.string() << "/" << model_name << "_" << std::to_string(int(period)) << "ms_" << int(100*IKrBlock)<<"_percent_block/final_states.dat";
-
-    std::vector<double> reference_states = LoadStatesFromFile(reference_path.str());
-
-    double ic_period;
-    double ic_block;
-    if(to_change=="period_IKrBlock"){
-      // Change both IKrBlock and pacing frequency
-      ic_period = period==1000?500:1000;
-      ic_block  = IKrBlock==0?0.5:0;
-    }
-    else if(to_change=="period"){
-      ic_period = period==1000?500:1000;
-      ic_block  = IKrBlock;
-    }
-    else if(to_change=="IKrBlock"){
-      ic_period = period;
-      ic_block  = IKrBlock==0?0.5:0;
-    }
-    else{
-      EXCEPTION("string argument doesn't match any option");
-    }
-
-    // Print the performance of this model with these settings
-    output_file << "period_IKrBlock " << model_name << " " << buffer_size << " " << extrapolation_constant << " " << ic_period << " " << ic_block << " " << period << " " << IKrBlock << " ";
-
-    try{
-      auto sim = RunModel(model, ic_period, ic_block, period, IKrBlock, buffer_size, extrapolation_constant);
-      if(!sim->HasTerminated()){
-        EXCEPTION("model failed to converge");
-      }
-      output_file << sim->GetPaces() << " " << sim->GetNumberOfJumps() << " ";
-      // Output APD90
-      output_file << Simulation(model).GetApd(90) << " " << sim->GetMRMS() << " ";
-
-      //Compute error measures with the reference solution
-      auto states = sim->GetStateVariables();
-      const double two_norm = TwoNorm(reference_states, states);
-      const double reference_mrms = mrms(reference_states, states);
-
-      auto pace = sim->GetPace().rGetSolutions();
-
-      // Compute reference pace
-      Simulation reference_sim(model, period, reference_path.str());
-      auto reference_pace = reference_sim.GetPace().rGetSolutions();
-
-      double reference_trace_two_norm = TwoNormTrace(reference_pace, pace);
-      double reference_trace_mrms = mrmsTrace(reference_pace, pace);
-
-      output_file << reference_mrms << " " << reference_trace_mrms << " " << two_norm << " " << reference_trace_two_norm << "\n";
-
-
-    }
-    catch(Exception& e){
-      std::cout << "Something went wrong when running the model! " << e.GetMessage() << "\n";;
-      output_file << "NaN NaN NaN NaN NaN NaN NaN NaN\n";
-      // Output APD90
-    }
   }
 
   void OutputScores(boost::shared_ptr<AbstractCvodeCell> model, std::vector<double> periods, std::vector<double> IKrBlocks, double extrapolation_constant, unsigned int buffer_size, std::ofstream& output_file){
@@ -163,39 +96,5 @@ public:
         OutputScore("IKrBlock", model, period, IKrBlock, extrapolation_constant, buffer_size, output_file);
       }
     }
-  }
-
-  std::shared_ptr<SmartSimulation> RunModel(boost::shared_ptr<AbstractCvodeCell> model, double ic_period, double ic_IKrBlock, double period, double IKrBlock, unsigned int buffer_size, double extrapolation_constant){
-
-    const boost::filesystem::path test_dir(getenv("CHASTE_TEST_OUTPUT"));
-
-    const std::string model_name = model->GetSystemInformation()->GetSystemName();
-
-    std::cout << "For model " << model_name << " with  n = " << buffer_size << " and e_c = " << extrapolation_constant << "\n";
-
-    std::stringstream dirname;
-    dirname << "/" << model_name << "_" << std::to_string(int(period)) << "ms_" << int(100*IKrBlock)<<"_percent_block/";
-
-    std::stringstream input_dirname_ss;
-    input_dirname_ss << model_name+"_" << std::to_string(int(ic_period)) << "ms_" << int(100*ic_IKrBlock)<<"_percent_block/";
-    const std::string input_dirname = (test_dir / boost::filesystem::path(input_dirname_ss.str())).string();
-
-    const std::string input_path = (test_dir / boost::filesystem::path(input_dirname_ss.str()) / boost::filesystem::path("final_states.dat")).string();
-
-    std::shared_ptr<SmartSimulation> smart_simulation = std::make_shared<SmartSimulation>(model, period, input_path, 1e-8, 1e-8, buffer_size, extrapolation_constant);
-    smart_simulation->SetIKrBlock(IKrBlock);
-    smart_simulation->SetMaxJumps(max_jumps);
-
-    int paces_to_run = get_max_paces();
-    paces_to_run = paces_to_run==INT_UNSET?max_paces:paces_to_run;
-
-    smart_simulation->RunPaces(paces_to_run);
-
-    unsigned int paces = smart_simulation->GetPaces();
-
-    std::cout << "took " << paces << " paces\n";
-    TS_ASSERT(paces+2<max_paces);
-
-    return smart_simulation;
   }
 };

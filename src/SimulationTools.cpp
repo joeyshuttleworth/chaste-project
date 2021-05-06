@@ -27,6 +27,9 @@
 #include "ten_tusscher_2004_epi_analytic_voltageCvode.hpp"
 #include "ToRORd_dyn_chloride_epi_analytic_voltageCvode.hpp"
 
+const int default_max_jumps = 1000;
+const int default_max_paces = 10000;
+
 void RunSimulation(boost::shared_ptr<AbstractCvodeCell> p_model, unsigned int paces, unsigned int period, double tolerances){
   boost::shared_ptr<RegularStimulus> p_stimulus;
   boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
@@ -428,7 +431,7 @@ int get_max_jumps(){
   return max_jumps;
 }
 
-double get_max_paces(){
+int get_max_paces(){
   double paces = INT_UNSET;
   const std::string option = "--paces";
 
@@ -443,3 +446,142 @@ double get_max_paces(){
 std::vector<boost::shared_ptr<AbstractCvodeCell>> get_analytic_models(){
   return(get_models("algebraic"));
 }
+
+
+
+void OutputScore(std::string to_change, boost::shared_ptr<AbstractCvodeCell> model, double period, double IKrBlock, double extrapolation_constant, unsigned int buffer_size, std::ofstream& output_file){
+
+    const boost::filesystem::path test_dir(getenv("CHASTE_TEST_OUTPUT"));
+    const std::string model_name = model->GetSystemInformation()->GetSystemName();
+    std::stringstream reference_path;
+    reference_path << test_dir.string() << "/" << model_name << "_" << std::to_string(int(period)) << "ms_" << int(100*IKrBlock)<<"_percent_block/final_states.dat";
+
+    std::vector<double> reference_states = LoadStatesFromFile(reference_path.str());
+
+    double ic_period;
+    double ic_block;
+    if(to_change=="period_IKrBlock"){
+      // Change both IKrBlock and pacing frequency
+      ic_period = period==1000?500:1000;
+      ic_block  = IKrBlock==0?0.5:0;
+    }
+    else if(to_change=="period"){
+      ic_period = period==1000?500:1000;
+      ic_block  = IKrBlock;
+    }
+    else if(to_change=="IKrBlock"){
+      ic_period = period;
+      ic_block  = IKrBlock==0?0.5:0;
+    }
+    else{
+      EXCEPTION("string argument doesn't match any option");
+    }
+
+    // Print the performance of this model with these settings
+    output_file << to_change << " " << model_name << " " << buffer_size << " " << extrapolation_constant << " " << ic_period << " " << ic_block << " " << period << " " << IKrBlock << " ";
+
+    try{
+      auto sim = RunModel(model, ic_period, ic_block, period, IKrBlock, buffer_size, extrapolation_constant);
+      if(!sim->HasTerminated()){
+        EXCEPTION("model failed to converge");
+      }
+      output_file << sim->GetPaces() << " " << sim->GetNumberOfJumps() << " ";
+      // Output APD90
+      double apd = sim->GetApd(90);
+      output_file << apd << " " << sim->GetMRMS() << " ";
+
+      std::cout <<"APD90 is " << apd << "\n";
+
+      //Compute error measures with the reference solution
+      auto states = sim->GetStateVariables();
+      const double two_norm = TwoNorm(reference_states, states);
+      const double reference_mrms = mrms(reference_states, states);
+
+      auto pace = sim->GetPace().rGetSolutions();
+
+      // Compute reference pace
+      Simulation reference_sim(model, period, reference_path.str());
+      auto reference_pace = reference_sim.GetPace().rGetSolutions();
+
+      double reference_trace_two_norm = TwoNormTrace(reference_pace, pace);
+      double reference_trace_mrms = mrmsTrace(reference_pace, pace);
+
+      output_file << reference_mrms << " " << reference_trace_mrms << " " << two_norm << " " << reference_trace_two_norm << " ";
+
+      for(auto state_var : states)
+        output_file << state_var << " ";
+      output_file << "\n";
+
+    }
+    catch(Exception& e){
+      std::cout << "Something went wrong when running the model! " << e.GetMessage() << "\n";;
+      output_file << "NaN NaN NaN NaN NaN NaN NaN NaN\n";
+      // Output APD90
+    }
+  }
+
+std::vector<double> get_extrapolation_constants(){
+  const std::string option = "--extrapolation_constants";
+  std::vector<double> extrapolation_constants;
+  if(CommandLineArguments::Instance()->OptionExists(option)){
+    extrapolation_constants = CommandLineArguments::Instance()->GetDoublesCorrespondingToOption(option);
+  }
+  return extrapolation_constants;
+}
+
+std::vector<int> get_buffer_sizes(){
+  std::vector<int> buffer_sizes;
+  const std::string option = "--buffer_sizes";
+if(CommandLineArguments::Instance()->OptionExists(option)){
+  buffer_sizes = CommandLineArguments::Instance()->GetIntsCorrespondingToOption(option);
+ }
+ return buffer_sizes;
+}
+
+std::string get_suffix(){
+  // Get directory name suffix
+  std::string suffix;
+  const std::string option = "--suffix";
+  if(CommandLineArguments::Instance()->OptionExists(option)){
+    suffix = CommandLineArguments::Instance()->GetStringCorrespondingToOption(option);
+  }
+  return suffix;
+}
+
+std::shared_ptr<SmartSimulation> RunModel(boost::shared_ptr<AbstractCvodeCell> model, double ic_period, double ic_IKrBlock, double period, double IKrBlock, unsigned int buffer_size, double extrapolation_constant){
+
+    int max_jumps = get_max_jumps();
+
+    max_jumps = max_jumps==INT_UNSET?default_max_jumps:max_jumps;
+
+    const boost::filesystem::path test_dir(getenv("CHASTE_TEST_OUTPUT"));
+
+    const std::string model_name = model->GetSystemInformation()->GetSystemName();
+
+    std::cout << "For model " << model_name << " with  n = " << buffer_size << " and e_c = " << extrapolation_constant << "\n";
+
+    std::stringstream dirname;
+    dirname << "/" << model_name << "_" << std::to_string(int(period)) << "ms_" << int(100*IKrBlock)<<"_percent_block/";
+
+    std::stringstream input_dirname_ss;
+    input_dirname_ss << model_name+"_" << std::to_string(int(ic_period)) << "ms_" << int(100*ic_IKrBlock)<<"_percent_block/";
+    const std::string input_dirname = (test_dir / boost::filesystem::path(input_dirname_ss.str())).string();
+
+    const std::string input_path = (test_dir / boost::filesystem::path(input_dirname_ss.str()) / boost::filesystem::path("final_states.dat")).string();
+
+    std::shared_ptr<SmartSimulation> smart_simulation = std::make_shared<SmartSimulation>(model, period, input_path, 1e-8, 1e-8, buffer_size, extrapolation_constant);
+    smart_simulation->SetIKrBlock(IKrBlock);
+    smart_simulation->SetMaxJumps(max_jumps);
+
+    int paces_to_run = get_max_paces();
+    paces_to_run = paces_to_run==INT_UNSET?default_max_paces:paces_to_run;
+
+    smart_simulation->RunPaces(paces_to_run);
+
+    unsigned int paces = smart_simulation->GetPaces();
+
+    std::cout << "took " << paces << " paces\n";
+    // TS_ASSERT(paces+2<paces_to_run);
+
+    return smart_simulation;
+  }

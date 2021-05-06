@@ -12,6 +12,7 @@
 #include <sstream>
 #include <iostream>
 #include <cassert>
+#include "SmartSimulation.hpp"
 
 const std::vector<std::string> model_names = {"beeler_reuter_model_1997", "ten_tusscher_model_2004_epi", "ohara_rudy_2011_endo", "shannon_wang_puglisi_weber_bers_2004"};
 
@@ -51,6 +52,12 @@ void compare_error_measures(int paces, boost::shared_ptr<AbstractCvodeCell>, dou
 
 int get_max_jumps();
 
+
+void OutputScore(std::string to_change, boost::shared_ptr<AbstractCvodeCell> model, double period, double IKrBlock, double extrapolation_constant, unsigned int buffer_size, std::ofstream& output_file);
+
+
+std::shared_ptr<SmartSimulation> RunModel(boost::shared_ptr<AbstractCvodeCell> model, double ic_period, double ic_IKrBlock, double period, double IKrBlock, unsigned int buffer_size, double extrapolation_constant);
+
 template<typename Container>
 double CalculatePMCC(Container values){
   const unsigned int N = values.size();
@@ -78,6 +85,12 @@ std::vector<double> get_periods();
 
 std::vector<double> get_IKr_blocks();
 
-double get_max_paces();
+int get_max_paces();
+
+std::vector<double> get_extrapolation_constants();
+
+std::vector<int> get_buffer_sizes();
+
+std::string get_suffix();
 
 #endif

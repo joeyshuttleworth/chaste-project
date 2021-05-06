@@ -11,8 +11,6 @@
 #include <string>
 #include <sstream>
 #include <iostream>
-#include "SimulationTools.hpp"
-
 
 class Simulation
 {

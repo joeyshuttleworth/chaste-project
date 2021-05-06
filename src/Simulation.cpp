@@ -1,6 +1,7 @@
 #include "Simulation.hpp"
 #include <iomanip>
 #include <algorithm>
+#include "SimulationTools.hpp"
 
 Simulation::Simulation(boost::shared_ptr<AbstractCvodeCell> _p_model, double _period, std::string input_path, double _tol_abs, double _tol_rel) : mpModel(_p_model), mPeriod(_period), mTolAbs(_tol_abs), mTolRel(_tol_rel){
   mHasTerminated = false;
