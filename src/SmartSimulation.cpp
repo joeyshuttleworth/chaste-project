@@ -53,8 +53,7 @@ bool SmartSimulation::ExtrapolateState(unsigned int state_index, bool& stop_extr
 
   const double r2 = pow(sum_xy/N - sum_x*sum_y/(N*N), 2)/((sum_x2/N - sum_x*sum_x/(N*N))*(sum_y2/N - sum_y*sum_y/(N*N)));
 
-  if(r2<0.5 && std::isfinite(r2)){
-    // std::cout <<  mpModel->GetSystemInformation()->rGetStateVariableNames()[state_index]<< ": r^2 was " << r2 << " Ignoring. \n";
+  if(r2<0.8 && std::isfinite(r2)){
     return false;
   }
 
@@ -143,8 +142,7 @@ bool SmartSimulation::RunPace(){
        solution and should reset to the state before the extrapolation. This
        seems to be quite rare so print a warning and stop any further extrapolations */
 
-    // if((mLastExtrapolationPace - mPace) % mBufferSize==0  && mPreviousMinimalMRMSs.size()>0){
-    if(mLastExtrapolationPace + mBufferSize == mPace  && mPreviousMinimalMRMSs.size()>0){
+    if((mLastExtrapolationPace - mPace) % mBufferSize==0  && mPreviousMinimalMRMSs.size()>0 && mPreviousMinimalMRMSs.size()<=3){
       if(mPreviousMinimalMRMSs.back() > mMRMSBeforeExtrapolation){
           std::cout << "Warning: the extrapolation appears to have gone wrong. The pace-to-pace MRMS error is greater than it was before the extrapolation. Will not perform further extrapolations\n";
           mStateVariables = mSafeStateVariables;
