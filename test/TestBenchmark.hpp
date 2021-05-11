@@ -18,8 +18,8 @@ private:
   std::ofstream output_file;
   int baseline_score = 0;
 
-  std::vector<int> buffer_sizes = {250, 25, 50, 100, 500, 750, 1000, 2000};
-  std::vector<double> extrapolation_constants ={1, 0.1, 0.5, 0.75, 0.9, 1.05, 1.1, 1.25};
+  std::vector<int> default_buffer_sizes = {250, 25, 50, 100, 500, 750, 1000, 2000};
+  std::vector<double> default_extrapolation_constants ={1, 0.1, 0.5, 0.75, 0.9, 1.05, 1.1, 1.25};
   const unsigned int max_paces = 100000;
   // Get max jumps parameter
   int max_jumps;
@@ -28,6 +28,15 @@ public:
   void TestBenchmarkRun(){
     boost::shared_ptr<RegularStimulus> p_stimulus;
     boost::shared_ptr<AbstractIvpOdeSolver> p_solver;
+
+
+
+    auto extrapolation_constants = get_extrapolation_constants();
+    auto buffer_sizes = get_buffer_sizes();
+    if(extrapolation_constants.size() == 0)
+      extrapolation_constants=default_extrapolation_constants;
+    if(buffer_sizes.size() == 0)
+      buffer_sizes=default_buffer_sizes;
 
     std::vector<double> periods = get_periods();
     std::vector<double> IKrBlocks = get_IKr_blocks();
@@ -48,6 +57,7 @@ public:
     for(auto bs : buffer_sizes)
       std::cout << bs << " ";
 
+    const std::string suffix = get_suffix();
     std::cout << "and suffix " << suffix << "\n";
 
     boost::filesystem::path directory = (boost::filesystem::path(test_dir) / (boost::filesystem::path("TestBenchmark"+suffix)));
