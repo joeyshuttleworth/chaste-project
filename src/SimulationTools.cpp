@@ -517,7 +517,7 @@ void OutputScore(std::string to_change, boost::shared_ptr<AbstractCvodeCell> mod
       std::cout << "Something went wrong when running the model! " << e.GetMessage() << "\n";;
       output_file << "NaN NaN NaN NaN NaN NaN NaN NaN";
       for(auto state : states)
-        output_file < "NaN ";
+        output_file << "NaN ";
       output_file <<"\n";
       // Output APD90
     }

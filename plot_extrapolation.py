@@ -90,13 +90,12 @@ def make_plot(model_name, jump_number=0):
         plt.ylabel("{} / millimolar".format(var_name))
         if not os.path.exists("plots"):
             os.mkdir("plots")
-        plt.show()
 
         # Plot the extrapolation on a log scale
         # plt.plot(np.log(np.abs(brute_var - brute_var[-1])))
         # plt.show()
 
-        # plt.savefig("plots/"+model_name+"_"+var_name+".pdf", format="pdf")
+        plt.savefig("plots/"+model_name+"_"+var_name+".pdf", format="pdf")
 
         plt.clf()
 
