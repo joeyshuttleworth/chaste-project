@@ -5,6 +5,7 @@ import re
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import math
 import seaborn as sns
 
 def summarise_model(model_name):
@@ -81,8 +82,6 @@ def summarise_model(model_name):
 
         setting_results=next(filter(lambda x: x[0]==n and x[1] == lmbda, normalised_paces_saved_list))[2]
 
-        if(len(setting_results)!=36):
-            print(len(setting_results), n, lmbda)
         column_names.append("({}, {})".format(int(n),lmbda))
         df_to_plot.append(setting_results)
 
@@ -114,25 +113,25 @@ def summarise_model(model_name):
     # Check all of the APDs are close
     for block in blocks:
         for period in periods:
-
             # max_final_mrms=0
             # max_apd_range=0
             # max_reference_mrms=0
 
             rows = df_results[df_results.period==period]
             rows = rows[rows.IKrBlock==block]
+            rows = rows[rows.APD90.notnull()]
             apd_vals = rows["APD90"].values
-            apd_min = min([min(apd_vals)])
-            apd_max = max([max(apd_vals)])
-
-            min_row = rows[rows.APD90==apd_min]
-            max_row = rows[rows.APD90==apd_max]
-
-            print(rows[["period", "IKrBlock", "buffer_size", "extrapolation_constant", "APD90"]].values)
+            apd_min = apd_vals.min()
+            apd_max = apd_vals.max()
 
             print("block={}, period={}, APD range was {}, min paces taken = {}".format(block, period, apd_max-apd_min, rows["score"].min()))
 
-            max_apd_range=max([max_apd_range, abs(apd_max - apd_min)])
+            new_max_apd_range=abs(apd_max - apd_min)
+
+            if new_max_apd_range > max_apd_range:
+                min_row = rows[rows.APD90==apd_min]
+                max_row = rows[rows.APD90==apd_max]
+                max_apd_range=new_max_apd_range
 
             mrms_errors = rows["last_mrms"].values
             max_final_mrms = max([max(mrms_errors), max_final_mrms])
@@ -141,7 +140,13 @@ def summarise_model(model_name):
 
     print("biggest final mrms was {}".format(max_final_mrms))
     print("biggest reference mrms was {}".format(max_reference_mrms))
-    print("max apd range was {} ({}, {})".format(max_apd_range, apd_min, apd_max))
+    print("max apd range was {}".format(max_apd_range))
+    if(max_apd_range > 0.5):
+        print("Bifurcation detected:")
+        print(min_row[["ic_period", "ic_block", "period", "IKrBlock", "extrapolation_constant", "buffer_size", "APD90"]])
+        print(max_row[["ic_period", "ic_block", "period", "IKrBlock", "extrapolation_constant", "buffer_size", "APD90"]])
+
+
     # return the total_scores data_frame
 
     # Print a latex table to file
@@ -154,8 +159,8 @@ def summarise_model(model_name):
     return([df_to_plot.iloc[:,0], total_scores.iloc[0]])
 
 if __name__=="__main__":
-    models = ["Tomek2020epi_analytic_voltage", "IyerMazhariWinslow2004_analytic_voltage", "HundRudy2004_analytic_voltage_units", "decker_2009_analytic_voltage", "tentusscher_model_2004_epi_analytic_voltage", "tentusscher_model_2006_epi_analytic_voltage", "ohara_rudy_2011_epi_analytic_voltage", "ohara_rudy_cipa_2017_analytic_voltage"]
-    # models = ["HundRudy2004_analytic_voltage_units", "decker_2009_analytic_voltage", "tentusscher_model_2004_epi_analytic_voltage", "tentusscher_model_2006_epi_analytic_voltage", "ohara_rudy_2011_epi_analytic_voltage", "ohara_rudy_cipa_2017_analytic_voltage"]
+    # models = ["Tomek2020epi_analytic_voltage", "IyerMazhariWinslow2004_analytic_voltage", "HundRudy2004_analytic_voltage_units", "decker_2009_analytic_voltage", "tentusscher_model_2004_epi_analytic_voltage", "tentusscher_model_2006_epi_analytic_voltage", "ohara_rudy_2011_epi_analytic_voltage", "ohara_rudy_cipa_2017_analytic_voltage"]
+    models = ["tentusscher_model_2004_epi_analytic_voltage", "tentusscher_model_2006_epi_analytic_voltage", "ohara_rudy_2011_epi_analytic_voltage", "ohara_rudy_cipa_2017_analytic_voltage"]
     # models = ["ohara_rudy_2011_epi_analytic_voltage"]
     # models = ["decker_2009_analytic_voltage"]
 

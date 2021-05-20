@@ -60,7 +60,8 @@ std::vector<double> LoadStatesFromFile(std::string file_path){
   std::getline(file_in, line);
   std::getline(file_in, line);
 
-  boost::split(state_variables_str, line, boost::is_any_of(" "), boost::token_compress_on);
+  boost::trim_if(line, boost::is_any_of("\t "));
+  boost::split(state_variables_str, line, boost::is_any_of(" \t"), boost::token_compress_on);
   for(auto state_var : state_variables_str){
     if(state_var!="")
       state_variables.push_back(std::stod(state_var));
@@ -516,11 +517,10 @@ void OutputScore(std::string to_change, boost::shared_ptr<AbstractCvodeCell> mod
     catch(Exception& e){
       std::cout << "Something went wrong when running the model! " << e.GetMessage() << "\n";;
       output_file << "NaN NaN NaN NaN NaN NaN NaN NaN";
-      auto states = sim->GetStateVariables();
-      for(auto state : states)
+      auto states = model->GetStdVecStateVariables();
+      for(unsigned int i = 0; i < states.size(); i++)
         output_file << "NaN ";
       output_file <<"\n";
-      // Output APD90
     }
   }
 

@@ -41,6 +41,14 @@ public:
     mOutputDir = dir;
     boost::filesystem::create_directories(dir);
   }
+
+  ~SmartSimulation(){
+    /*  Make sure maximal GKr capacitance parameter is set back to its original value */
+    SetIKrBlock(0);
+    if(mOutputFile.is_open())
+      mOutputFile.close();
+  }
+
 private:
   std::string mOutputDir;
   unsigned int mBufferSize;

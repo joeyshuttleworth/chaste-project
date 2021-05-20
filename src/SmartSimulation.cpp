@@ -166,15 +166,14 @@ bool SmartSimulation::ExtrapolateStates(){
     // double mrms_pmcc = CalculatePMCC(mMRMSBuffer);
     bool extrapolated = false;
     std::string model_name = mpModel->GetSystemInformation()->GetSystemName();
-    const std::string dir_name = mOutputDir;
-    if(dir_name!="")
-      boost::filesystem::create_directory(dir_name);
+    if(mOutputDir!="")
+      boost::filesystem::create_directory(mOutputDir);
     if(true){
       mSafeStateVariables = mStateVariables;
       std::cout << "Extrapolating - start of buffer is " << mPace - mBufferSize + 1<< "\n";
 
-      if(dir_name!=""){
-        mOutputFile.open(dir_name + "/" + std::to_string(int(mPeriod)) + "JumpParameters" + std::to_string(mJumps) + ".dat");
+      if(mOutputDir!=""){
+        mOutputFile.open(mOutputDir + "/" + std::to_string(int(mPeriod))+ "_" + std::to_string(mIKrBlock) + "_" + "JumpParameters" + std::to_string(mJumps) + ".dat");
         mOutputFile << std::setprecision(20);
         mOutputFile << mPace << " " << mBufferSize << " " << mExtrapolationConstant << "\n";
       }
