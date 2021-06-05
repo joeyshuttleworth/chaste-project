@@ -28,14 +28,18 @@ protected:
   bool mTerminateOnConvergence = true;
   unsigned int mPace = 0;
 
-  unsigned int mPreviousMinimalMRMSsWindowSize = 10;
+  unsigned int mPreviousMinimalMRMSsWindowSize = 20;
   boost::circular_buffer<double> mPreviousMinimalMRMSs;
+  boost::circular_buffer<double> mPreviousMaximalMRMSs;
+
   double mPreviousMinimalMRMSsPMCC = DOUBLE_UNSET;
+  double mPreviousMaximalMRMSsPMCC = DOUBLE_UNSET;
 
   unsigned int mMRMSBufferSize = 25;
   boost::circular_buffer<double> mMRMSBuffer;
 
   double mCurrentMinimalMRMS = DOUBLE_UNSET;
+  double mCurrentMaximalMRMS = DOUBLE_UNSET;
 
   long double mDefaultGKr = DOUBLE_UNSET;
 

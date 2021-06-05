@@ -25,6 +25,7 @@ Simulation::Simulation(boost::shared_ptr<AbstractCvodeCell> _p_model, double _pe
   SetTolerances(_tol_abs, _tol_rel);
 
   mPreviousMinimalMRMSs.set_capacity(mPreviousMinimalMRMSsWindowSize);
+  mPreviousMaximalMRMSs.set_capacity(mPreviousMinimalMRMSsWindowSize);
   mMRMSBuffer.set_capacity(mMRMSBufferSize);
 
   // Initialise GKr parameter
@@ -71,21 +72,28 @@ bool Simulation::RunPace(){
 
   if(mPace % mMRMSBufferSize == 0 && mCurrentMinimalMRMS!=DOUBLE_UNSET){
     mPreviousMinimalMRMSs.push_back(mCurrentMinimalMRMS);
+    mPreviousMaximalMRMSs.push_back(mCurrentMinimalMRMS);
     mCurrentMinimalMRMS = DOUBLE_UNSET;
+    mCurrentMaximalMRMS = DOUBLE_UNSET;
 
     if(mPreviousMinimalMRMSs.full()){
-      std::vector<double> log_minima;
+      std::vector<double> log_minima, log_maxima;
       log_minima.reserve(mPreviousMinimalMRMSs.size());
+      log_maxima.reserve(mPreviousMinimalMRMSs.size());
 
       for(auto val : mPreviousMinimalMRMSs)
         log_minima.push_back(log(val));
 
+      for(auto val : mPreviousMaximalMRMSs)
+        log_minima.push_back(log(val));
+
       mPreviousMinimalMRMSsPMCC = CalculatePMCC(log_minima);
+      mPreviousMaximalMRMSsPMCC = CalculatePMCC(log_maxima);
     }
   }
 
   /*  Check stopping criteria */
-  if(mPreviousMinimalMRMSsPMCC!=DOUBLE_UNSET && mTerminateOnConvergence && mCurrentMRMS < mThreshold && mPreviousMinimalMRMSsPMCC != DOUBLE_UNSET && mPreviousMinimalMRMSsPMCC >= 0 && mMRMSBuffer.full()){
+  if(mPreviousMinimalMRMSsPMCC!=DOUBLE_UNSET && mPreviousMaximalMRMSsPMCC!=DOUBLE_UNSET && mTerminateOnConvergence && mCurrentMRMS < mThreshold && mPreviousMinimalMRMSsPMCC != DOUBLE_UNSET && mPreviousMinimalMRMSsPMCC >= 0 && std::abs(mPreviousMaximalMRMSsPMCC) < 0.1 && mMRMSBuffer.full()){
 
     /*  Perform Dickey-Fuller test */
 
