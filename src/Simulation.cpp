@@ -85,7 +85,7 @@ bool Simulation::RunPace(){
         log_minima.push_back(log(val));
 
       for(auto val : mPreviousMaximalMRMSs)
-        log_minima.push_back(log(val));
+        log_maxima.push_back(log(val));
 
       mPreviousMinimalMRMSsPMCC = CalculatePMCC(log_minima);
       mPreviousMaximalMRMSsPMCC = CalculatePMCC(log_maxima);
@@ -93,7 +93,7 @@ bool Simulation::RunPace(){
   }
 
   /*  Check stopping criteria */
-  if(mPreviousMinimalMRMSsPMCC!=DOUBLE_UNSET && mPreviousMaximalMRMSsPMCC!=DOUBLE_UNSET && mTerminateOnConvergence && mCurrentMRMS < mThreshold && mPreviousMinimalMRMSsPMCC != DOUBLE_UNSET && mPreviousMinimalMRMSsPMCC >= 0 && std::abs(mPreviousMaximalMRMSsPMCC) < 0.1 && mMRMSBuffer.full()){
+  if(mPreviousMinimalMRMSsPMCC!=DOUBLE_UNSET && mPreviousMaximalMRMSsPMCC!=DOUBLE_UNSET && mTerminateOnConvergence && mCurrentMRMS < mThreshold && mPreviousMinimalMRMSsPMCC != DOUBLE_UNSET && mPreviousMinimalMRMSsPMCC >= -0.05 && std::abs(mPreviousMaximalMRMSsPMCC) < 0.1 && mMRMSBuffer.full()){
 
     /*  Perform Dickey-Fuller test */
 
